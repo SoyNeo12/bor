@@ -1536,7 +1536,7 @@ HaxballJS.then((HBInit) => {
       return false;
     } else if (message.startsWith("!agregar")) {
       if (rolesData.roles["liderpanda"].users.includes(playerAuth) || rolesData.roles["maestropanda"].users.includes(playerAuth) || rolesData.roles["jefepanda"].users.includes(playerAuth) || rolesData.roles["granpanda"].users.includes(playerAuth) || rolesData.roles["coowner"].users.includes(playerAuth) || rolesData.roles["owner"].users.includes(playerAuth)) {
-        const args = message.splist(' ');
+        const args = message.split(' ');
         const rol = args[1];
         const name = message.split('@')[1]?.trim();
 
