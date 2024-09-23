@@ -78,7 +78,7 @@ HaxballJS.then((HBInit) => {
       "lon": -70.5445,
       "code": "AR"
     },
-    token: "thr1.AAAAAGbwc-t7EiuK0WW30g.UAK4yb6x3d4"
+    token: "thr1.AAAAAGbwxEaiiZdoUWBwmQ.7CKeyiLxyzM"
   });
   // "| 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
   const ranks = {
