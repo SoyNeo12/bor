@@ -826,6 +826,13 @@ HaxballJS.then((HBInit) => {
       return;
     }
 
+    const registeredPlayer = Object.values(playerStats).find(data => data.name === p.name && data.auth !== p.auth);
+    if (registeredPlayer) {
+      room.sendAnnouncement(`El nombre "${p.name}" ya está registrado con otro auth. Por favor, usa el comando !login [contraseña] para iniciar sesión con esa cuenta.`, p.id, 0xFF0000, "bold", 2);
+      playerStats[p.auth].registered = true;
+      return;
+    }
+
     if (p.name.trim().length === 0 || p.name === "⠀") {
       room.kickPlayer(p.id, "Necesitas tener un carácter mínimo en el nombre.", false);
       return;
