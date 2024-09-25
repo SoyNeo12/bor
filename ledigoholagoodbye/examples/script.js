@@ -70,7 +70,7 @@ HaxballJS.then((HBInit) => {
   room = HBInit({
     roomName: "𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋",
     maxPlayers: 26, // el que quieras
-    public: false,
+    public: true,
     noPlayer: true,
     geo: {
       "lat": -33.4029,
