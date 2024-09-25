@@ -70,14 +70,14 @@ HaxballJS.then((HBInit) => {
   room = HBInit({
     roomName: "𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋",
     maxPlayers: 26, // el que quieras
-    public: true,
+    public: false,
     noPlayer: true,
     geo: {
       "lat": -33.4029,
       "lon": -70.5445,
       "code": "AR"
     },
-    token: "thr1.AAAAAGbxoh3Doql1cOeTKQ.JeppZ1cyoMw"
+    token: "thr1.AAAAAGb0MO5Xg94vreeu_w.US0DZsNfcA4"
   });
   // "| 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
   const ranks = {
@@ -131,9 +131,11 @@ HaxballJS.then((HBInit) => {
   const playerId = {};
   const playerRadius = 15;
   const activities = {};
-  const inactivityThreshold = 30000;
   const GRAVITY_HOLD_TIME = 1800;
   const MODES = ['power', 'comba'];
+  const inactivityThreshold = 15000;
+  const warningTime = 15000;
+  const warnedPlayers = {};
 
   let lastPlayerTouchBall = null;
   let secondPlayerTouchBall = null;
@@ -638,12 +640,24 @@ HaxballJS.then((HBInit) => {
 
     for (const player of players) {
       const playerAuth = playerId[player.id];
+
       if (player.team !== 0 && room.getScores() !== null) {
         const lastActivity = activities[player.id] || Date.now();
         const currentTime = Date.now();
 
-        if (currentTime - lastActivity >= inactivityThreshold && !gkred.includes(playerAuth) && !gkblue.includes(playerAuth)) {
-          room.kickPlayer(player.id, "AFK", false);
+        if (currentTime - lastActivity >= inactivityThreshold && !warnedPlayers[player.id] && !gkred.includes(playerAuth) && !gkblue.includes(playerAuth)) {
+          room.sendAnnouncement(`${player.name}, estás AFK. Serás expulsado en 15 segundos si no te mueves.`, player.id, 0xFFFF00, "bold", 2);
+
+          warnedPlayers[player.id] = setTimeout(() => {
+            const lastActivityAfterWarning = activities[player.id] || Date.now();
+            const currentTimeAfterWarning = Date.now();
+
+            if (currentTimeAfterWarning - lastActivityAfterWarning >= inactivityThreshold && !gkred.includes(playerAuth) && !gkblue.includes(playerAuth)) {
+              room.kickPlayer(player.id, "AFK", false);
+            }
+
+            delete warnedPlayers[player.id];
+          }, warningTime);
         }
       }
     }
@@ -692,7 +706,7 @@ HaxballJS.then((HBInit) => {
 
   function jugadoresSorteados(key) {
     return Object.values(playerStats)
-      .filter(player => player.logged)
+      .filter(player => player.games >= 5)
       .sort((a, b) => b[key] - a[key])
       .map(player => ({
         name: player.name,
@@ -702,41 +716,41 @@ HaxballJS.then((HBInit) => {
 
   function generateRanking() {
     const topVallas = jugadoresSorteados("vallas").slice(0, 5);
-    let announcementVallas = "🧤🥅Ranking de Vallas Invictas🧤🥅:\n";
+    let announcementVallas = "**🧤🥅Ranking de Vallas Invictas🧤🥅:**\n";
     topVallas.forEach((player, index) => {
       announcementVallas += `${index + 1}. ${player.name}: ${player.value} vallas\n`;
     });
 
     const topGoals = jugadoresSorteados("goals").slice(0, 5);
-    let announcementGoles = "⚽Ranking de Goles⚽:\n";
+    let announcementGoles = "**⚽Ranking de Goles⚽:**\n";
     topGoals.forEach((player, index) => {
       announcementGoles += `${index + 1}. ${player.name}: ${player.value} goles\n`;
     });
 
     const topVictorias = jugadoresSorteados("victories").slice(0, 5);
-    let announcementVictorias = "✅Ranking de Victorias✅:\n";
+    let announcementVictorias = "**✅Ranking de Victorias✅:**\n";
     topVictorias.forEach((player, index) => {
       announcementVictorias += `${index + 1}. ${player.name}: ${player.value} victorias\n`;
     });
 
     const topAsistencias = jugadoresSorteados("assists").slice(0, 5);
-    let announcementAsistencias = "👟🧙‍♂️Ranking de Asistencias👟🧙‍♂️:\n";
+    let announcementAsistencias = "**👟🧙‍♂️Ranking de Asistencias👟🧙‍♂️:**\n";
     topAsistencias.forEach((player, index) => {
       announcementAsistencias += `${index + 1}. ${player.name}: ${player.value} asistencias\n`;
     });
 
     const topJuegos = jugadoresSorteados("games").slice(0, 5);
-    let announcementJuegos = "🎋Ranking de Juegos🎋:\n";
+    let announcementJuegos = "**🎋Ranking de Juegos🎋:**\n";
     topJuegos.forEach((player, index) => {
       announcementJuegos += `${index + 1}. ${player.name}: ${player.value} juegos\n`;
     });
 
     const topWinrate = jugadoresSorteados("winrate").slice(0, 5);
-    let announcementWinrate = "💪Ranking de Winrate💪:\n";
+    let announcementWinrate = "**💪Ranking de Winrate💪:**\n";
     topWinrate.forEach((player, index) => {
       announcementWinrate += `${index + 1}. ${player.name}: ${player.value}% winrate\n`;
     });
-    const fullAnnouncement = `${announcementVallas}${announcementGoles}${announcementVictorias}${announcementAsistencias}${announcementJuegos}${announcementWinrate}`;
+    const fullAnnouncement = `${announcementVallas}\n${announcementGoles}\n${announcementVictorias}\n${announcementAsistencias}\n${announcementJuegos}\n${announcementWinrate}`;
     sendRankingToDiscord("📊 Rankings del Juego 📊", fullAnnouncement);
   }
 
@@ -787,25 +801,44 @@ HaxballJS.then((HBInit) => {
   };
 
   room.onPlayerTeamChange = function (changedPlayer, byPlayer) {
+    const playerAuth = playerId[changedPlayer.id];
+
+    activities[changedPlayer.id] = Date.now();
+
+    if (warnedPlayers[changedPlayer.id]) {
+      clearTimeout(warnedPlayers[changedPlayer.id]);
+      delete warnedPlayers[changedPlayer.id];
+    }
+
+    if (gkred.includes(playerAuth)) {
+      gkred = gkred.filter(gk => gk.auth !== playerAuth && gk.id !== changedPlayer.id);
+    } else if (gkblue.includes(playerAuth)) {
+      gkblue = gkblue.filter(gk => gk.auth !== playerAuth && gk.id !== changedPlayer.id);
+    }
+
+    setTimeout(() => {
+      activities[changedPlayer.id] = Date.now();
+    }, 10000);
+
     if (byPlayer != null) {
       activities[byPlayer.id] = Date.now();
-      if (changedPlayer.id == byPlayer.id) {
-        const playerAuth = playerId[changedPlayer.id];
-        activities[changedPlayer.id] = Date.now();
-        if (gkred.includes(playerAuth)) {
-          gkred = gkred.filter(gk => gk.auth !== playerAuth && gk.id !== changedPlayer.id);
-        } else if (gkblue.includes(playerAuth)) {
-          gkblue = gkblue.filter(gk => gk.auth !== playerAuth && gk.id !== changedPlayer.id);
-        }
+
+      if (warnedPlayers[byPlayer.id]) {
+        clearTimeout(warnedPlayers[byPlayer.id]);
+        delete warnedPlayers[byPlayer.id];
       }
     }
-  }
+  };
 
   room.onPositionsReset = function () {
     let players = room.getPlayerList();
 
     for (let i = 0; i < players.length; i++) {
       activities[players[i].id] = Date.now();
+      if (warnedPlayers[players[i].id.id]) {
+        clearTimeout(warnedPlayers[players[i].id.id]);
+        delete warnedPlayers[players[i].id.id];
+      }
     }
 
     if (players.length >= 4 && lastMode) {
@@ -829,8 +862,6 @@ HaxballJS.then((HBInit) => {
     const registeredPlayer = Object.values(playerStats).find(data => data.name === p.name && data.auth !== p.auth);
     if (registeredPlayer) {
       room.sendAnnouncement(`El nombre "${p.name}" ya está registrado con otro auth. Por favor, usa el comando !login [contraseña] para iniciar sesión con esa cuenta.`, p.id, 0xFF0000, "bold", 2);
-      playerStats[p.auth].registered = true;
-      return;
     }
 
     if (p.name.trim().length === 0 || p.name === "⠀") {
@@ -872,15 +903,17 @@ HaxballJS.then((HBInit) => {
     EnLaSala[p.auth] = true;
     playerId[p.id] = p.auth;
 
-    room.sendAnnouncement(`[👋] ¡¡¡Bienvenido ${p.name}!!! Que disfrutes de PANDA🎋🐼.`, p.id, 0x6FA8DC, "bold", 2);
-    room.sendAnnouncement(`[🐼] Usá el comando !dc para entrar al Discord de la comunidad y estar al tanto de las novedades🐼.`, p.id, 0x3C78D8, "bold", 2);
+    if (!registeredPlayer) {
+      room.sendAnnouncement(`[👋] ¡¡¡Bienvenido ${p.name}!!! Que disfrutes de PANDA🎋🐼.`, p.id, 0x6FA8DC, "bold", 2);
+      room.sendAnnouncement(`[🐼] Usá el comando !dc para entrar al Discord de la comunidad y estar al tanto de las novedades🐼.`, p.id, 0x3C78D8, "bold", 2);
 
-    if (isRegistered(p.auth) && !isLoggedIn(p.auth)) {
-      room.sendAnnouncement(`@${p.name}, por favor usa el comando !login [password] para iniciar sesión.`, p.id, null, "bold", 2);
-    }
+      if (isRegistered(p.auth) && !isLoggedIn(p.auth)) {
+        room.sendAnnouncement(`@${p.name}, por favor usa el comando !login [password] para iniciar sesión.`, p.id, null, "bold", 2);
+      }
 
-    if (!isRegistered(p.auth)) {
-      room.sendAnnouncement(`@${p.name}, bienvenido! Puedes jugar como invitado o registrarte usando el comando !register [password].`, p.id, null, "bold", 2);
+      if (!isRegistered(p.auth)) {
+        room.sendAnnouncement(`@${p.name}, bienvenido! Puedes jugar como invitado o registrarte usando el comando !register [password].`, p.id, null, "bold", 2);
+      }
     }
 
     if (rolesData.roles[getPlayerRole(p.auth)]?.gameAdmin) {
@@ -1003,7 +1036,7 @@ HaxballJS.then((HBInit) => {
 
     const playerAuth = playerId[scorer.id];
     const players = room.getPlayerList().length;
-    const updateStats = players >= 8 && playerStats[playerAuth].logged;
+    const updateStats = players >= 6;
 
     if (playerStats[playerAuth] && playerStats[playerAuth].xp < 0) {
       playerStats[playerAuth].xp = 0;
@@ -1033,7 +1066,9 @@ HaxballJS.then((HBInit) => {
 
       let autogolRandom = mensajesAutoGol[Math.floor(Math.random() * mensajesAutoGol.length)];
       room.sendAnnouncement(autogolRandom, null, 0xF903AF, "bold", 1);
-      if (updateStats) playerStats[playerAuth].owngoals = (playerStats[playerAuth].owngoals || 0) + 1;
+      if (updateStats && playerStats[playerAuth] && playerStats[playerAuth].logged) {
+        playerStats[playerAuth].owngoals = (playerStats[playerAuth].owngoals || 0) + 1;
+      }
       room.setPlayerDiscProperties(scorer.id, { radius: playerRadius - 5 });
       resetSize(scorer);
     } else {
@@ -1041,7 +1076,7 @@ HaxballJS.then((HBInit) => {
       if (assister && assister.id !== scorer.id && assister.team === team) {
         assisterName = assister.name;
         const assisterAuth = playerId[assister.id];
-        const update = players.length >= 8 && playerStats[assisterAuth]?.logged;
+        const update = players >= 6;
         let mensajesAsistencia = [
           `👟🧙‍♂️ PASE MÁGICO DE ${assister.name}.🧙‍♂️`,
           `👟🧙‍♂️ MAGISTRAL PASE DE ${assister.name}.🎩`,
@@ -1058,8 +1093,10 @@ HaxballJS.then((HBInit) => {
 
         let asistenciaRandom = mensajesAsistencia[Math.floor(Math.random() * mensajesAsistencia.length)];
         room.sendAnnouncement(asistenciaRandom, null, 0x9D52B2, "bold", 1);
-        if (update) playerStats[assisterAuth].assists = (playerStats[assisterAuth].assists || 0) + 1;
-        if (update) playerStats[assisterAuth].xp = (playerStats[assisterAuth].xp || 0) + 1;
+        if (update && playerStats[assisterAuth] && playerStats[assisterAuth].logged) {
+          playerStats[assisterAuth].assists = (playerStats[assisterAuth].assists || 0) + 1;
+          playerStats[assisterAuth].xp = (playerStats[assisterAuth].xp || 0) + 1;
+        }
       }
 
       let existingGoal = goles.find(g => g.id === scorer.id);
@@ -1093,8 +1130,10 @@ HaxballJS.then((HBInit) => {
 
       let golRandom = mensajesGol[Math.floor(Math.random() * mensajesGol.length)];
       room.sendAnnouncement(golRandom, null, 0xFB35C0, "bold", 1);
-      if (updateStats) playerStats[playerAuth].goals = (playerStats[playerAuth].goals || 0) + 1;
-      if (updateStats) playerStats[playerAuth].xp = (playerStats[playerAuth].xp || 0) + 1;
+      if (updateStats && playerStats[playerAuth] && playerStats[playerAuth].logged) {
+        playerStats[playerAuth].goals = (playerStats[playerAuth].goals || 0) + 1;
+        playerStats[playerAuth].xp = (playerStats[playerAuth].xp || 0) + 1;
+      }
       room.setPlayerDiscProperties(scorer.id, { radius: playerRadius * 2 });
       resetSize(scorer);
     }
@@ -1151,6 +1190,10 @@ HaxballJS.then((HBInit) => {
     owngoals = [];
     if (byPlayer != null) {
       activities[byPlayer.id] = Date.now();
+      if (warnedPlayers[byPlayer.id]) {
+        clearTimeout(warnedPlayers[byPlayer.id]);
+        delete warnedPlayers[byPlayer.id];
+      }
     }
 
     if (powerIncreaseInterval) {
@@ -1171,6 +1214,10 @@ HaxballJS.then((HBInit) => {
     room.startRecording();
     if (byPlayer != null) {
       activities[byPlayer.id] = Date.now();
+      if (warnedPlayers[byPlayer.id]) {
+        clearTimeout(warnedPlayers[byPlayer.id]);
+        delete warnedPlayers[byPlayer.id];
+      }
     }
 
     setTimeout(() => {
@@ -1200,6 +1247,15 @@ HaxballJS.then((HBInit) => {
 
       activities[kickedPlayer.id] = Date.now();
       activities[byPlayer.id] = Date.now();
+      if (warnedPlayers[byPlayer.id]) {
+        clearTimeout(warnedPlayers[byPlayer.id]);
+        delete warnedPlayers[byPlayer.id];
+      }
+
+      if (warnedPlayers[kickedPlayer.id]) {
+        clearTimeout(warnedPlayers[kickedPlayer.id]);
+        delete warnedPlayers[kickedPlayer.id];
+      }
 
       if (ban) {
         const targetAuth = playerId[kickedPlayer.id];
@@ -1221,25 +1277,46 @@ HaxballJS.then((HBInit) => {
   room.onStadiumChange = function (newStadiumName, byPlayer) {
     if (byPlayer != null) {
       activities[byPlayer.id] = Date.now();
+      if (warnedPlayers[byPlayer.id]) {
+        clearTimeout(warnedPlayers[byPlayer.id]);
+        delete warnedPlayers[byPlayer.id];
+      }
     }
   }
 
   room.onPlayerAdminChange = function (changedPlayer, byPlayer) {
+    activities[changedPlayer.id] = Date.now();
+
+    if (warnedPlayers[changedPlayer.id]) {
+      clearTimeout(warnedPlayers[changedPlayer.id]);
+      delete warnedPlayers[changedPlayer.id];
+    }
+
     if (byPlayer != null) {
       activities[byPlayer.id] = Date.now();
-      if (changedPlayer.id == byPlayer.id) {
-        activities[changedPlayer.id] = Date.now();
+
+      if (warnedPlayers[byPlayer.id]) {
+        clearTimeout(warnedPlayers[byPlayer.id]);
+        delete warnedPlayers[byPlayer.id];
       }
     }
   }
 
   room.onPlayerActivity = function (player) {
     activities[player.id] = Date.now();
+    if (warnedPlayers[player.id]) {
+      clearTimeout(warnedPlayers[player.id]);
+      delete warnedPlayers[player.id];
+    }
   }
 
   room.onGameUnpause = function (byPlayer) {
     if (byPlayer != null) {
       activities[byPlayer.id] = Date.now();
+      if (warnedPlayers[byPlayer.id]) {
+        clearTimeout(warnedPlayers[byPlayer.id]);
+        delete warnedPlayers[byPlayer.id];
+      }
     }
 
     if (remainingTime > 0 && room.getPlayerList().length >= 4) {
@@ -1254,6 +1331,10 @@ HaxballJS.then((HBInit) => {
   room.onGamePause = function (byPlayer) {
     if (byPlayer != null) {
       activities[byPlayer.id] = Date.now();
+      if (warnedPlayers[byPlayer.id]) {
+        clearTimeout(warnedPlayers[byPlayer.id]);
+        delete warnedPlayers[byPlayer.id];
+      }
     }
 
     if (chaosModeTimer && room.getPlayerList().length >= 4) {
@@ -1272,7 +1353,7 @@ HaxballJS.then((HBInit) => {
     const winningTeam = scores.red > scores.blue ? 1 : 2;
     const defeatTeam = winningTeam === 1 ? 2 : 1;
     const players = room.getPlayerList().filter(p => p.team !== 0);
-    const updateStats = room.getPlayerList().length >= 8;
+    const updateStats = room.getPlayerList().length >= 6;
 
     players.forEach((player) => {
       const playerAuth = playerId[player.id];
@@ -1292,8 +1373,20 @@ HaxballJS.then((HBInit) => {
           }
 
           playerStats[playerAuth].games = (playerStats[playerAuth].games || 0) + 1;
-          if (playerStats[playerAuth].games >= 20) {
-            playerStats[playerAuth].winrate = (100 * playerStats[playerAuth].victories / playerStats[playerAuth].games).toPrecision(3);
+
+          if (playerStats[playerAuth].games > 5) {
+            const victories = playerStats[playerAuth].victories || 0;
+            let winrate = (victories / playerStats[playerAuth].games) * 100;
+
+            if (winrate > 100) {
+              winrate = 100;
+            } else if (winrate < 0) {
+              winrate = 0;
+            }
+
+            playerStats[playerAuth].winrate = winrate.toFixed(2);
+          } else {
+            playerStats[playerAuth].winrate = "0%";
           }
 
           const gkredPlayer = gkred.find(gk => playerId[gk.id] === playerAuth);
@@ -1323,6 +1416,11 @@ HaxballJS.then((HBInit) => {
 
   room.onPlayerChat = (player, message) => {
     activities[player.id] = Date.now();
+    if (warnedPlayers[player.id]) {
+      clearTimeout(warnedPlayers[player.id]);
+      delete warnedPlayers[player.id];
+    }
+
     const playerAuth = playerId[player.id];
     const playerRole = getPlayerRole(playerAuth);
 
@@ -1415,32 +1513,37 @@ HaxballJS.then((HBInit) => {
         return false;
       }
 
-      const playerData = playerStats[playerAuth];
+      const registeredPlayer = Object.values(playerStats).find(data => data.name === player.name);
 
-      if (!playerData.registered) {
-        room.sendAnnouncement("No tienes una cuenta. Regístrate con !register [contraseña]", player.id, 0xFF0000, "bold", 2);
+      if (!registeredPlayer) {
+        room.sendAnnouncement("No tienes una cuenta registrada. Regístrate con !register [contraseña]", player.id, 0xFF0000, "bold", 2);
         return false;
       }
 
-      if (playerData.logged) {
+      if (registeredPlayer.logged) {
         room.sendAnnouncement("Ya estás logueado", player.id, 0xFF0000);
         return false;
       }
 
-      if (playerData.password !== password) {
+      if (registeredPlayer.password !== password) {
         room.sendAnnouncement("Contraseña incorrecta. Intenta nuevamente.", player.id, 0xFF0000, "bold", 2);
         return false;
       }
 
-      playerData.logged = true;
-      playerStats[playerAuth] = playerData;
+      if (registeredPlayer.auth !== playerAuth) {
+        playerStats[playerAuth] = {
+          ...registeredPlayer,
+          auth: playerAuth,
+          logged: true
+        };
 
-      if (playerStats[playerAuth].auth !== playerAuth) {
-        playerStats[playerAuth].auth = playerAuth;
-        playerStats[playerAuth].name = player.name;
+        delete playerStats[registeredPlayer.auth];
+
+        room.sendAnnouncement(`¡Bienvenido de nuevo ${registeredPlayer.name}! Has iniciado sesión correctamente.`, player.id, 0x00FF00);
+      } else {
+        playerStats[playerAuth].logged = true;
+        room.sendAnnouncement(`¡Bienvenido de nuevo ${playerStats[playerAuth].name}! Has iniciado sesión correctamente.`, player.id, 0x00FF00);
       }
-
-      room.sendAnnouncement(`¡Bienvenido de nuevo ${playerData.name}! Has iniciado sesión correctamente.`, player.id, 0x00FF00);
 
       try {
         fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
@@ -1665,8 +1768,8 @@ HaxballJS.then((HBInit) => {
           room.sendAnnouncement("Necesitas estar logeado para usar este comando", player.id, 0xFF0000, "bold", 2);
         } else {
           if (room.getScores() !== null) {
-            if (room.getPlayerList().length < 8) {
-              room.sendAnnouncement("No hay 8 jugadores para usar este comando", player.id, 0xFF0000);
+            if (room.getPlayerList().length < 6) {
+              room.sendAnnouncement("No hay 6 jugadores para usar este comando", player.id, 0xFF0000);
             } else {
               if (player.team === 1) {
                 let index = gkred.findIndex(gk => gk.auth === playerAuth);
@@ -1736,7 +1839,7 @@ HaxballJS.then((HBInit) => {
 
           const sortedPlayers = (key) => {
             return Object.values(playerStats)
-              .filter(player => player.logged)
+              .filter(player => player.games >= 5)
               .sort((a, b) => b[key] - a[key])
               .map(player => ({
                 name: player.name,
