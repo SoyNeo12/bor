@@ -70,7 +70,7 @@ HaxballJS.then((HBInit) => {
   room = HBInit({
     roomName: "𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋",
     maxPlayers: 26, // el que quieras
-    public: true,
+    public: false,
     noPlayer: true,
     geo: {
       "lat": -32.9561,
@@ -123,8 +123,7 @@ HaxballJS.then((HBInit) => {
     x7blue: { x: 1183.41, y: 10.00 }
   }
 
-  const palabrasCensuradas = ['down', 'pija', 'pelotudo', 'chupar', 'chupa', 'verga', 'autista', 'mongolico', 'mogolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos', 'chupas', 'nazi', 'nasi'];
-  const POWER_HOLD_TIME = 1800;
+  const palabrasCensuradas = ['puto', 'down', 'autismo', 'd0wn', 'enfermo', 'travesti', 'gay', 'traba', 'violar', 'pija', 'pelotudo', 'chupar', 'chupa', 'verga', 'autista', 'mongolico', 'mogolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos', 'chupas', 'nazi', 'nasi']; const POWER_HOLD_TIME = 1800;
   const BOOST_SPEEDS = [1.2, 1.5, 1.7, 2];
   const COLORS = [0xFF0204, 0xE60102, 0xB50002, 0x540202];
   const NORMAL_BALL_COLOR = 0xfff000;
@@ -1916,29 +1915,24 @@ HaxballJS.then((HBInit) => {
     } else if (message.startsWith("!unban")) {
       if (rolesData.roles[playerRole]?.gameAdmin === true) {
         const args = message.split(' ');
-        const name = args[1]?.replace(/@/g, "").replace(/_/g, " ").trim();
+        const name = args.slice(1).join(' ').replace(/_/g, " ").trim().toLowerCase();
 
         if (!name) {
           room.sendAnnouncement("Debes proporcionar un nombre válido.", player.id, 0xFF0000);
         } else {
-          const targetPlayer = findPlayer(name);
+          const index = bannedPlayers.findIndex(entry => entry.name.toLowerCase() === name);
 
-          if (!targetPlayer) {
-            room.sendAnnouncement(`El jugador ${name} no está en la sala.`, player.id, 0xFF0000);
-          } else {
-            const index = bannedPlayers.findIndex(entry => entry.name === targetPlayer.name);
-
-            if (index !== -1) {
-              bannedPlayers.splice(index, 1);
-              try {
-                fs.writeFileSync(bannedPlayersFilePath, JSON.stringify(bannedPlayers, null, 2));
-                room.sendAnnouncement(`${targetPlayer.name} ha sido desbaneado.`, null, 0x00FF00);
-              } catch (err) {
-                console.error('Error al escribir el archivo de baneos:', err);
-              }
-            } else {
-              room.sendAnnouncement(`${targetPlayer.name} no está baneado.`, player.id, 0xFFFF00);
+          if (index !== -1) {
+            const unbannedPlayer = bannedPlayers[index].name;
+            bannedPlayers.splice(index, 1);
+            try {
+              fs.writeFileSync(bannedPlayersFilePath, JSON.stringify(bannedPlayers, null, 2));
+              room.sendAnnouncement(`${unbannedPlayer} ha sido desbaneado.`, null, 0x00FF00);
+            } catch (err) {
+              console.error('Error al escribir el archivo de baneos:', err);
             }
+          } else {
+            room.sendAnnouncement(`${name} no está baneado.`, player.id, 0xFFFF00);
           }
         }
       } else {
@@ -2130,31 +2124,9 @@ HaxballJS.then((HBInit) => {
     } else if (message.startsWith("https:")) {
       return false;
     } else if (contienePalabraCensurada(message)) {
-      room.sendAnnouncement(`${playerStats[playerAuth].name} sancionado por decir una palabra inapropiada`, null, 0x00FF00, "bold", 2);
-      playerStats[playerAuth].sanciones = (playerStats[playerAuth].sanciones || 0) + 1;
-
-      if (playerStats[playerAuth].sanciones >= 3) {
-        if (!bannedPlayers.some(entry => entry.auth === playerAuth)) {
-          bannedPlayers.push({ name: player.name, auth: playerAuth });
-          try {
-            fs.writeFileSync(bannedPlayersFilePath, JSON.stringify(bannedPlayers, null, 2));
-          } catch (err) {
-            console.error('Error al escribir el archivo de baneos:', err);
-          }
-        }
-
-        room.sendAnnouncement(`Jugador ${player.name} baneado permanentemente por alcanzar 3 sanciones.`, null, 0xFF0000);
-        room.kickPlayer(player.id, "No digas malas palabras.", false);
-        delete playerStats[playerAuth];
-        rolesData.roles[playerRole].users = rolesData.roles[playerRole].users.filter(auth => auth !== playerAuth);
-        try {
-          fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
-          fs.writeFileSync(rolesFilePath, JSON.stringify(rolesData, null, 2));
-        } catch (err) {
-          console.error('Error al escribir el archivo de jugadores o roles:', err);
-        }
-        return false;
-      }
+      room.sendAnnouncement(`${player.name} kickeado por decir una palabra inapropiada`, null, 0x00FF00, "bold", 2);
+      room.kickPlayer(player.id, "No digas malas palabras.", false);
+      return false;
     }
 
     if (isLoggedIn(playerAuth)) {
