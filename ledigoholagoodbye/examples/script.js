@@ -70,14 +70,14 @@ HaxballJS.then((HBInit) => {
   room = HBInit({
     roomName: "𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋",
     maxPlayers: 26, // el que quieras
-    public: false,
+    public: true,
     noPlayer: true,
     geo: {
-      "lat": -33.4029,
-      "lon": -70.5445,
+      "lat": -32.9561,
+      "lon": -60.6559,
       "code": "AR"
     },
-    token: "thr1.AAAAAGb57WUhTnKaGMOOQA.lV0-2h3oHX4"
+    token: "thr1.AAAAAGb7AQw3UJ4vuxpELA.D7Ezml_hs24"
   });
   // "| 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
   const ranks = {
@@ -123,7 +123,7 @@ HaxballJS.then((HBInit) => {
     x7blue: { x: 1183.41, y: 10.00 }
   }
 
-  const palabrasCensuradas = ['down', 'puto', 'pija', 'pelotudo', 'chupar', 'chupa', 'verga', 'autista', 'mongolico', 'mogolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos', 'chupas', 'nazi', 'nasi'];
+  const palabrasCensuradas = ['down', 'pija', 'pelotudo', 'chupar', 'chupa', 'verga', 'autista', 'mongolico', 'mogolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos', 'chupas', 'nazi', 'nasi'];
   const POWER_HOLD_TIME = 1800;
   const BOOST_SPEEDS = [1.2, 1.5, 1.7, 2];
   const COLORS = [0xFF0204, 0xE60102, 0xB50002, 0x540202];
@@ -2133,7 +2133,7 @@ HaxballJS.then((HBInit) => {
       room.sendAnnouncement(`${playerStats[playerAuth].name} sancionado por decir una palabra inapropiada`, null, 0x00FF00, "bold", 2);
       playerStats[playerAuth].sanciones = (playerStats[playerAuth].sanciones || 0) + 1;
 
-      if (playerStats[targetAuth].sanciones >= 3) {
+      if (playerStats[playerAuth].sanciones >= 3) {
         if (!bannedPlayers.some(entry => entry.auth === playerAuth)) {
           bannedPlayers.push({ name: player.name, auth: playerAuth });
           try {
