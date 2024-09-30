@@ -70,14 +70,14 @@ HaxballJS.then((HBInit) => {
   room = HBInit({
     roomName: "𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋",
     maxPlayers: 26, // el que quieras
-    public: true,
+    public: false,
     noPlayer: true,
     geo: {
       "lat": -33.4029,
       "lon": -70.5445,
       "code": "AR"
     },
-    token: "thr1.AAAAAGb0XUvl3BLWLfKQQA.knLkY-d7XcM"
+    token: "thr1.AAAAAGb57WUhTnKaGMOOQA.lV0-2h3oHX4"
   });
   // "| 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
   const ranks = {
@@ -123,6 +123,7 @@ HaxballJS.then((HBInit) => {
     x7blue: { x: 1183.41, y: 10.00 }
   }
 
+  const palabrasCensuradas = ['down', 'pija', 'mierda', 'pelotudo', 'chupar', 'chupa', 'hdp', 'culiao', 'verga', 'autista', 'mongolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos'];
   const POWER_HOLD_TIME = 1800;
   const BOOST_SPEEDS = [1.2, 1.5, 1.7, 2];
   const COLORS = [0xFF0204, 0xE60102, 0xB50002, 0x540202];
@@ -794,6 +795,11 @@ HaxballJS.then((HBInit) => {
   const isLoggedIn = (playerAuth) => {
     return playerStats[playerAuth] && playerStats[playerAuth].logged;
   };
+
+  function contienePalabraCensurada(message) {
+    const mensajeEnMinusculas = message.toLowerCase();
+    return palabrasCensuradas.some(palabra => mensajeEnMinusculas.includes(palabra));
+  }
 
   room.onRoomLink = (link) => {
     roomLink = link;
@@ -1537,6 +1543,10 @@ HaxballJS.then((HBInit) => {
           logged: true
         };
 
+        if (registeredPlayer.sanciones > 0) {
+          playerStats[playerAuth].sanciones = registeredPlayer.sanciones;
+        }
+
         delete playerStats[registeredPlayer.auth];
 
         room.sendAnnouncement(`¡Bienvenido de nuevo ${registeredPlayer.name}! Has iniciado sesión correctamente.`, player.id, 0x00FF00);
@@ -1577,6 +1587,14 @@ HaxballJS.then((HBInit) => {
             if (!reason) {
               room.sendAnnouncement("Debes proporcionar una razón para la sanción.", player.id, 0xFF0000);
             } else {
+              if (targetPlayer.id === player.id) {
+                room.sendAnnouncement("No puedes sancionarte a ti mismo.", player.id, 0xFF0000);
+                return false;
+              } else if (!playerStats[targetAuth].logged) {
+                room.sendAnnouncement("No puedes sancionar a alguien que no esta logeado", player.id, 0xFF0000, "bold", 2);
+                return false;
+              }
+
               playerStats[targetAuth].sanciones = (playerStats[targetAuth].sanciones || 0) + 1;
 
               if (playerStats[targetAuth].sanciones >= 3) {
@@ -1903,18 +1921,24 @@ HaxballJS.then((HBInit) => {
         if (!name) {
           room.sendAnnouncement("Debes proporcionar un nombre válido.", player.id, 0xFF0000);
         } else {
-          const index = bannedPlayers.findIndex(entry => entry.name === name);
+          const targetPlayer = findPlayer(name);
 
-          if (index !== -1) {
-            bannedPlayers.splice(index, 1);
-            try {
-              fs.writeFileSync(bannedPlayersFilePath, JSON.stringify(bannedPlayers, null, 2));
-              room.sendAnnouncement(`${name} ha sido desbaneado.`, null, 0x00FF00);
-            } catch (err) {
-              console.error('Error al escribir el archivo de baneos:', err);
-            }
+          if (!targetPlayer) {
+            room.sendAnnouncement(`El jugador ${name} no está en la sala.`, player.id, 0xFF0000);
           } else {
-            room.sendAnnouncement(`${name} no está baneado.`, player.id, 0xFFFF00);
+            const index = bannedPlayers.findIndex(entry => entry.name === targetPlayer.name);
+
+            if (index !== -1) {
+              bannedPlayers.splice(index, 1);
+              try {
+                fs.writeFileSync(bannedPlayersFilePath, JSON.stringify(bannedPlayers, null, 2));
+                room.sendAnnouncement(`${targetPlayer.name} ha sido desbaneado.`, null, 0x00FF00);
+              } catch (err) {
+                console.error('Error al escribir el archivo de baneos:', err);
+              }
+            } else {
+              room.sendAnnouncement(`${targetPlayer.name} no está baneado.`, player.id, 0xFFFF00);
+            }
           }
         }
       } else {
@@ -1922,42 +1946,56 @@ HaxballJS.then((HBInit) => {
       }
       return false;
     } else if (message.startsWith("!quitarsancion")) {
-      if (rolesData.roles["liderpanda"].users.includes(playerAuth) || rolesData.roles["maestropanda"].users.includes(playerAuth) || rolesData.roles["jefepanda"].users.includes(playerAuth) || rolesData.roles["granpanda"].users.includes(playerAuth) || rolesData.roles["coowner"].users.includes(playerAuth) || rolesData.roles["owner"].users.includes(playerAuth)) {
+      if (rolesData.roles["liderpanda"].users.includes(playerAuth) ||
+        rolesData.roles["maestropanda"].users.includes(playerAuth) ||
+        rolesData.roles["jefepanda"].users.includes(playerAuth) ||
+        rolesData.roles["granpanda"].users.includes(playerAuth) ||
+        rolesData.roles["coowner"].users.includes(playerAuth) ||
+        rolesData.roles["owner"].users.includes(playerAuth)) {
+
         const args = message.split(' ');
         const name = args[1]?.replace(/@/g, "").replace(/_/g, " ").trim();
 
         if (!name) {
           room.sendAnnouncement("Debes proporcionar un nombre válido.", player.id, 0xFF0000);
+          return false;
         } else {
-          let targetAuth = null;
+          const targetPlayer = findPlayer(name);
 
-          for (const auth in playerStats) {
-            if (playerStats[auth].name === name) {
-              targetAuth = auth;
-              break;
-            }
-          }
-
-          if (!targetAuth) {
-            room.sendAnnouncement(`No se encontró al jugador con nombre ${name}.`, player.id, 0xFF0000);
+          if (!targetPlayer) {
+            room.sendAnnouncement(`El jugador ${name} no está en la sala.`, player.id, 0xFF0000);
+            return false;
           } else {
-            if (playerStats[targetAuth]) {
-              playerStats[targetAuth].sanciones = (playerStats[targetAuth].sanciones || 0) - 1;
+            let targetAuth = null;
 
-              if (playerStats[targetAuth].sanciones < 0) {
-                playerStats[targetAuth].sanciones = 0;
+            for (const auth in playerStats) {
+              if (playerStats[auth].name === name) {
+                targetAuth = auth;
+                break;
               }
+            }
 
-              if (playerStats[targetAuth].sanciones === 0) {
-                room.sendAnnouncement(`${player.name} no tiene ninguna sancion`, player.id, null, "bold", 2);
+            if (!targetAuth) {
+              room.sendAnnouncement(`No se encontró al jugador con nombre ${name}.`, player.id, 0xFF0000);
+              return false;
+            } else {
+              if (targetPlayer.id === player.id) {
+                room.sendAnnouncement("No puedes quitarte sanciones a ti mismo.", player.id, 0xFF0000);
                 return false;
               }
 
-              try {
-                fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
-                room.sendAnnouncement(`A ${name} le sacaron una sanción.`, null, 0x00FF00, "bold", 2);
-              } catch (err) {
-                console.error('Error al escribir el archivo de jugadores:', err);
+              if (playerStats[targetAuth] && playerStats[targetAuth].sanciones > 0) {
+                playerStats[targetAuth].sanciones--;
+
+                try {
+                  fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
+
+                  room.sendAnnouncement(`A ${targetPlayer.name} le sacaron una sanción.`, null, 0x00FF00, "bold", 2);
+                } catch (err) {
+                  console.error('Error al escribir el archivo de jugadores:', err);
+                }
+              } else {
+                room.sendAnnouncement(`${targetPlayer.name} no tiene sanciones.`, player.id, 0xFFFF00, "bold", 2);
               }
             }
           }
@@ -2091,6 +2129,32 @@ HaxballJS.then((HBInit) => {
       return false;
     } else if (message.startsWith("https:")) {
       return false;
+    } else if (contienePalabraCensurada(message)) {
+      room.sendAnnouncement(`${playerStats[playerAuth].name} sancionado por decir una palabra inapropiada`, null, 0x00FF00, "bold", 2);
+      playerStats[playerAuth].sanciones = (playerStats[playerAuth].sanciones || 0) + 1;
+
+      if (playerStats[targetAuth].sanciones >= 3) {
+        if (!bannedPlayers.some(entry => entry.auth === playerAuth)) {
+          bannedPlayers.push({ name: player.name, auth: playerAuth });
+          try {
+            fs.writeFileSync(bannedPlayersFilePath, JSON.stringify(bannedPlayers, null, 2));
+          } catch (err) {
+            console.error('Error al escribir el archivo de baneos:', err);
+          }
+        }
+
+        room.sendAnnouncement(`Jugador ${player.name} baneado permanentemente por alcanzar 3 sanciones.`, null, 0xFF0000);
+        room.kickPlayer(player.id, "No digas malas palabras.", false);
+        delete playerStats[playerAuth];
+        rolesData.roles[playerRole].users = rolesData.roles[playerRole].users.filter(auth => auth !== playerAuth);
+        try {
+          fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
+          fs.writeFileSync(rolesFilePath, JSON.stringify(rolesData, null, 2));
+        } catch (err) {
+          console.error('Error al escribir el archivo de jugadores o roles:', err);
+        }
+        return false;
+      }
     }
 
     if (isLoggedIn(playerAuth)) {
