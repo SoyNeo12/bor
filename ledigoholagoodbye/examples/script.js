@@ -123,7 +123,7 @@ HaxballJS.then((HBInit) => {
     x7blue: { x: 1183.41, y: 10.00 }
   }
 
-  const palabrasCensuradas = ['down', 'pija', 'pelotudo', 'chupar', 'chupa', 'verga', 'autista', 'mongolico', 'mogolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos', 'chupas', 'nazi', 'nasi'];
+  const palabrasCensuradas = ['down', 'puto', 'pija', 'pelotudo', 'chupar', 'chupa', 'verga', 'autista', 'mongolico', 'mogolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos', 'chupas', 'nazi', 'nasi'];
   const POWER_HOLD_TIME = 1800;
   const BOOST_SPEEDS = [1.2, 1.5, 1.7, 2];
   const COLORS = [0xFF0204, 0xE60102, 0xB50002, 0x540202];
