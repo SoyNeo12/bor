@@ -708,44 +708,44 @@ HaxballJS.then((HBInit) => {
     return Object.values(playerStats)
       .filter(player => player.games >= 5)
       .sort((a, b) => b[key] - a[key])
-      .map(player => ({
-        name: player.name,
-        value: player[key],
+      .map(p => ({
+        name: p.name,
+        value: p[key],
       }));
   }
 
   function generateRanking() {
-    const topVallas = jugadoresSorteados("vallas").slice(0, 5);
+    const topVallas = jugadoresSorteados("vallas").slice(0, 10);
     let announcementVallas = "**🧤🥅Ranking de Vallas Invictas🧤🥅:**\n";
     topVallas.forEach((player, index) => {
       announcementVallas += `${index + 1}. ${player.name}: ${player.value} vallas\n`;
     });
 
-    const topGoals = jugadoresSorteados("goals").slice(0, 5);
+    const topGoals = jugadoresSorteados("goals").slice(0, 10);
     let announcementGoles = "**⚽Ranking de Goles⚽:**\n";
     topGoals.forEach((player, index) => {
       announcementGoles += `${index + 1}. ${player.name}: ${player.value} goles\n`;
     });
 
-    const topVictorias = jugadoresSorteados("victories").slice(0, 5);
+    const topVictorias = jugadoresSorteados("victories").slice(0, 10);
     let announcementVictorias = "**✅Ranking de Victorias✅:**\n";
     topVictorias.forEach((player, index) => {
       announcementVictorias += `${index + 1}. ${player.name}: ${player.value} victorias\n`;
     });
 
-    const topAsistencias = jugadoresSorteados("assists").slice(0, 5);
+    const topAsistencias = jugadoresSorteados("assists").slice(0, 10);
     let announcementAsistencias = "**👟🧙‍♂️Ranking de Asistencias👟🧙‍♂️:**\n";
     topAsistencias.forEach((player, index) => {
       announcementAsistencias += `${index + 1}. ${player.name}: ${player.value} asistencias\n`;
     });
 
-    const topJuegos = jugadoresSorteados("games").slice(0, 5);
+    const topJuegos = jugadoresSorteados("games").slice(0, 10);
     let announcementJuegos = "**🎋Ranking de Juegos🎋:**\n";
     topJuegos.forEach((player, index) => {
       announcementJuegos += `${index + 1}. ${player.name}: ${player.value} juegos\n`;
     });
 
-    const topWinrate = jugadoresSorteados("winrate").slice(0, 5);
+    const topWinrate = jugadoresSorteados("winrate").slice(0, 10);
     let announcementWinrate = "**💪Ranking de Winrate💪:**\n";
     topWinrate.forEach((player, index) => {
       announcementWinrate += `${index + 1}. ${player.name}: ${player.value}% winrate\n`;
@@ -815,9 +815,11 @@ HaxballJS.then((HBInit) => {
       delete warnedPlayers[changedPlayer.id];
     }
 
-    if (gkred.includes(playerAuth)) {
+    if (gkred.some(gk => gk.auth === playerAuth && gk.id === changedPlayer.id)) {
       gkred = gkred.filter(gk => gk.auth !== playerAuth && gk.id !== changedPlayer.id);
-    } else if (gkblue.includes(playerAuth)) {
+    }
+
+    if (gkblue.some(gk => gk.auth === playerAuth && gk.id === changedPlayer.id)) {
       gkblue = gkblue.filter(gk => gk.auth !== playerAuth && gk.id !== changedPlayer.id);
     }
 
@@ -826,11 +828,20 @@ HaxballJS.then((HBInit) => {
     }, 10000);
 
     if (byPlayer != null) {
+      const byPlayerAuth = playerId[byPlayer.id];
       activities[byPlayer.id] = Date.now();
 
       if (warnedPlayers[byPlayer.id]) {
         clearTimeout(warnedPlayers[byPlayer.id]);
         delete warnedPlayers[byPlayer.id];
+      }
+
+      if (gkred.some(gk => gk.auth === byPlayerAuth && gk.id === byPlayer.id)) {
+        gkred = gkred.filter(gk => gk.auth !== byPlayerAuth && gk.id !== byPlayer.id);
+      }
+
+      if (gkblue.some(gk => gk.auth === byPlayerAuth && gk.id === byPlayer.id)) {
+        gkblue = gkblue.filter(gk => gk.auth !== byPlayerAuth && gk.id !== byPlayer.id);
       }
     }
   };
@@ -1542,7 +1553,7 @@ HaxballJS.then((HBInit) => {
           logged: true
         };
 
-        if (registeredPlayer.sanciones > 0) {
+        if (playerStats[playerAuth].sanciones > 0) {
           playerStats[playerAuth].sanciones = registeredPlayer.sanciones;
         }
 
@@ -1795,7 +1806,7 @@ HaxballJS.then((HBInit) => {
                   room.sendAnnouncement(`${player.name} ya no es el GK del equipo rojo 🧤❌`, null, 0xEC4A4A, "bold", 1);
                 } else {
                   if (gkred.length > 0) {
-                    room.sendAnnouncement("Ya hay un GK en el equipo rojo", player.id, 0xEC4A4A);
+                    room.sendAnnouncement(`Ya hay un GK en el equipo rojo: ${gkred.name}`, player.id, 0xEC4A4A);
                     return false;
                   }
                   gkred.push({ auth: playerAuth, id: player.id, name: player.name });
@@ -1808,7 +1819,7 @@ HaxballJS.then((HBInit) => {
                   room.sendAnnouncement(`${player.name} ya no es el GK del equipo azul 🧤❌`, null, 0x5A7EFD, "bold", 1);
                 } else {
                   if (gkblue.length > 0) {
-                    room.sendAnnouncement("Ya hay un GK en el equipo azul", player.id, 0x5A7EFD);
+                    room.sendAnnouncement(`Ya hay un GK en el equipo azul: ${gkblue.name}`, player.id, 0x5A7EFD);
                     return false;
                   }
 
@@ -1847,70 +1858,97 @@ HaxballJS.then((HBInit) => {
       }
       return false;
     } else if (message.startsWith("!top")) {
-      if (playerStats[playerAuth]) {
-        if (!playerStats[playerAuth].logged) {
-          room.sendAnnouncement("Necesitas estar logeado para usar este comando", player.id, 0xFF0000, "bold", 2);
-        } else {
-          const args = message.split(' ');
-          const action = args[1];
-
-          const sortedPlayers = (key) => {
-            return Object.values(playerStats)
-              .filter(player => player.games >= 5)
-              .sort((a, b) => b[key] - a[key])
-              .map(player => ({
-                name: player.name,
-                value: player[key],
-              }));
-          };
-
-          if (action === "vallas") {
-            const topVallas = sortedPlayers("vallas").slice(0, 5);
-            let announcement = "🧤🥅Ranking de Vallas Invictas🧤🥅:\n";
-            topVallas.forEach((player, index) => {
-              announcement += `${index + 1}. ${player.name}: ${player.value} vallas\n`;
-            });
-            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
-          } else if (action === "goles") {
-            const topGoals = sortedPlayers("goals").slice(0, 5);
-            let announcement = "⚽Ranking de Goles⚽:\n";
-            topGoals.forEach((player, index) => {
-              announcement += `${index + 1}. ${player.name}: ${player.value} goles\n`;
-            });
-            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
-          } else if (action === "victorias") {
-            const topVictorias = sortedPlayers("victories").slice(0, 5);
-            let announcement = "✅Ranking de Victorias✅:\n";
-            topVictorias.forEach((player, index) => {
-              announcement += `${index + 1}. ${player.name}: ${player.value} victorias\n`;
-            });
-            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
-          } else if (action === "asistencias") {
-            const topAsistencias = sortedPlayers("assists").slice(0, 5);
-            let announcement = "👟🧙‍♂️Ranking de Asistencias👟🧙‍♂️:\n";
-            topAsistencias.forEach((player, index) => {
-              announcement += `${index + 1}. ${player.name}: ${player.value} asistencias\n`;
-            });
-            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
-          } else if (action === "juegos") {
-            const topJuegos = sortedPlayers("games").slice(0, 5);
-            let announcement = "🎋Ranking de Juegos🎋:\n";
-            topJuegos.forEach((player, index) => {
-              announcement += `${index + 1}. ${player.name}: ${player.value} juegos\n`;
-            });
-            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
-          } else if (action === "winrate") {
-            const topWinrate = sortedPlayers("winrate").slice(0, 5);
-            let announcement = "💪Ranking de Winrate💪:\n";
-            topWinrate.forEach((player, index) => {
-              announcement += `${index + 1}. ${player.name}: ${player.value}% winrate\n`;
-            }); // esq es asi el winrate
-            room.sendAnnouncement(announcement, player.id, 0xFF0000, "bold", 2);
-          } else {
-            room.sendAnnouncement(`Ese ranking NO existe❌. Los que existen son: !top vallas; !top goles; !top victorias; !top asistencias; !top juegos y !top winrate.`, player.id, 0xe48729, "bold", 2);
-          }
-        }
+      if (!isRegistered(playerAuth)) {
+        room.sendAnnouncement("Necesitas estar registrado para usar este comando", player.id, 0xFF0000, "bold", 2);
+        return false;
       }
+
+      if (!isLoggedIn(playerAuth)) {
+        room.sendAnnouncement("Necesitas estar logeado para usar este comando", player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
+      const args = message.split(' ');
+      const action = args[1];
+
+      const sortedPlayers = (key) => {
+        try {
+          const currentStats = JSON.parse(fs.readFileSync(playersFilePath, 'utf8'));
+          Object.assign(playerStats, currentStats);
+        } catch (error) {
+          console.error('Error al leer el archivo de estadísticas:', error);
+        }
+
+        return Object.entries(playerStats)
+          .filter(([_, player]) => player.games >= 5)
+          .map(([player]) => ({
+            name: player.name,
+            value: player[key]
+          }))
+          .sort((a, b) => {
+            const valA = parseFloat(a.value);
+            const valB = parseFloat(b.value);
+            return valB - valA;
+          });
+      };
+
+      const formatAnnouncement = (title, players, emoji1, emoji2, color = null) => {
+        let announcement = `${emoji1}${title}${emoji2}:\n`;
+        players.forEach((player, index) => {
+          const prefix = index === 0 ? "👑" : index === 1 ? "🥈" : index === 2 ? "🥉" : "👤";
+          announcement += `${prefix} ${index + 1}. ${player.name}: ${player.value}\n`;
+        });
+        room.sendAnnouncement(announcement, player.id, color, "bold", 2);
+      };
+
+      let key, title, emoji1, emoji2, color;
+
+      switch (action) {
+        case "vallas":
+          key = "vallas";
+          title = "Ranking de Vallas Invictas";
+          emoji1 = "🧤"; emoji2 = "🥅";
+          break;
+        case "goles":
+          key = "goals";
+          title = "Ranking de Goles";
+          emoji1 = "⚽"; emoji2 = "⚽";
+          break;
+        case "victorias":
+          key = "victories";
+          title = "Ranking de Victorias";
+          emoji1 = "✅"; emoji2 = "✅";
+          break;
+        case "asistencias":
+          key = "assists";
+          title = "Ranking de Asistencias";
+          emoji1 = "👟"; emoji2 = "🧙‍♂️";
+          break;
+        case "juegos":
+          key = "games";
+          title = "Ranking de Juegos";
+          emoji1 = "🎋"; emoji2 = "🎋";
+          break;
+        case "winrate":
+          key = "winrate";
+          title = "Ranking de Winrate";
+          emoji1 = "💪"; emoji2 = "💪";
+          color = 0xFF0000;
+          break;
+        default:
+          room.sendAnnouncement(
+            `Ese ranking NO existe❌. Los que existen son: !top vallas; !top goles; !top victorias; !top asistencias; !top juegos y !top winrate.`,
+            player.id,
+            0xe48729,
+            "bold",
+            2
+          );
+          return false;
+      }
+
+      const topPlayers = sortedPlayers(key).slice(0, 5);
+      formatAnnouncement(title, topPlayers, emoji1, emoji2, color);
+
       return false;
     } else if (message.startsWith("!unban")) {
       if (rolesData.roles[playerRole]?.gameAdmin === true) {
@@ -2129,46 +2167,58 @@ HaxballJS.then((HBInit) => {
       return false;
     }
 
-    if (isLoggedIn(playerAuth)) {
-      if (isRegistered(playerAuth)) {
-        const { rankName, colorRank } = determineRank(playerStats[playerAuth].xp);
-        playerStats[playerAuth].rank = rankName;
-        fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
+    if (!isRegistered(playerAuth)) {
+      room.sendAnnouncement(
+        "Necesitas estar registrado para hablar en el chat (!register [contraseña])",
+        player.id,
+        0x00FF00,
+        "bold",
+        2
+      );
+      return false;
+    }
 
-        if (rolesData.roles["owner"].users.includes(playerAuth)) {
-          room.sendAnnouncement(`FUNDADOR PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0xff75f2, "bold", 1);
-          return false;
-        } else if (rolesData.roles["coowner"].users.includes(playerAuth)) {
-          room.sendAnnouncement(`CO-FUNDADOR PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0xB99284, "bold", 1);
-          return false;
-        } else if (rolesData.roles["granpanda"].users.includes(playerAuth)) {
-          room.sendAnnouncement(`GRAN PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0xd0a6f5, "bold", 1);
-          return false;
-        } else if (rolesData.roles["jefepanda"].users.includes(playerAuth)) {
-          room.sendAnnouncement(`JEFE PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0xA5F685, "bold", 1);
-          return false;
-        } else if (rolesData.roles["maestropanda"].users.includes(playerAuth)) {
-          room.sendAnnouncement(`MAESTRO PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0xfd6e6e, "bold", 1);
-          return false;
-        } else if (rolesData.roles["liderpanda"].users.includes(playerAuth)) {
-          room.sendAnnouncement(`LIDER PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0x2ff6fd, "bold", 1);
-          return false;
-        } else if (rolesData.roles["subliderpanda"].users.includes(playerAuth)) {
-          room.sendAnnouncement(`SUB-LIDER PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0x1ee8f0, "normal", 1);
-          return false;
-        } else if (rolesData.roles["asistente"].users.includes(playerAuth)) {
-          room.sendAnnouncement(`ASISTENTE PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0x17dde5, "normal", 1);
-          return false;
-        } else {
-          room.sendAnnouncement(`${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, colorRank, "normal", 1); // este no toques
-          return false;
-        }
-      } else {
-        room.sendAnnouncement("Necesitas estar registrado para hablar en el chat (!register [contraseña])", player.id, 0x00FF00, "bold", 2);
-        return false;
-      }
+    if (!isLoggedIn(playerAuth)) {
+      room.sendAnnouncement(
+        "Necesitas estar logeado para hablar en el chat (!login [contraseña])",
+        player.id,
+        0x00FF00,
+        "bold",
+        2
+      );
+      return false;
+    }
+
+    const { rankName, colorRank } = determineRank(playerStats[playerAuth].xp);
+    playerStats[playerAuth].rank = rankName;
+    fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
+
+    if (rolesData.roles["owner"].users.includes(playerAuth)) {
+      room.sendAnnouncement(`FUNDADOR PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0xff75f2, "bold", 1);
+      return false;
+    } else if (rolesData.roles["coowner"].users.includes(playerAuth)) {
+      room.sendAnnouncement(`CO-FUNDADOR PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0xB99284, "bold", 1);
+      return false;
+    } else if (rolesData.roles["granpanda"].users.includes(playerAuth)) {
+      room.sendAnnouncement(`GRAN PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0xd0a6f5, "bold", 1);
+      return false;
+    } else if (rolesData.roles["jefepanda"].users.includes(playerAuth)) {
+      room.sendAnnouncement(`JEFE PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0xA5F685, "bold", 1);
+      return false;
+    } else if (rolesData.roles["maestropanda"].users.includes(playerAuth)) {
+      room.sendAnnouncement(`MAESTRO PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0xfd6e6e, "bold", 1);
+      return false;
+    } else if (rolesData.roles["liderpanda"].users.includes(playerAuth)) {
+      room.sendAnnouncement(`LIDER PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0x2ff6fd, "bold", 1);
+      return false;
+    } else if (rolesData.roles["subliderpanda"].users.includes(playerAuth)) {
+      room.sendAnnouncement(`SUB-LIDER PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0x1ee8f0, "normal", 1);
+      return false;
+    } else if (rolesData.roles["asistente"].users.includes(playerAuth)) {
+      room.sendAnnouncement(`ASISTENTE PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0x17dde5, "normal", 1);
+      return false;
     } else {
-      room.sendAnnouncement("Necesitas estar logeado para hablar en el chat (!login [contraseña])", player.id, 0x00FF00, "bold", 2);
+      room.sendAnnouncement(`${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, colorRank, "normal", 1); // este no toques
       return false;
     }
   };
