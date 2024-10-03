@@ -77,7 +77,7 @@ HaxballJS.then((HBInit) => {
       "lon": -60.6559,
       "code": "MAC"
     },
-    token: "thr1.AAAAAGb7AQw3UJ4vuxpELA.D7Ezml_hs24"
+    token: "thr1.AAAAAGb98JkiAp5JhTQxfw.V6B34YnXgSo"
   });
   // "| 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
   // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
