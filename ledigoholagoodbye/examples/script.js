@@ -68,18 +68,19 @@ let roomLink = '';
 
 HaxballJS.then((HBInit) => {
   room = HBInit({
-    roomName: "𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋",
+    roomName: "🎋🐼 JUEGAN TODOS | PANDA 🐼🎋",
     maxPlayers: 26, // el que quieras
-    public: false,
+    public: true,
     noPlayer: true,
     geo: {
       "lat": -32.9561,
       "lon": -60.6559,
-      "code": "AR"
+      "code": "MAC"
     },
     token: "thr1.AAAAAGb7AQw3UJ4vuxpELA.D7Ezml_hs24"
   });
   // "| 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
+  // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
   const ranks = {
     '[Pandita Bebé 1🐼]': { range: [0, 49], colorRank: 0xffffff }, // 1
     '[Pandita Bebé 2🐼]': { range: [50, 99], colorRank: 0xf0f0f0 }, // 2
@@ -616,8 +617,8 @@ HaxballJS.then((HBInit) => {
 
     if (players >= 24) {
       if (!slotsActivated) {
+        room.sendAnnouncement("Slots activados solo para admins", null, null, "bold", 2);
         if (rolesData.roles["owner"].users.includes(playerAuth) || rolesData.roles["coowner"].users.includes(playerAuth) || rolesData.roles["granpanda"].users.includes(playerAuth) || rolesData.roles["jefepanda"].users.includes(playerAuth) || rolesData.roles["maestropanda"].users.includes(playerAuth) || rolesData.roles["liderpanda"].users.includes(playerAuth) || rolesData.roles["subliderpanda"].users.includes(playerAuth) || rolesData.roles["asistente"].users.includes(playerAuth)) {
-          room.sendAnnouncement("Slots activados solo para admins", null, null, "bold", 2);
           slotsActivated = true;
         } else {
           room.kickPlayer(p.id, "Estos espacios están reservados solo para los admins", false);
@@ -2197,7 +2198,7 @@ HaxballJS.then((HBInit) => {
       room.sendAnnouncement(`FUNDADOR PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0xff75f2, "bold", 1);
       return false;
     } else if (rolesData.roles["coowner"].users.includes(playerAuth)) {
-      room.sendAnnouncement(`CO-FUNDADOR PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0xB99284, "bold", 1);
+      room.sendAnnouncement(`CO-FUNDADOR PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0x65B3C3, "bold", 1);
       return false;
     } else if (rolesData.roles["granpanda"].users.includes(playerAuth)) {
       room.sendAnnouncement(`GRAN PANDA | ${playerStats[playerAuth].rank} ${player.name}: ${message}`, null, 0xd0a6f5, "bold", 1);
