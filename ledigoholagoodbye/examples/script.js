@@ -1336,11 +1336,12 @@ HaxballJS.then((HBInit) => {
       }
     }
 
-    if (remainingTime > 0 && room.getPlayerList().length >= 4) {
-      chaosModeTimer = setTimeout(() => {
-        resetChaosMode(lastMode);
-        room.sendAnnouncement(`¡Modo ${lastMode} terminado!`, null, null, "bold", 2);
-      }, remainingTime);
+    if (room.getPlayerList().length >= 4 && lastMode) {
+      if (chaosModeTimer) {
+        clearTimeout(chaosModeTimer);
+      }
+      resetChaosMode(lastMode);
+      room.sendAnnouncement(`¡Modo ${lastMode} terminado!`, null, null, "bold", 2);
       room.sendAnnouncement("▶️ ¡Modo caos reanudado!", null, 0x00FF00, "bold", 2);
     }
   }
@@ -1873,83 +1874,60 @@ HaxballJS.then((HBInit) => {
       const action = args[1];
 
       const sortedPlayers = (key) => {
-        try {
-          const currentStats = JSON.parse(fs.readFileSync(playersFilePath, 'utf8'));
-          Object.assign(playerStats, currentStats);
-        } catch (error) {
-          console.error('Error al leer el archivo de estadísticas:', error);
-        }
+            return Object.values(playerStats)
+              .filter(player => player.games >= 5)
+              .sort((a, b) => b[key] - a[key])
+              .map(player => ({
+                name: player.name,
+                value: player[key],
+              }));
+          };
 
-        return Object.entries(playerStats)
-          .filter(([_, player]) => player.games >= 5)
-          .map(([player]) => ({
-            name: player.name,
-            value: player[key]
-          }))
-          .sort((a, b) => {
-            const valA = parseFloat(a.value);
-            const valB = parseFloat(b.value);
-            return valB - valA;
-          });
-      };
-
-      const formatAnnouncement = (title, players, emoji1, emoji2, color = null) => {
-        let announcement = `${emoji1}${title}${emoji2}:\n`;
-        players.forEach((player, index) => {
-          const prefix = index === 0 ? "👑" : index === 1 ? "🥈" : index === 2 ? "🥉" : "👤";
-          announcement += `${prefix} ${index + 1}. ${player.name}: ${player.value}\n`;
-        });
-        room.sendAnnouncement(announcement, player.id, color, "bold", 2);
-      };
-
-      let key, title, emoji1, emoji2, color;
-
-      switch (action) {
-        case "vallas":
-          key = "vallas";
-          title = "Ranking de Vallas Invictas";
-          emoji1 = "🧤"; emoji2 = "🥅";
-          break;
-        case "goles":
-          key = "goals";
-          title = "Ranking de Goles";
-          emoji1 = "⚽"; emoji2 = "⚽";
-          break;
-        case "victorias":
-          key = "victories";
-          title = "Ranking de Victorias";
-          emoji1 = "✅"; emoji2 = "✅";
-          break;
-        case "asistencias":
-          key = "assists";
-          title = "Ranking de Asistencias";
-          emoji1 = "👟"; emoji2 = "🧙‍♂️";
-          break;
-        case "juegos":
-          key = "games";
-          title = "Ranking de Juegos";
-          emoji1 = "🎋"; emoji2 = "🎋";
-          break;
-        case "winrate":
-          key = "winrate";
-          title = "Ranking de Winrate";
-          emoji1 = "💪"; emoji2 = "💪";
-          color = 0xFF0000;
-          break;
-        default:
-          room.sendAnnouncement(
-            `Ese ranking NO existe❌. Los que existen son: !top vallas; !top goles; !top victorias; !top asistencias; !top juegos y !top winrate.`,
-            player.id,
-            0xe48729,
-            "bold",
-            2
-          );
-          return false;
-      }
-
-      const topPlayers = sortedPlayers(key).slice(0, 5);
-      formatAnnouncement(title, topPlayers, emoji1, emoji2, color);
-
+          if (action === "vallas") {
+            const topVallas = sortedPlayers("vallas").slice(0, 5);
+            let announcement = "🧤🥅Ranking de Vallas Invictas🧤🥅:\n";
+            topVallas.forEach((player, index) => {
+              announcement += `${index + 1}. ${player.name}: ${player.value} vallas\n`;
+            });
+            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
+          } else if (action === "goles") {
+            const topGoals = sortedPlayers("goals").slice(0, 5);
+            let announcement = "⚽Ranking de Goles⚽:\n";
+            topGoals.forEach((player, index) => {
+              announcement += `${index + 1}. ${player.name}: ${player.value} goles\n`;
+            });
+            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
+          } else if (action === "victorias") {
+            const topVictorias = sortedPlayers("victories").slice(0, 5);
+            let announcement = "✅Ranking de Victorias✅:\n";
+            topVictorias.forEach((player, index) => {
+              announcement += `${index + 1}. ${player.name}: ${player.value} victorias\n`;
+            });
+            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
+          } else if (action === "asistencias") {
+            const topAsistencias = sortedPlayers("assists").slice(0, 5);
+            let announcement = "👟🧙‍♂️Ranking de Asistencias👟🧙‍♂️:\n";
+            topAsistencias.forEach((player, index) => {
+              announcement += `${index + 1}. ${player.name}: ${player.value} asistencias\n`;
+            });
+            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
+          } else if (action === "juegos") {
+            const topJuegos = sortedPlayers("games").slice(0, 5);
+            let announcement = "🎋Ranking de Juegos🎋:\n";
+            topJuegos.forEach((player, index) => {
+              announcement += `${index + 1}. ${player.name}: ${player.value} juegos\n`;
+            });
+            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
+          } else if (action === "winrate") {
+            const topWinrate = sortedPlayers("winrate").slice(0, 5);
+            let announcement = "💪Ranking de Winrate💪:\n";
+            topWinrate.forEach((player, index) => {
+              announcement += `${index + 1}. ${player.name}: ${player.value}% winrate\n`;
+            }); // esq es asi el winrate
+            room.sendAnnouncement(announcement, player.id, 0xFF0000, "bold", 2);
+          } else {
+            room.sendAnnouncement(`Ese ranking NO existe❌. Los que existen son: !top vallas; !top goles; !top victorias; !top asistencias; !top juegos y !top winrate.`, player.id, 0xe48729, "bold", 2);
+          }
       return false;
     } else if (message.startsWith("!unban")) {
       if (rolesData.roles[playerRole]?.gameAdmin === true) {
