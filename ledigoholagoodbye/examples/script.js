@@ -646,14 +646,17 @@ HaxballJS.then((HBInit) => {
         const lastActivity = activities[player.id] || Date.now();
         const currentTime = Date.now();
 
-        if (currentTime - lastActivity >= inactivityThreshold && !warnedPlayers[player.id] && !gkred.includes(playerAuth) && !gkblue.includes(playerAuth)) {
+        const isGK = gkred.includes(playerAuth) || gkblue.includes(playerAuth);
+
+        if (currentTime - lastActivity >= inactivityThreshold && !warnedPlayers[player.id] && !isGK) {
           room.sendAnnouncement(`${player.name}, estás AFK. Serás expulsado en 15 segundos si no te mueves.`, player.id, 0xFFFF00, "bold", 2);
 
           warnedPlayers[player.id] = setTimeout(() => {
             const lastActivityAfterWarning = activities[player.id] || Date.now();
             const currentTimeAfterWarning = Date.now();
 
-            if (currentTimeAfterWarning - lastActivityAfterWarning >= inactivityThreshold && !gkred.includes(playerAuth) && !gkblue.includes(playerAuth)) {
+            const isStillGK = gkred.includes(playerAuth) || gkblue.includes(playerAuth);
+            if (currentTimeAfterWarning - lastActivityAfterWarning >= inactivityThreshold && !isStillGK) {
               room.kickPlayer(player.id, "AFK", false);
             }
 
