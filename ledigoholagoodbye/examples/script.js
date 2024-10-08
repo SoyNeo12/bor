@@ -1085,6 +1085,7 @@ HaxballJS.then((HBInit) => {
       room.sendAnnouncement(autogolRandom, null, 0xF903AF, "bold", 1);
       if (updateStats && playerStats[playerAuth] && playerStats[playerAuth].logged) {
         playerStats[playerAuth].owngoals = (playerStats[playerAuth].owngoals || 0) + 1;
+        playerStats[playerAuth].xp = (playerStats[playerAuth].xp || 0) - 5;
       }
       room.setPlayerDiscProperties(scorer.id, { radius: playerRadius - 5 });
       resetSize(scorer);
@@ -1151,8 +1152,6 @@ HaxballJS.then((HBInit) => {
         playerStats[playerAuth].goals = (playerStats[playerAuth].goals || 0) + 1;
         playerStats[playerAuth].xp = (playerStats[playerAuth].xp || 0) + 1;
       }
-      room.setPlayerDiscProperties(scorer.id, { radius: playerRadius * 2 });
-      resetSize(scorer);
     }
 
     if (team === 1) {
@@ -1577,83 +1576,90 @@ HaxballJS.then((HBInit) => {
     } else if (message.startsWith("!sancionar")) {
       if (rolesData.roles[playerRole]?.gameAdmin === true) {
         const args = message.split(' ');
-        const name = args[1]?.replace(/@/g, "").replace(/_/g, " ").trim();
+        const name = args[1] ? args[1].replace(/_/g, " ").trim().toLowerCase() : null;
+
+        const normalizeName = (str) => str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/gi, '') : null;
+
+        const normalizedTargetName = normalizeName(name);
+        const reason = args.slice(2).join(' ').trim();
 
         if (!name) {
           room.sendAnnouncement("Debes proporcionar un nombre válido.", player.id, 0xFF0000);
+          return false;
+        }
+
+        const playerList = room.getPlayerList();
+        const targetPlayer = playerList.find(p => normalizeName(p.name.toLowerCase()) === normalizedTargetName);
+
+        if (!targetPlayer) {
+          room.sendAnnouncement("Jugador no encontrado.", player.id, 0xFF0000);
+          return false;
+        }
+
+        const targetAuth = playerId[targetPlayer.id];
+
+        if (!targetAuth) {
+          room.sendAnnouncement("No se pudo obtener el auth del jugador.", player.id, 0xFF0000);
+          return false;
+        }
+
+        if (!reason) {
+          room.sendAnnouncement("Debes proporcionar una razón para la sanción.", player.id, 0xFF0000);
+          return false;
+        }
+
+        if (targetPlayer.id === player.id) {
+          room.sendAnnouncement("No puedes sancionarte a ti mismo.", player.id, 0xFF0000);
+          return false;
+        } else if (!playerStats[targetAuth]?.logged) {
+          room.sendAnnouncement("No puedes sancionar a alguien que no está logeado", player.id, 0xFF0000, "bold", 2);
+          return false;
+        }
+
+        playerStats[targetAuth].sanciones = (playerStats[targetAuth].sanciones || 0) + 1;
+
+        if (playerStats[targetAuth].sanciones >= 3) {
+          if (!bannedPlayers.some(entry => entry.auth === targetAuth)) {
+            bannedPlayers.push({ name: targetPlayer.name, auth: targetAuth });
+            try {
+              fs.writeFileSync(bannedPlayersFilePath, JSON.stringify(bannedPlayers, null, 2));
+            } catch (err) {
+              console.error('Error al escribir el archivo de baneos:', err);
+            }
+          }
+
+          room.sendAnnouncement(`Jugador ${targetPlayer.name} baneado permanentemente por alcanzar 3 sanciones.`, null, 0xFF0000);
+          room.kickPlayer(targetPlayer.id, "Baneado permanentemente por alcanzar 3 sanciones.", false);
+          delete playerStats[targetAuth];
+          rolesData.roles[playerRole].users = rolesData.roles[playerRole].users.filter(auth => auth !== targetAuth);
+          try {
+            fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
+            fs.writeFileSync(rolesFilePath, JSON.stringify(rolesData, null, 2));
+          } catch (err) {
+            console.error('Error al escribir el archivo de jugadores o roles:', err);
+          }
         } else {
-          const targetPlayer = findPlayer(name);
+          const embed = {
+            title: "Nueva Sancion",
+            description: `**Victima:** ${targetPlayer.name}\n**Sancionado por:** ${player.name}\n**Razón:** ${reason}\n**Sanciones:** ${playerStats[targetAuth].sanciones}/3`,
+            color: 0x00FF00,
+            timestamp: new Date(),
+            footer: {
+              text: "Sistema de Sanciones",
+            },
+          };
 
-          if (!targetPlayer) {
-            room.sendAnnouncement("Jugador no encontrado.", player.id, 0xFF0000);
-          } else {
-            const targetAuth = playerId[targetPlayer.id];
-
-            if (!targetAuth) {
-              room.sendAnnouncement("No se pudo obtener el auth del jugador.", player.id, 0xFF0000);
-              return;
-            }
-
-            const reason = args.slice(2).join(' ');
-
-            if (!reason) {
-              room.sendAnnouncement("Debes proporcionar una razón para la sanción.", player.id, 0xFF0000);
-            } else {
-              if (targetPlayer.id === player.id) {
-                room.sendAnnouncement("No puedes sancionarte a ti mismo.", player.id, 0xFF0000);
-                return false;
-              } else if (!playerStats[targetAuth].logged) {
-                room.sendAnnouncement("No puedes sancionar a alguien que no esta logeado", player.id, 0xFF0000, "bold", 2);
-                return false;
-              }
-
-              playerStats[targetAuth].sanciones = (playerStats[targetAuth].sanciones || 0) + 1;
-
-              if (playerStats[targetAuth].sanciones >= 3) {
-                if (!bannedPlayers.some(entry => entry.auth === targetAuth)) {
-                  bannedPlayers.push({ name: targetPlayer.name, auth: targetAuth });
-                  try {
-                    fs.writeFileSync(bannedPlayersFilePath, JSON.stringify(bannedPlayers, null, 2));
-                  } catch (err) {
-                    console.error('Error al escribir el archivo de baneos:', err);
-                  }
-                }
-
-                room.sendAnnouncement(`Jugador ${targetPlayer.name} baneado permanentemente por alcanzar 3 sanciones.`, null, 0xFF0000);
-                room.kickPlayer(targetPlayer.id, "Baneado permanentemente por alcanzar 3 sanciones.", false);
-                delete playerStats[targetAuth];
-                rolesData.roles[playerRole].users = rolesData.roles[playerRole].users.filter(auth => auth !== targetAuth);
-                try {
-                  fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
-                  fs.writeFileSync(rolesFilePath, JSON.stringify(rolesData, null, 2));
-                } catch (err) {
-                  console.error('Error al escribir el archivo de jugadores o roles:', err);
-                }
-              } else {
-                const embed = {
-                  title: "Nueva Sancion",
-                  description: `**Victima:** ${targetPlayer.name}\n**Sancionado por:** ${player.name}\n**Razón:** ${reason}\n**Sanciones:** ${playerStats[targetAuth].sanciones}/3`,
-                  color: 0x00FF00,
-                  timestamp: new Date(),
-                  footer: {
-                    text: "Sistema de Sanciones",
-                  },
-                };
-
-                axios.post("https://discord.com/api/webhooks/1278152698952290327/RQvTuL8-zXfTF-_d59Z79ZgcCfBuv9OvcZZlIMulCkrPY9a-Q17YhqzbJIL7W72nWcuI", {
-                  content: null,
-                  embeds: [embed],
-                })
-                  .then(() => console.log("Webhook enviado con exito"))
-                  .catch(err => console.error("No se pudo enviar el webhook", err))
-                room.sendAnnouncement(`${targetPlayer.name} sancionado por ${player.name}. Razón: ${reason}\nSanciones: ${playerStats[targetAuth].sanciones}/3`, null, 0xFFFF00);
-                try {
-                  fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
-                } catch (err) {
-                  console.error('Error al escribir el archivo de jugadores:', err);
-                }
-              }
-            }
+          axios.post("https://discord.com/api/webhooks/1278152698952290327/RQvTuL8-zXfTF-_d59Z79ZgcCfBuv9OvcZZlIMulCkrPY9a-Q17YhqzbJIL7W72nWcuI", {
+            content: null,
+            embeds: [embed],
+          })
+            .then(() => console.log("Webhook enviado con exito"))
+            .catch(err => console.error("No se pudo enviar el webhook", err))
+          room.sendAnnouncement(`${targetPlayer.name} sancionado por ${player.name}. Razón: ${reason}\nSanciones: ${playerStats[targetAuth].sanciones}/3`, null, 0xFFFF00);
+          try {
+            fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
+          } catch (err) {
+            console.error('Error al escribir el archivo de jugadores:', err);
           }
         }
       } else {
@@ -1808,7 +1814,7 @@ HaxballJS.then((HBInit) => {
                   room.sendAnnouncement(`${player.name} ya no es el GK del equipo rojo 🧤❌`, null, 0xEC4A4A, "bold", 1);
                 } else {
                   if (gkred.length > 0) {
-                    room.sendAnnouncement(`Ya hay un GK en el equipo rojo: ${gkred.name}`, player.id, 0xEC4A4A);
+                    room.sendAnnouncement(`Ya hay un GK en el equipo rojo: ${gkred[0].name}`, player.id, 0xEC4A4A);
                     return false;
                   }
                   gkred.push({ auth: playerAuth, id: player.id, name: player.name });
@@ -1821,7 +1827,7 @@ HaxballJS.then((HBInit) => {
                   room.sendAnnouncement(`${player.name} ya no es el GK del equipo azul 🧤❌`, null, 0x5A7EFD, "bold", 1);
                 } else {
                   if (gkblue.length > 0) {
-                    room.sendAnnouncement(`Ya hay un GK en el equipo azul: ${gkblue.name}`, player.id, 0x5A7EFD);
+                    room.sendAnnouncement(`Ya hay un GK en el equipo azul: ${gkblue[0].name}`, player.id, 0x5A7EFD);
                     return false;
                   }
 
@@ -1874,60 +1880,60 @@ HaxballJS.then((HBInit) => {
       const action = args[1];
 
       const sortedPlayers = (key) => {
-            return Object.values(playerStats)
-              .filter(player => player.games >= 5)
-              .sort((a, b) => b[key] - a[key])
-              .map(player => ({
-                name: player.name,
-                value: player[key],
-              }));
-          };
+        return Object.values(playerStats)
+          .filter(player => player.games >= 5)
+          .sort((a, b) => b[key] - a[key])
+          .map(player => ({
+            name: player.name,
+            value: player[key],
+          }));
+      };
 
-          if (action === "vallas") {
-            const topVallas = sortedPlayers("vallas").slice(0, 5);
-            let announcement = "🧤🥅Ranking de Vallas Invictas🧤🥅:\n";
-            topVallas.forEach((player, index) => {
-              announcement += `${index + 1}. ${player.name}: ${player.value} vallas\n`;
-            });
-            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
-          } else if (action === "goles") {
-            const topGoals = sortedPlayers("goals").slice(0, 5);
-            let announcement = "⚽Ranking de Goles⚽:\n";
-            topGoals.forEach((player, index) => {
-              announcement += `${index + 1}. ${player.name}: ${player.value} goles\n`;
-            });
-            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
-          } else if (action === "victorias") {
-            const topVictorias = sortedPlayers("victories").slice(0, 5);
-            let announcement = "✅Ranking de Victorias✅:\n";
-            topVictorias.forEach((player, index) => {
-              announcement += `${index + 1}. ${player.name}: ${player.value} victorias\n`;
-            });
-            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
-          } else if (action === "asistencias") {
-            const topAsistencias = sortedPlayers("assists").slice(0, 5);
-            let announcement = "👟🧙‍♂️Ranking de Asistencias👟🧙‍♂️:\n";
-            topAsistencias.forEach((player, index) => {
-              announcement += `${index + 1}. ${player.name}: ${player.value} asistencias\n`;
-            });
-            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
-          } else if (action === "juegos") {
-            const topJuegos = sortedPlayers("games").slice(0, 5);
-            let announcement = "🎋Ranking de Juegos🎋:\n";
-            topJuegos.forEach((player, index) => {
-              announcement += `${index + 1}. ${player.name}: ${player.value} juegos\n`;
-            });
-            room.sendAnnouncement(announcement, player.id, null, "bold", 2);
-          } else if (action === "winrate") {
-            const topWinrate = sortedPlayers("winrate").slice(0, 5);
-            let announcement = "💪Ranking de Winrate💪:\n";
-            topWinrate.forEach((player, index) => {
-              announcement += `${index + 1}. ${player.name}: ${player.value}% winrate\n`;
-            }); // esq es asi el winrate
-            room.sendAnnouncement(announcement, player.id, 0xFF0000, "bold", 2);
-          } else {
-            room.sendAnnouncement(`Ese ranking NO existe❌. Los que existen son: !top vallas; !top goles; !top victorias; !top asistencias; !top juegos y !top winrate.`, player.id, 0xe48729, "bold", 2);
-          }
+      if (action === "vallas") {
+        const topVallas = sortedPlayers("vallas").slice(0, 5);
+        let announcement = "🧤🥅Ranking de Vallas Invictas🧤🥅:\n";
+        topVallas.forEach((player, index) => {
+          announcement += `${index + 1}. ${player.name}: ${player.value} vallas\n`;
+        });
+        room.sendAnnouncement(announcement, player.id, null, "bold", 2);
+      } else if (action === "goles") {
+        const topGoals = sortedPlayers("goals").slice(0, 5);
+        let announcement = "⚽Ranking de Goles⚽:\n";
+        topGoals.forEach((player, index) => {
+          announcement += `${index + 1}. ${player.name}: ${player.value} goles\n`;
+        });
+        room.sendAnnouncement(announcement, player.id, null, "bold", 2);
+      } else if (action === "victorias") {
+        const topVictorias = sortedPlayers("victories").slice(0, 5);
+        let announcement = "✅Ranking de Victorias✅:\n";
+        topVictorias.forEach((player, index) => {
+          announcement += `${index + 1}. ${player.name}: ${player.value} victorias\n`;
+        });
+        room.sendAnnouncement(announcement, player.id, null, "bold", 2);
+      } else if (action === "asistencias") {
+        const topAsistencias = sortedPlayers("assists").slice(0, 5);
+        let announcement = "👟🧙‍♂️Ranking de Asistencias👟🧙‍♂️:\n";
+        topAsistencias.forEach((player, index) => {
+          announcement += `${index + 1}. ${player.name}: ${player.value} asistencias\n`;
+        });
+        room.sendAnnouncement(announcement, player.id, null, "bold", 2);
+      } else if (action === "juegos") {
+        const topJuegos = sortedPlayers("games").slice(0, 5);
+        let announcement = "🎋Ranking de Juegos🎋:\n";
+        topJuegos.forEach((player, index) => {
+          announcement += `${index + 1}. ${player.name}: ${player.value} juegos\n`;
+        });
+        room.sendAnnouncement(announcement, player.id, null, "bold", 2);
+      } else if (action === "winrate") {
+        const topWinrate = sortedPlayers("winrate").slice(0, 5);
+        let announcement = "💪Ranking de Winrate💪:\n";
+        topWinrate.forEach((player, index) => {
+          announcement += `${index + 1}. ${player.name}: ${player.value}% winrate\n`;
+        }); // esq es asi el winrate
+        room.sendAnnouncement(announcement, player.id, 0xFF0000, "bold", 2);
+      } else {
+        room.sendAnnouncement(`Ese ranking NO existe❌. Los que existen son: !top vallas; !top goles; !top victorias; !top asistencias; !top juegos y !top winrate.`, player.id, 0xe48729, "bold", 2);
+      }
       return false;
     } else if (message.startsWith("!unban")) {
       if (rolesData.roles[playerRole]?.gameAdmin === true) {
@@ -1965,26 +1971,24 @@ HaxballJS.then((HBInit) => {
         rolesData.roles["owner"].users.includes(playerAuth)) {
 
         const args = message.split(' ');
-        const name = args[1]?.replace(/@/g, "").replace(/_/g, " ").trim();
+        const name = args[1] ? args[1].replace(/_/g, " ").trim().toLowerCase() : null;
+
+        const normalizeName = (str) => str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/gi, '') : null;
+
+        const normalizedTargetName = normalizeName(name);
 
         if (!name) {
           room.sendAnnouncement("Debes proporcionar un nombre válido.", player.id, 0xFF0000);
           return false;
         } else {
-          const targetPlayer = findPlayer(name);
+          const playerList = room.getPlayerList();
+          const targetPlayer = playerList.find(p => normalizeName(p.name.toLowerCase()) === normalizedTargetName);
 
           if (!targetPlayer) {
             room.sendAnnouncement(`El jugador ${name} no está en la sala.`, player.id, 0xFF0000);
             return false;
           } else {
-            let targetAuth = null;
-
-            for (const auth in playerStats) {
-              if (playerStats[auth].name === name) {
-                targetAuth = auth;
-                break;
-              }
-            }
+            const targetAuth = playerId[targetPlayer.id];
 
             if (!targetAuth) {
               room.sendAnnouncement(`No se encontró al jugador con nombre ${name}.`, player.id, 0xFF0000);
@@ -2072,13 +2076,18 @@ HaxballJS.then((HBInit) => {
           room.sendAnnouncement("Necesitas estar logeado para usar este comando", player.id, 0xFF0000, "bold", 2);
         } else {
           const args = message.split(' ');
-          const name = args[1]?.replace(/@/g, "").replace(/_/g, " ").trim();
+          const name = args[1] ? args[1].replace(/_/g, " ").trim().toLowerCase() : null;
+
+          const normalizeName = (str) => str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^\w\s]/gi, '') : null;
+
+          const normalizedTargetName = normalizeName(name);
 
           if (!name) {
             room.sendAnnouncement("Debes proporcionar un nombre válido.", player.id, 0xFF0000);
             return false;
           } else {
-            const targetPlayer = findPlayer(name);
+            const playerList = room.getPlayerList();
+            const targetPlayer = playerList.find(p => normalizeName(p.name.toLowerCase()) === normalizedTargetName);
 
             if (!targetPlayer) {
               room.sendAnnouncement(`El jugador ${name} no está en la sala.`, player.id, 0xFF0000);
