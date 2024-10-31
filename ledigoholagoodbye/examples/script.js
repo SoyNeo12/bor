@@ -99,7 +99,7 @@ HaxballJS.then((HBInit) => {
       "lon": -60.6559,
       "code": "MO"
     },
-    token: "thr1.AAAAAGcYPAVB_Rozl9-t8w.wUernOlbTb4"
+    token: "thr1.AAAAAGci_aZco0xbR6OMmQ.fljepY3pHPM"
   });
   // | 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
   // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
@@ -137,15 +137,35 @@ HaxballJS.then((HBInit) => {
   const cooldown = {};
   const cooldown2 = {};
   const cooldown3 = {};
+  const cooldown4 = {};
   const playerId = {};
   const activities = {};
   const warnedPlayers = {};
+  const afkTimestamps = {};
 
   const palabrasCensuradas = ['puto', 'down', 'autismo', 'd0wn', 'travesti', 'mueranse', 'chupame la pija', 'la concha de tu madre', 'suicidate', 'matate', 'pegate un tiro', 'son una mierda', 'gay', 'traba', 'violar', 'pija', 'pelotudo', 'chupar', 'chupa', 'verga', 'autista', 'mongolico', 'mogolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos', 'chupas', 'nazi', 'nasi']; const POWER_HOLD_TIME = 1800;
   const MODES = ['power', 'comba'];
   const BOOST_SPEEDS = [1.2, 1.5, 1.7, 2];
   const COLORS = [0xFF0204, 0xE60102, 0xB50002, 0x540202];
-
+  const operators = ['+', '-', '*', '/'];
+  const numberPairs = [
+    [9, 3],
+    [12, 4],
+    [6, 3],
+    [2, 1],
+    [100, 50],
+    [99, 9],
+    [110, 10],
+    [50, 5],
+    [100, 10],
+    [88, 2],
+    [25, 5],
+    [20, 2],
+    [30, 3],
+    [40, 10],
+    [28, 7],
+    [8, 8]
+  ];
   const playerRadius = 15;
   const inactivityThreshold = 15000;
   const GRAVITY_HOLD_TIME = 1800;
@@ -158,11 +178,13 @@ HaxballJS.then((HBInit) => {
   let isGameStart = false;
   let chaosModeActive = false;
   let betCooldownActive = false;
+  let mathActive = false;
 
   let team1Name = '';
   let team2Name = '';
   let lastMode = null;
   let bolapor = null;
+  let currentAnswer = null;
 
   let votes = 0;
   let requiredVotes = 3;
@@ -176,9 +198,11 @@ HaxballJS.then((HBInit) => {
   let PowerComba = null;
 
   let playerSizes = {};
-  let playerTouches = {};
   let EnLaSala = {};
   let bets = {};
+  let goals = {};
+  let assists = {};
+  let afkPlayers = {};
 
   let gkred = [];
   let gkblue = [];
@@ -316,23 +340,6 @@ HaxballJS.then((HBInit) => {
     }
   };
 
-  function shuffleTeams() {
-    const players = room.getPlayerList();
-    if (players.length > 1) {
-      const half = Math.floor(players.length / 2);
-
-      for (let i = players.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [players[i], players[j]] = [players[j], players[i]];
-      }
-
-      players.forEach((player, index) => {
-        const newTeam = index < half ? 1 : 2;
-        room.setPlayerTeam(player.id, newTeam);
-      });
-    }
-  }
-
   function getPlayerRole(auth) {
     for (const role in rolesData.roles) {
       if (rolesData.roles[role].users.includes(auth)) {
@@ -432,7 +439,7 @@ HaxballJS.then((HBInit) => {
       if (!chaosModeActive) return;
       let mode;
       do {
-        mode = Math.floor(Math.random() * 5) + 1;
+        mode = Math.floor(Math.random() * 4) + 1;
       } while (mode === lastMode);
       lastMode = mode;
 
@@ -468,19 +475,6 @@ HaxballJS.then((HBInit) => {
             radius: ballDisc.radius * 2
           });
         }
-      } else if (mode === 5) {
-        room.sendAnnouncement("¡QUINTO MODO DE JUEGO!", null, null, "bold", 2);
-        room.sendAnnouncement("¡CAMARA LENTA!", null, 0x59f7ff, "bold", 2);
-        playerList.forEach(function (player) {
-          const playerDisc = room.getPlayerDiscProperties(player.id);
-
-          if (playerDisc !== null) {
-            room.setPlayerDiscProperties(player.id, {
-              xspeed: playerDisc.xspeed - 3,
-              yspeed: playerDisc.yspeed - 3
-            });
-          }
-        });
       }
 
       chaosModeTimer = setTimeout(() => {
@@ -494,7 +488,7 @@ HaxballJS.then((HBInit) => {
 
   function resetChaosMode(mode) {
     const playerList = room.getPlayerList();
-    if (mode === 1 || mode === 2 || mode === 5) {
+    if (mode === 1 || mode === 2) {
       playerList.forEach(function (player) {
         const playerDisc = room.getPlayerDiscProperties(player.id);
 
@@ -509,14 +503,6 @@ HaxballJS.then((HBInit) => {
           radius: 6.4
         });
       }
-    } else if (mode === 5) {
-      playerList.forEach(function (player) {
-        const playerDisc = room.getPlayerDiscProperties(player.id);
-
-        if (playerDisc !== null) {
-          room.setPlayerDiscProperties(player.id, { xspeed: playerDisc.xspeed + 3, yspeed: playerDisc.yspeed + 3 });
-        }
-      });
     }
     remainingTime = 30000;
 
@@ -531,6 +517,24 @@ HaxballJS.then((HBInit) => {
     axios.post('https://discord.com/api/webhooks/1276994417424859280/YPcP2brHPBTKiT-HrEShwTuxNgJvOeE5uBSbAmFB7rqXvk3h5XHaWiZNcSykzOSxevWV', {
       content: message
     })
+  }
+
+  function shuffleTeams() {
+    const players = room.getPlayerList();
+
+    if (players.length > 1) {
+      const half = Math.floor(players.length / 2);
+
+      for (let i = players.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [players[i], players[j]] = [players[j], players[i]];
+      }
+
+      players.forEach((player, index) => {
+        const newTeam = index < half ? 1 : 2;
+        room.setPlayerTeam(player.id, newTeam);
+      });
+    }
   }
 
   function handleAfkPlayers() {
@@ -560,6 +564,18 @@ HaxballJS.then((HBInit) => {
             delete warnedPlayers[player.id];
           }, warningTime);
         }
+      }
+    }
+  }
+
+  function kickAFKs() {
+    for (let playerId in afkPlayers) {
+      const player = room.getPlayer(playerId);
+
+      if (player && (Date.now() - afkTimestamps[playerId]) >= 300000) {
+        room.kickPlayer(playerId, "AFK por mas de 2 minutos.", false);
+
+        delete afkPlayers[playerId];
       }
     }
   }
@@ -752,6 +768,38 @@ HaxballJS.then((HBInit) => {
       });
   }
 
+  function startMathMinigame() {
+    if (!isGameStart) return;
+
+    const firstPairIndex = Math.floor(Math.random() * numberPairs.length);
+    let secondPairIndex;
+    do {
+      secondPairIndex = Math.floor(Math.random() * numberPairs.length);
+    } while (secondPairIndex === firstPairIndex);
+
+    const num1 = numberPairs[firstPairIndex][Math.floor(Math.random() * 2)];
+    const num2 = numberPairs[secondPairIndex][Math.floor(Math.random() * 2)];
+    const operator = operators[Math.floor(Math.random() * operators.length)];
+
+    switch (operator) {
+      case '+':
+        currentAnswer = num1 + num2;
+        break;
+      case '-':
+        currentAnswer = num1 - num2;
+        break;
+      case '*':
+        currentAnswer = num1 * num2;
+        break;
+      case '/':
+        currentAnswer = parseFloat((num1 / num2).toFixed(2));
+        break;
+    }
+
+    room.sendAnnouncement(`🎲 ¿Cuál es el resultado de: ${num1} ${operator} ${num2}?`, null, 0xCEBDFD, "bold", 2);
+    mathActive = true;
+  }
+
   room.onRoomLink = (link) => {
     roomLink = link;
     console.log(roomLink);
@@ -777,6 +825,10 @@ HaxballJS.then((HBInit) => {
 
     room.setPlayerAvatar(changedPlayer.id, null);
 
+    if (playerSizes[changedPlayer.id]) {
+      room.setPlayerDiscProperties(changedPlayer.id, { radius: playerSizes[changedPlayer.id] });
+    }
+
     setTimeout(() => {
       activities[changedPlayer.id] = Date.now();
     }, 10000);
@@ -798,6 +850,15 @@ HaxballJS.then((HBInit) => {
         gkblue = gkblue.filter(gk => gk.auth !== byPlayerAuth && gk.id !== byPlayer.id);
       }
       room.setPlayerAvatar(byPlayer.id, null);
+
+      if (playerSizes[byPlayer.id]) {
+        room.setPlayerDiscProperties(byPlayer.id, { radius: playerSizes[byPlayer.id] });
+      }
+
+      if (afkPlayers[changedPlayer.id]) {
+        room.sendAnnouncement(`No puedes mover a un jugador que está AFK`, byPlayer.id, 0xFF0000, "bold", 2);
+        room.setPlayerTeam(changedPlayer.id, 0);
+      }
     }
   };
 
@@ -880,9 +941,8 @@ HaxballJS.then((HBInit) => {
   room.onPlayerJoin = (p) => {
     sendJoin(p.name, p.auth, p.conn, decryptHex(p.conn));
 
-    if (!playerTouches[p.id]) {
-      playerTouches[p.id] = 0;
-    }
+    if (!goals[p.id]) goals[p.id] = 0;
+    if (!assists[p.id]) assists[p.id] = 0;
 
     const isBanned = bannedPlayers.some(entry => entry.auth === p.auth);
     if (isBanned) {
@@ -996,20 +1056,25 @@ HaxballJS.then((HBInit) => {
 
     if (room.getPlayerList().length >= 24) {
       const playerAuth = p.auth;
-      const hasRole = rolesData.roles["owner"].users.includes(playerAuth) ||
-        rolesData.roles["coowner"].users.includes(playerAuth) ||
-        rolesData.roles["granpanda"].users.includes(playerAuth) ||
-        rolesData.roles["jefepanda"].users.includes(playerAuth) ||
-        rolesData.roles["maestropanda"].users.includes(playerAuth) ||
-        rolesData.roles["liderpanda"].users.includes(playerAuth) ||
-        rolesData.roles["subliderpanda"].users.includes(playerAuth) ||
-        rolesData.roles["asistente"].users.includes(playerAuth);
-
+      
+      const allowedRoles = [
+        "owner",
+        "coowner",
+        "granpanda",
+        "jefepanda",
+        "maestropanda",
+        "liderpanda",
+        "subliderpanda",
+        "asistente"
+      ];
+    
+      const hasRole = allowedRoles.some(role => rolesData.roles[role].users.includes(playerAuth));
+    
       if (!hasRole) {
         room.kickPlayer(p.id, "Slots reservados solo para admins.", false);
         return;
       }
-    }
+    }    
   };
 
   room.onPlayerLeave = (player) => {
@@ -1029,9 +1094,10 @@ HaxballJS.then((HBInit) => {
     if (playerSizes[player.id]) {
       delete playerSizes[player.id];
     }
-
-    delete playerTouches[player.id];
-    delete bets[playerAuth];
+    delete goals[player.id];
+    delete assists[player.id];
+    delete afkTimestamps[player.id];
+    delete afkPlayers[player.id];
   };
 
   room.onPlayerBallKick = (player) => {
@@ -1087,11 +1153,6 @@ HaxballJS.then((HBInit) => {
       }
     }
 
-    if (playerTouches[player.id] !== undefined) {
-      playerTouches[player.id]++;
-    } else {
-      console.log(`Error: No se ha inicializado playerTouches para el jugador con ID ${player.id}`);
-    }
     activities[player.id] = Date.now();
   };
 
@@ -1142,7 +1203,6 @@ HaxballJS.then((HBInit) => {
       room.sendAnnouncement(autogolRandom, null, 0xdf8b3a, "bold", 1);
       if (updateStats && playerStats[playerAuth] && playerStats[playerAuth].logged) {
         playerStats[playerAuth].owngoals = (playerStats[playerAuth].owngoals || 0) + 1;
-        playerStats[playerAuth].xp = (playerStats[playerAuth].xp || 0) + 0;
       }
       room.setPlayerDiscProperties(scorer.id, { radius: playerRadius - 5 });
       room.setPlayerAvatar(scorer.id, '🤡');
@@ -1180,6 +1240,7 @@ HaxballJS.then((HBInit) => {
           playerStats[assisterAuth].assists = (playerStats[assisterAuth].assists || 0) + 1;
           playerStats[assisterAuth].xp = (playerStats[assisterAuth].xp || 0) + 1;
         }
+        assists[assister.id]++;
         room.setPlayerDiscProperties(assister.id, { radius: 20 });
         room.setPlayerAvatar(assister.id, '👟');
         resetSize(assister);
@@ -1232,6 +1293,7 @@ HaxballJS.then((HBInit) => {
         playerStats[playerAuth].goals = (playerStats[playerAuth].goals || 0) + 1;
         playerStats[playerAuth].xp = (playerStats[playerAuth].xp || 0) + 1;
       }
+      goals[scorer.id] += 1;
       room.setPlayerDiscProperties(scorer.id, { radius: playerRadius * 2 });
       room.setPlayerAvatar(scorer.id, '⚽');
       resetSize(scorer);
@@ -1240,10 +1302,10 @@ HaxballJS.then((HBInit) => {
 
     if (team === 1) {
       Marcador.Red++;
-      room.setDiscProperties(0, { color: 0xFF0000 });
+      room.setDiscProperties(0, { color: 0xFF0000, radius: 6.25 * 3 });
     } else if (team === 2) {
       Marcador.Blue++;
-      room.setDiscProperties(0, { color: 0x0000FF });
+      room.setDiscProperties(0, { color: 0x0000FF, radius: 6.25 * 3 });
     }
 
     if (players === 1) {
@@ -1268,12 +1330,21 @@ HaxballJS.then((HBInit) => {
         room.setPlayerTeam(player.id, 0);
       }
     });
+
+    setTimeout(() => {
+      if (players.length >= 2) {
+        shuffleTeams();
+        Object.keys(afkPlayers).forEach(playerId => {
+          room.setPlayerTeam(playerId, 0);
+        });
+      }
+    }, 3000);
+
+    setTimeout(() => {
+      room.startGame();
+    }, 5000);
     clearTimeout(chaosModeTimer);
     updateMaps();
-    setTimeout(() => {
-      shuffleTeams();
-      room.startGame();
-    }, 3000);
     room.stopRecording();
     isGameStart = false;
     remainingTime = 30000;
@@ -1281,7 +1352,6 @@ HaxballJS.then((HBInit) => {
     secondPlayerTouchBall = null;
     powerActive = false;
     ballHeldBy = null;
-    mvpId = null;
     maxTouches = 0;
     gravityEnabled = false;
     betCooldownActive = false;
@@ -1316,15 +1386,15 @@ HaxballJS.then((HBInit) => {
       gravityTimer = null;
     }
 
-    for (let playerId in playerTouches) {
-      playerTouches[playerId] = 0;
-    }
+    goals = Object.fromEntries(Object.keys(goals).map(playerId => [playerId, 0]));
+    assists = Object.fromEntries(Object.keys(assists).map(playerId => [playerId, 0]));
   };
 
   room.onGameStart = (byPlayer) => {
     changeColors();
     isGameStart = true;
     chaosModeActive = true;
+    mathActive = false;
     room.startRecording();
     if (byPlayer != null) {
       activities[byPlayer.id] = Date.now();
@@ -1334,7 +1404,7 @@ HaxballJS.then((HBInit) => {
       }
     }
 
-    room.pauseGame(true);
+    if (room.getPlayerList().length >= 6) room.pauseGame(true);
 
     room.sendAnnouncement(`🐼⚽🔥 Arranca el partido: Se enfrentan ${team1Name} 🆚 ${team2Name} 🔥🐼⚽`, null, 0xfff9b7, "bold", 2);
 
@@ -1342,9 +1412,12 @@ HaxballJS.then((HBInit) => {
       room.sendAnnouncement(`Si las camisetas son iguales: !changecolors para iniciar votación.`, null, null, "bold", 2);
     }, 2000);
 
-    setTimeout(() => {
-      room.sendAnnouncement(`Les damos 7 segundos para que hagan sus apuestas (!bet red/blue [pandacoins])`, null, 0x8efff1, "bold", 2);
-    }, 4000);
+
+    if (room.getPlayerList().length >= 6) {
+      setTimeout(() => {
+        room.sendAnnouncement(`Les damos 7 segundos para que hagan sus apuestas (!bet red/blue [pandacoins])`, null, 0x8efff1, "bold", 2);
+      }, 4000);
+    }
 
     setTimeout(() => {
       startGame();
@@ -1354,10 +1427,12 @@ HaxballJS.then((HBInit) => {
       room.pauseGame(false);
     }, 8000);
 
-    setTimeout(() => {
-      betCooldownActive = true;
-      room.sendAnnouncement("Apuestas cerradas, ¡que comience el partido!", null, 0x8efff1, "bold", 2);
-    }, 14000);
+    if (room.getPlayerList().length >= 6) {
+      setTimeout(() => {
+        betCooldownActive = true;
+        room.sendAnnouncement("Apuestas cerradas, ¡que comience el partido!", null, 0x8efff1, "bold", 2);
+      }, 14000);
+    }
   };
 
   room.onPlayerKicked = (kickedPlayer, reason, ban, byPlayer) => {
@@ -1481,6 +1556,7 @@ HaxballJS.then((HBInit) => {
 
   room.onGameTick = () => {
     handleAfkPlayers();
+    kickAFKs();
   };
 
   room.onTeamVictory = (scores) => {
@@ -1492,6 +1568,10 @@ HaxballJS.then((HBInit) => {
 
     players.forEach((player) => {
       const playerAuth = playerId[player.id];
+
+      if (playerStats[playerAuth].pandacoins < 0) {
+        playerStats[playerAuth].pandacoins = 0;
+      }
 
       if (updateStats) {
         if (playerStats[playerAuth] && playerStats[playerAuth].logged) {
@@ -1552,25 +1632,65 @@ HaxballJS.then((HBInit) => {
       { Red: 0, Blue: 0 }
     ];
 
-    if (updateStats) {
-      let mvpId = Object.keys(playerTouches).reduce((maxId, playerId) => {
-        return playerTouches[playerId] > (playerTouches[maxId] || 0) ? playerId : maxId;
-      }, null);
+    // if (updateStats) {
+    let mvpId = null;
+    let maxGoals = 0;
+    let maxAssists = 0;
 
-      if (mvpId !== null) {
-        const mvpAuth = playerId[mvpId];
+    players.forEach(player => {
+      const playerId = player.id;
+      const playerGoals = goals[playerId] || 0;
+      const playerAssists = assists[playerId] || 0;
+
+      if (playerGoals > maxGoals) {
+        maxGoals = playerGoals;
+        mvpId = playerId;
+        maxAssists = playerAssists;
+      }
+    });
+
+    players.forEach(player => {
+      const playerId = player.id;
+      const playerGoals = goals[playerId] || 0;
+      const playerAssists = assists[playerId] || 0;
+
+      if (playerId !== mvpId && playerGoals > maxGoals && playerAssists > maxAssists) {
+        mvpId = playerId;
+        maxGoals = playerGoals;
+        maxAssists = playerAssists;
+      }
+    });
+
+    const hasStats = players.some(player => {
+      const playerGoals = goals[player.id] || 0;
+      const playerAssists = assists[player.id] || 0;
+      return playerGoals > 0 && playerAssists > 0;
+    });
+
+    if (mvpId) {
+      if (hasStats) {
         const mvpPlayer = room.getPlayer(mvpId);
+        const mvpGoals = goals[mvpId] || 0;
+        const mvpAssists = assists[mvpId] || 0;
 
-        if (mvpPlayer && playerStats[mvpAuth]) {
-          playerStats[mvpAuth].pandacoins += 25;
-          room.sendAnnouncement(`🏆🐼 El PANDITA MVP del partido es: ${mvpPlayer.name} 🥇\n🔄 Toques: ${playerTouches[mvpId]}`, null, 0xDFC57B, "bold", 2);
-        } else {
-          room.sendAnnouncement("No se pudo determinar el MVP, todos los jugadores tienen 0 toques.", null, 0xFF0000, "normal", 1);
-        }
+        room.sendAnnouncement(
+          `🏆🐼 El PANDITA MVP del partido es: ${mvpPlayer.name} 🥇\nGoles: ${mvpGoals}, Asistencias: ${mvpAssists}`,
+          null,
+          0xDFC57B,
+          "bold",
+          2
+        );
       } else {
-        console.log("No se pudo determinar el MVP o no hay estadísticas disponibles.");
+        room.sendAnnouncement("No se pudo determinar al MVP, nadie tiene tanto goles como asistencias", null, 0xFF0000, "bold", 1);
       }
     }
+
+    setTimeout(() => {
+      mvpId = null;
+      maxGoals = 0;
+      maxAssists = 0;
+    }, 3000);
+    // }
 
     players.forEach(player => {
       const playerAuth = playerId[player.id];
@@ -1589,10 +1709,6 @@ HaxballJS.then((HBInit) => {
         }
       }
     });
-
-    setTimeout(() => {
-      mvpId = null;
-    }, 2000);
   };
 
   room.onPlayerChat = (player, message) => {
@@ -1604,6 +1720,12 @@ HaxballJS.then((HBInit) => {
 
     const playerAuth = playerId[player.id];
     const playerRole = getPlayerRole(playerAuth);
+
+    if (mathActive && Math.abs(parseFloat(message) - currentAnswer) < 0.01) {
+      if (playerStats) playerStats[playerAuth].pandacoins += 4
+      room.sendAnnouncement(`🎉 Felicidades ${player.name}, ¡acertaste la respuesta correctamente!`, null, 0x00FF00, "bold", 2);
+      mathActive = false;
+    }
 
     if (!message.startsWith("!")) {
       sendMessages(player.name + ": " + message);
@@ -1892,7 +2014,7 @@ HaxballJS.then((HBInit) => {
       }
       return false;
     } else if (message.startsWith("!agregar")) {
-      if (rolesData.roles["liderpanda"].users.includes(playerAuth) || rolesData.roles["maestropanda"].users.includes(playerAuth) || rolesData.roles["jefepanda"].users.includes(playerAuth) || rolesData.roles["granpanda"].users.includes(playerAuth) || rolesData.roles["coowner"].users.includes(playerAuth) || rolesData.roles["owner"].users.includes(playerAuth)) {
+      if (rolesData.roles["maestropanda"].users.includes(playerAuth) || rolesData.roles["jefepanda"].users.includes(playerAuth) || rolesData.roles["granpanda"].users.includes(playerAuth) || rolesData.roles["coowner"].users.includes(playerAuth) || rolesData.roles["owner"].users.includes(playerAuth)) {
         const args = message.split(' ');
         const rol = args[1];
         const name = message.split('@')[1]?.trim();
@@ -2082,12 +2204,12 @@ HaxballJS.then((HBInit) => {
             `📊 STATS: !stats #ID - !top [ranking]\n` +
             `💬 SOCIAL: !ds / !dc / !discord - !llamaradmin RAZON y NOMBRE de user que reportas.\n` +
             `💵 TIENDA: !tienda / !shop - !ruleta cantidad - !bet team cantidad.\n` +
-            `⚽ JUEGO: !gk - !nv / !bb - !modos / !modo - !changecolors`,
+            `⚽ JUEGO: !gk - !nv / !bb - !modos / !modo - !changecolors - !afk`,
             player.id, 0x84e35a, "small-bold", 1);
 
           if (player.admin) {
             room.sendAnnouncement(`🔨 Comandos  Staff 🔨\n` +
-              `⚠️ Moderación: !sancionar #ID [razón] - !unban [@jugador] - !quitarsancion #ID\n` +
+              `⚠️ Moderación: !sancionar #ID [razón] - !unban [@jugador] - !quitarsancion #ID - !unban [auth]\n` +
               `🛠️ Gestión: !agregar [rol] [@jugador] - !power - !comba`,
               player.id, 0x63d033, "small-bold", 1);
           }
@@ -2379,8 +2501,8 @@ HaxballJS.then((HBInit) => {
         } else {
           room.sendAnnouncement("!color [#hexacolor] - Cambia permanentemente el color de tus mensajes. (500 pandacoins)", player.id, 0x8efffd, "bold", 2);
           room.sendAnnouncement("!size [tamaño] - Cambia tu tamaño -entre 10 y 20-. Se reinicia al terminar el partido. (150 pandacoins)", player.id, 0x8efffd, "bold", 2);
-          room.sendAnnouncement("!bigall - Haces gordos a todos por 30 segs o hasta que metan gol. (200 pandacoins)", player.id, 0x8efffd, "bold", 2);
-          room.sendAnnouncement("!smallall - Haces pequeños a todos por 30 segs o hasta que metan gol. (200 pandacoins)", player.id, 0x8efffd, "bold", 2);
+          room.sendAnnouncement("!bigall - Haces gordos a todos por 30 segs o hasta que metan gol. (300 pandacoins)", player.id, 0x8efffd, "bold", 2);
+          room.sendAnnouncement("!smallall - Haces pequeños a todos por 30 segs o hasta que metan gol. (300 pandacoins)", player.id, 0x8efffd, "bold", 2);
           room.sendAnnouncement("!festejo - Personalizá tu festejo al meter un gol -permanente-. (150 pandacoins)", player.id, 0x8efffd, "bold", 2);
         }
       }
@@ -2489,7 +2611,7 @@ HaxballJS.then((HBInit) => {
         if (!playerStats[playerAuth].logged) {
           room.sendAnnouncement("Necesitas estar logeado para usar este comando", player.id, 0xFF0000, "bold", 2);
         } else {
-          if (playerStats[playerAuth].pandacoins < 200) {
+          if (playerStats[playerAuth].pandacoins < 300) {
             room.sendAnnouncement(`❌😢No tenés suficientes pandacoins para comprar y usar este comando😢❌.`, player.id, 0x3bb4cb, "bold", 2);
           } else {
             const players = room.getPlayerList();
@@ -2505,7 +2627,7 @@ HaxballJS.then((HBInit) => {
                   room.setPlayerDiscProperties(p.id, { radius: playerRadius });
                 }, 30000);
               });
-              playerStats[playerAuth].pandacoins -= 200;
+              playerStats[playerAuth].pandacoins -= 300;
               room.sendAnnouncement(`🐼🤑😳EL PANDITA ${player.name} USÓ !BIGALL: TODOS GIGANTES😳🤑🐼.`, null, 0xacffed, "bold", 2);
             } else {
               room.sendAnnouncement("No podés usar este comando porque no hay 4 jugadores", player.id, 0xFF0000, "bold", 2);
@@ -2519,7 +2641,7 @@ HaxballJS.then((HBInit) => {
         if (!playerStats[playerAuth].logged) {
           room.sendAnnouncement("Necesitas estar logeado para usar este comando", player.id, 0xFF0000, "bold", 2);
         } else {
-          if (playerStats[playerAuth].pandacoins < 200) {
+          if (playerStats[playerAuth].pandacoins < 300) {
             room.sendAnnouncement(`❌😢No tenés suficientes pandacoins para comprar y usar este comando😢❌.`, player.id, 0x3bb4cb, "bold", 2);
           } else {
             const players = room.getPlayerList();
@@ -2535,7 +2657,7 @@ HaxballJS.then((HBInit) => {
                   room.setPlayerDiscProperties(p.id, { radius: playerRadius });
                 }, 30000);
               });
-              playerStats[playerAuth].pandacoins -= 200;
+              playerStats[playerAuth].pandacoins -= 300;
               room.sendAnnouncement(`🐼🤑🤏EL PANDITA ${player.name} USÓ !SMALLALL: TODOS PEQUEÑOS🤏🤑🐼`, null, 0xacffed, "bold", 2);
             } else {
               room.sendAnnouncement("No puedes usar este comando porque no hay 4 jugadores", player.id, 0xFF0000, "bold", 2);
@@ -2560,6 +2682,11 @@ HaxballJS.then((HBInit) => {
 
       cooldown3[player.id] = now;
 
+      if (!isLoggedIn(playerAuth)) {
+        room.sendAnnouncement("Necesitas estar logeado para usar este comando", player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
       if (isNaN(betAmount) || betAmount <= 0) {
         room.sendAnnouncement("💰 Debes apostar una cantidad válida de pandacoins.", player.id, 0xFF0000, "small-bold", 2);
         return false;
@@ -2570,8 +2697,8 @@ HaxballJS.then((HBInit) => {
         return false;
       }
 
-      if (betAmount < 20) {
-        room.sendAnnouncement("⚠️ La apuesta tiene que ser mayor a 20", player.id, 0xFF0000, "bold", 2);
+      if (betAmount < 40) {
+        room.sendAnnouncement("⚠️ La apuesta tiene que ser mayor a 40", player.id, 0xFF0000, "bold", 2);
         return false;
       }
 
@@ -2601,6 +2728,21 @@ HaxballJS.then((HBInit) => {
 
       const team = teamName === "red" ? 1 : teamName === "blue" ? 2 : null;
 
+      if (!isLoggedIn(playerAuth)) {
+        room.sendAnnouncement("Necesitas estar logeado para usar este comando", player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
+      if (player.team === 0) {
+        room.sendAnnouncement("Necesitas estar en un equipo para usar este comando", player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
+      if (room.getPlayerList().length < 6) {
+        room.sendAnnouncement("No hay suficientes jugadores para usar este comando", player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
       if (betCooldownActive) {
         room.sendAnnouncement("⚠️ El comando !bet está deshabilitado por el momento. Espera a que se reinicie.", player.id, 0xFF0000, "bold", 2);
         return false;
@@ -2616,8 +2758,8 @@ HaxballJS.then((HBInit) => {
         return false;
       }
 
-      if (betAmount <= 20) {
-        room.sendAnnouncement("⚠️ La apuesta tiene que ser mayor a 20", player.id, 0xFF0000, "bold", 2);
+      if (betAmount <= 40) {
+        room.sendAnnouncement("⚠️ La apuesta tiene que ser mayor a 40", player.id, 0xFF0000, "bold", 2);
         return false;
       }
 
@@ -2633,6 +2775,84 @@ HaxballJS.then((HBInit) => {
 
       bets[playerAuth] = { team, betAmount };
       room.sendAnnouncement(`🎲 ${player.name} ha apostado ${betAmount} pandacoins por el equipo ${teamName.toUpperCase()}!`, null, 0xFFA500, "small-bold", 2);
+      return false;
+    } else if (message.startsWith("!banauth")) {
+      if (rolesData.roles["maestropanda"].users.includes(playerAuth) || rolesData.roles["jefepanda"].users.includes(playerAuth) || rolesData.roles["granpanda"].users.includes(playerAuth) || rolesData.roles["coowner"].users.includes(playerAuth) || rolesData.roles["owner"].users.includes(playerAuth)) {
+        const args = message.split(' ');
+        const authToBan = args[1];
+
+        if (!authToBan) {
+          room.sendAnnouncement("Por favor, especificá el auth para banear. Ejemplo: !banauth [auth]", player.id, 0xFF0000, "bold", 2);
+          return false;
+        }
+
+        const targetPlayer = room.getPlayerList().find(p => playerId[p.id] === authToBan);
+
+        if (!targetPlayer) {
+          if (playerStats[authToBan]) {
+            const playerName = playerStats[authToBan].name;
+            bannedPlayers.push({ name: playerName, auth: authToBan });
+
+            if (rolesData.roles[playerRole]) {
+              rolesData.roles[playerRole].users = rolesData.roles[playerRole].users.filter(userAuth => userAuth !== authToBan);
+            }
+
+            delete playerStats[authToBan];
+            fs.writeFileSync(bannedPlayersFilePath, JSON.stringify(bannedPlayers, null, 2));
+            fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
+            room.sendAnnouncement(`⛔ El pandita ${playerName} fue baneado mediante auth por portarse mal🐼👎❌.`, player.id, 0xf3ea87, "bold", 1);
+          } else {
+            room.sendAnnouncement(`⚠️ No se encontró ningún jugador con el auth especificado en la sala o en las estadísticas.`, player.id, 0xFF0000, "bold", 2);
+          }
+        } else {
+          room.sendAnnouncement(`⚠️ El jugador con auth ${authToBan} no está en la sala. Usá el comando de baneo directo si es necesario.`, player.id, 0xFF0000, "bold", 2);
+        }
+      } else {
+        room.sendAnnouncement(`[❌] ${player.name}, no tienes permitido usar este comando.`, player.id, 0xFF0000, "bold", 2);
+      }
+      return false;
+    } else if (message === "!afk") {
+      const now = Date.now();
+      const cooldownTime = 15000;
+      const lastUsed = cooldown4[player.id] || 0
+
+      if (now - lastUsed < cooldownTime) {
+        const timeLeft = Math.ceil((cooldownTime - (now - lastUsed)) / 1000);
+        room.sendAnnouncement(`Debes esperar ${timeLeft} segundos antes de volver a usar este comando.`, player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
+      cooldown4[player.id] = now;
+
+      if (!afkPlayers[player.id]) {
+        if (!isLoggedIn(playerAuth)) {
+          room.sendAnnouncement("Necesitas estar logeado para usar este comando", player.id, 0xFF0000, "bold", 2);
+          return false;
+        }
+
+        if (room.getPlayerList().length < 6) {
+          room.sendAnnouncement("No hay suficientes jugadores para usar este comando", player.id, 0xFF0000, "bold", 2);
+          return false;
+        }
+
+        room.sendAnnouncement(`El pandita ${player.name} ahora está AFK🐼😴.`, null, 0xF19917, "bold", 1);
+        afkPlayers[player.id] = true;
+        afkTimestamps[player.id] = Date.now();
+        room.setPlayerTeam(player.id, 0);
+      } else {
+        room.sendAnnouncement(`${player.name} no esta mas AFK🐼😁`, null, 0xF19917, "bold", 1);
+        const red = room.getPlayerList().filter(p => p.team === 1).length;
+        const blue = room.getPlayerList().filter(p => p.team === 2).length;
+
+        delete afkPlayers[player.id];
+        delete afkTimestamps[player.id];
+
+        if (red <= blue) {
+          room.setPlayerTeam(player.id, 1);
+        } else {
+          room.setPlayerTeam(player.id, 2);
+        }
+      }
       return false;
     } else if (message.startsWith("!")) {
       room.sendAnnouncement("Comando desconocido o no existe, usa !help para ver los comandos", player.id, 0xFF0000, "bold", 2);
@@ -2695,6 +2915,8 @@ HaxballJS.then((HBInit) => {
         room.sendAnnouncement(` SUB-LIDER PANDA | ${playerRank} ${player.name}: ${message}`, null, 0x1ee8f0, "normal", 1);
       } else if (roles["asistente"]?.users.includes(playerAuth)) {
         room.sendAnnouncement(` ASISTENTE PANDA | ${playerRank} ${player.name}: ${message}`, null, 0x17dde5, "normal", 1);
+      } else if (afkPlayers[player.id]) {
+        room.sendAnnouncement(`💤 AFK | ${playerRank} ${player.name}: ${message}`, null, 0xC48018, "small-bold", 0);
       } else {
         const teamEmoji = player.team === 1 ? "🔴" : "🔵";
         room.sendAnnouncement(`[${teamEmoji}] [${player.id}] / ${playerRank} ${player.name}: ${message}`, null, playerStats[playerAuth].color, "normal", 1);
@@ -2822,7 +3044,11 @@ HaxballJS.then((HBInit) => {
     }
   }, 180000);
 
-  setInterval(generateRanking, 30000);
+  setInterval(() => {
+    if (!mathActive) startMathMinigame();
+  }, 240000);
+
+  setInterval(generateRanking, 3600000);
 });
 
 function getRoomLink() {
