@@ -15,6 +15,7 @@ const rolesFilePath = path.join(__dirname, 'roles.json');
 const messagesDir = `./festejosMessages`;
 const messagesFilePath = `${messagesDir}/festejosMessage.json`;
 
+let playerId = {};
 let rolesData;
 try {
   rolesData = JSON.parse(fs.readFileSync(rolesFilePath, 'utf8'));
@@ -92,14 +93,14 @@ HaxballJS.then((HBInit) => {
   room = HBInit({
     roomName: "🎋🐼 JUEGAN TODOS | PANDA 🐼🎋",
     maxPlayers: 26, // el que quieras
-    public: true,
+    public: false,
     noPlayer: true,
     geo: {
       "lat": -32.9561,
       "lon": -60.6559,
       "code": "MO"
     },
-    token: "thr1.AAAAAGci_aZco0xbR6OMmQ.fljepY3pHPM"
+    token: "thr1.AAAAAGckH7p-lZFlj0FyOw.bpo3GzP6F-g"
   });
   // | 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
   // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
@@ -138,7 +139,6 @@ HaxballJS.then((HBInit) => {
   const cooldown2 = {};
   const cooldown3 = {};
   const cooldown4 = {};
-  const playerId = {};
   const activities = {};
   const warnedPlayers = {};
   const afkTimestamps = {};
@@ -950,11 +950,6 @@ HaxballJS.then((HBInit) => {
       return;
     }
 
-    const registeredPlayer = Object.values(playerStats).find(data => data.name === p.name && data.auth !== p.auth);
-    if (registeredPlayer) {
-      room.sendAnnouncement(`El nombre "${p.name}" ya está registrado con otro auth. Por favor, usa el comando !login [contraseña] para iniciar sesión con esa cuenta.`, p.id, 0xFF0000, "bold", 2);
-    }
-
     if (p.name.trim().length === 0 || p.name === "⠀") {
       room.kickPlayer(p.id, "Necesitas tener un carácter mínimo en el nombre.", false);
       return;
@@ -985,12 +980,13 @@ HaxballJS.then((HBInit) => {
         sanciones: 0,
         registered: false,
         pandacoins: 0,
-        color: null
+        color: null,
+        recoveryCode: ''
       };
     } else {
       if (playerStats[p.auth].name !== p.name) {
         const oldName = playerStats[p.auth].name;
-        room.sendAnnouncement(`${oldName} se cambió el nombre a ${p.name}`, null, 0xd18032, "normal", 1);
+        room.sendAnnouncement(`${oldName} se cambió el nombre a ${p.name}`, null, 0xd18032, "bold", 1);
         setTimeout(() => {
           playerStats[p.auth].name = p.name;
         }, 2000);
@@ -1000,6 +996,7 @@ HaxballJS.then((HBInit) => {
     EnLaSala[p.auth] = true;
     playerId[p.id] = p.auth;
 
+    const registeredPlayer = Object.values(playerStats).find(data => data.name === p.name && data.auth !== p.auth);
     if (!registeredPlayer) {
       room.sendAnnouncement(`[👋] ¡¡¡Bienvenido ${p.name}!!! Que disfrutes de la TEMPORADA 2 de PANDA🎋🐼.`, p.id, 0x6ce0ff, "bold", 2);
       room.sendAnnouncement(`[🐼] Usá el comando !dc para entrar al Discord de la comunidad y estar al tanto de las novedades🐼.`, p.id, 0x58d1f1, "bold", 2);
@@ -1056,7 +1053,7 @@ HaxballJS.then((HBInit) => {
 
     if (room.getPlayerList().length >= 24) {
       const playerAuth = p.auth;
-      
+
       const allowedRoles = [
         "owner",
         "coowner",
@@ -1067,14 +1064,14 @@ HaxballJS.then((HBInit) => {
         "subliderpanda",
         "asistente"
       ];
-    
+
       const hasRole = allowedRoles.some(role => rolesData.roles[role].users.includes(playerAuth));
-    
+
       if (!hasRole) {
         room.kickPlayer(p.id, "Slots reservados solo para admins.", false);
         return;
       }
-    }    
+    }
   };
 
   room.onPlayerLeave = (player) => {
@@ -1727,9 +1724,9 @@ HaxballJS.then((HBInit) => {
       mathActive = false;
     }
 
-    if (!message.startsWith("!")) {
-      sendMessages(player.name + ": " + message);
-    }
+    // if (!message.startsWith("!")) {
+    //   sendMessages(player.name + ": " + message);
+    // }
 
     if (message.startsWith("!register")) {
       const args = message.split(' ');
@@ -1780,7 +1777,8 @@ HaxballJS.then((HBInit) => {
         sanciones: 0,
         registered: true,
         pandacoins: 0,
-        color: null
+        color: null,
+        recoveryCode: ''
       };
 
       const players = room.getPlayerList().length;
@@ -2006,6 +2004,14 @@ HaxballJS.then((HBInit) => {
         } else {
           room.sendAnnouncement(`Tu contraseña: ${playerStats[playerAuth].password}`, player.id, 0xE37A11, "bold", 2);
 
+          if (!playerStats[playerAuth].recoveryCode) {
+            const codeRandom = Math.floor(100000 + Math.random() * 900000);
+            playerStats[playerAuth].recoveryCode = `${codeRandom}`;
+          }
+
+          room.sendAnnouncement(`Código de recuperación: ${playerStats[playerAuth].recoveryCode}`, player.id, 0xE37A11, "bold", 2);
+          fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
+
           const stats = `1. Partidos ❯❯ 🎮PJ: ${playerStats[playerAuth].games || 0}   •   🏆PG: ${playerStats[playerAuth].victories || 0} (${(playerStats[playerAuth].winrate || 0)}%)   •   📉PP: ${playerStats[playerAuth].defeats || 0}\n` +
             `2. Individual ❯❯ ⚽Gᴏʟᴇs: ${playerStats[playerAuth].goals || 0}  •  👟Aꜱɪꜱᴛᴇɴᴄɪᴀꜱ: ${playerStats[playerAuth].assists || 0}  •  🤦‍♂️Aᴜᴛᴏɢᴏʟᴇꜱ: ${playerStats[playerAuth].owngoals || 0}  •  🧤Vᴀʟʟᴀꜱ: ${playerStats[playerAuth].vallas || 0}  •  🎋XP: ${playerStats[playerAuth].xp || 0}  •  ⏰Sᴀɴᴄɪᴏɴᴇꜱ: ${playerStats[playerAuth].sanciones || 0}/3`;
 
@@ -2200,10 +2206,10 @@ HaxballJS.then((HBInit) => {
           room.sendAnnouncement("Necesitas estar logeado para usar este comando", player.id, 0xFF0000, "bold", 2);
         } else {
           room.sendAnnouncement(`🐼 Comandos Panditas 🐼\n` +
-            `📝 CUENTA: !register [contraseña] - !me - !login [contraseña] - !pandacoins\n` +
+            `📝 CUENTA: !register [contraseña] - !me - !login [contraseña] - !pandacoins - !recuperar [codigo] (generado del !me)\n` +
             `📊 STATS: !stats #ID - !top [ranking]\n` +
             `💬 SOCIAL: !ds / !dc / !discord - !llamaradmin RAZON y NOMBRE de user que reportas.\n` +
-            `💵 TIENDA: !tienda / !shop - !ruleta cantidad - !bet team cantidad.\n` +
+            `💵 TIENDA: !tienda / !shop - !ruleta cantidad - !bet team cantidad - !dar [pandacoins] [#idusuario].\n` +
             `⚽ JUEGO: !gk - !nv / !bb - !modos / !modo - !changecolors - !afk`,
             player.id, 0x84e35a, "small-bold", 1);
 
@@ -2854,13 +2860,94 @@ HaxballJS.then((HBInit) => {
         }
       }
       return false;
+    } else if (message.startsWith("!recuperar")) {
+      const args = message.split(" ");
+      const recoveryCode = args[1]?.trim();
+      const registeredPlayer = Object.values(playerStats).find(player => player.recoveryCode && player.recoveryCode.toString() === recoveryCode);
+
+      if (!registeredPlayer) {
+        room.sendAnnouncement("Código de recuperación incorrecto o expirado.", player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
+      if (registeredPlayer && registeredPlayer.auth !== playerAuth && registeredPlayer.name !== player.name) {
+        playerStats[playerAuth] = {
+          ...registeredPlayer,
+          name: player.name,
+          auth: playerAuth,
+          logged: true
+        };
+
+        room.sendAnnouncement("¡Recuperación exitosa!. Pandita: Recuperaste tus estadísticas🐼.", player.id, 0xa5fad3, "bold", 2);
+
+        delete playerStats[playerAuth].recoveryCode;
+        delete playerStats[registeredPlayer.auth];
+      } else {
+        room.sendAnnouncement("No se encontraron estadísticas para recuperar o ya están vinculadas a este usuario🐼❌.", player.id, 0xFF0000, "bold", 2);
+      }
+      return false;
+    } else if (message.startsWith("!dar")) {
+      const args = message.split(' ');
+      const coinsAmount = parseInt(args[1]);
+      const idPlayer = args[2] ? parseInt(args[2].replace("#", "")) : null;
+
+      if (isNaN(idPlayer)) {
+        room.sendAnnouncement("Debes proporcionar correctamente el #ID del pandita.", player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
+      if (isNaN(coinsAmount) || coinsAmount <= 0) {
+        room.sendAnnouncement("Debes proporcionar una cantidad POSITIVA de pandacoins💰❌", player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
+      if (!isLoggedIn(playerAuth)) {
+        room.sendAnnouncement("Necesitas estar logeado para usar este comando🐼.", player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
+      const playerList = room.getPlayerList();
+      const targetPlayer = playerList.find(p => p.id === idPlayer);
+
+      if (!targetPlayer) {
+        room.sendAnnouncement(`El pandita con la ID #${idPlayer} no existe o no está en la sala.`, player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
+      const targetAuth = playerId[targetPlayer.id];
+
+      if (!targetAuth) {
+        room.sendAnnouncement("No se pudo obtener la autenticación del jugador.", player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
+      if ((playerStats[playerAuth]?.pandacoins || 0) < coinsAmount) {
+        room.sendAnnouncement("No tenés pandacoins suficientes para darle a " + targetPlayer.name, player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
+      if (targetPlayer.id === player.id) {
+        room.sendAnnouncement("No podés darte pandacoins a vos mismo💸❌.", player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
+      if (coinsAmount < 20) {
+        room.sendAnnouncement("La cantidad mínima para dar pandacoins es 20💰🐼.", player.id, 0xFF0000, "bold", 2);
+        return false;
+      }
+
+      room.sendAnnouncement(`EL PANDITA ${player.name} TE REGALÓ ${coinsAmount} PANDACOINS💰🤑🐼`, targetPlayer.id, 0xead2c0, "bold", 2);
+      room.sendAnnouncement(`Le diste ${coinsAmount} pandacoins a ${targetPlayer.name}💰🤑🐼.`, 0xead2c0, "bold", 2);
+      playerStats[playerAuth].pandacoins = (playerStats[playerAuth].pandacoins || 0) - coinsAmount;
+      playerStats[targetAuth].pandacoins = (playerStats[targetAuth].pandacoins || 0) + coinsAmount;
+      return false;
     } else if (message.startsWith("!")) {
       room.sendAnnouncement("Comando desconocido o no existe, usa !help para ver los comandos", player.id, 0xFF0000, "bold", 2);
       return false;
     } else if (message.startsWith("https:")) {
       return false;
     } else if (contienePalabraCensurada(message)) {
-      room.sendAnnouncement(`SE ACTIVÓ EL FILTRO DE PANDA: ${player.name} fue kickeado por no respetar🌿🐼.`, null, 0xead2c0, "bold", 2);
+      room.sendAnnouncement(`SE ACTIVÓ EL FILTRO DE PANDA: ${player.name} fue kickeado.🌿🐼.`, null, 0xead2c0, "bold", 2);
       room.kickPlayer(player.id, "Por favor, no seas desubicado.", false);
       return false; // amor no uses el ctrl + z si lo tas usando // perdon, si fui yo jkasdkasdkjasdkj
     }// tranqui
@@ -2891,7 +2978,7 @@ HaxballJS.then((HBInit) => {
     playerStats[playerAuth].rank = rankName;
     if (playerStats && playerAuth in playerStats) {
       if (!playerStats[playerAuth].color) {
-        playerStats[playerAuth].color = colorRank || "#FFFFFF";
+        playerStats[playerAuth].color = colorRank || 0xFFFFFF;
       }
 
       fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
@@ -3055,4 +3142,4 @@ function getRoomLink() {
   return roomLink;
 } // ya elimine
 
-module.exports = { room, getRoomLink };
+module.exports = { room, getRoomLink, playerStats, playerId };
