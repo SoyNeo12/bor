@@ -1,4 +1,5 @@
 const { Client, Collection, REST, Routes } = require('discord.js');
+const { sendAnnouncement } = require('../script');
 const config = require('./config.json');
 const fs = require('fs');
 const path = require('path');
@@ -9,7 +10,12 @@ client.commands = new Collection();
 
 fs.readdirSync(path.join(__dirname, "./slashCommands")).forEach((commandFile) => {
   const command = require(path.join(__dirname, `./slashCommands/${commandFile}`));
-  client.commands.set(command.data.name, command);
+
+  if (!command.data || !command.execute) {
+    console.error(`Error en el archivo de comando ${commandFile}: falta 'data' o 'execute'`);
+  } else {
+    client.commands.set(command.data.name, command);
+  }
 });
 
 const rest = new REST().setToken(config.CLIENT_TOKEN);
@@ -37,9 +43,26 @@ client.on('ready', async (c) => {
 client.on('interactionCreate', async (interaction) => {
   if (interaction.isChatInputCommand()) {
     const command = client.commands.get(interaction.commandName);
-    command.execute(interaction).catch(console.error);
-  } else {
-    // no hace nada
+
+    if (!command) {
+      console.error(`Comando no encontrado: ${interaction.commandName}`);
+      return interaction.reply({ content: 'Comando no encontrado.', ephemeral: true });
+    }
+
+    try {
+      await command.execute(interaction);
+    } catch (error) {
+      console.error(`Error al ejecutar el comando ${interaction.commandName}:`, error);
+      interaction.reply({ content: 'Hubo un error al ejecutar este comando.', ephemeral: true });
+    }
+  }
+});
+
+client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+
+  if (message && message.channelId === '1276988562650435584') {
+    sendAnnouncement(`${message.author.username}: ${message.content}`, null, 0xB766CC, 1);
   }
 });
 
