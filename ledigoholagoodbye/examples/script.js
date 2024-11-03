@@ -3009,28 +3009,6 @@ HaxballJS.then((HBInit) => {
       return false; // amor no uses el ctrl + z si lo tas usando // perdon, si fui yo jkasdkasdkjasdkj
     }// tranqui
 
-    if (!isRegistered(playerAuth)) { // AMOR ESTÁ BIEN ESTO? // en donde
-      room.sendAnnouncement(
-        "🐼Necesitas estar registrado para hablar en el chat !register contraseña (mínimo 4 letras).",
-        player.id,
-        0xb6ea54,
-        "bold",
-        2
-      );
-      return false;
-    } // cllllaaaro
-
-    if (!isLoggedIn(playerAuth)) {
-      room.sendAnnouncement(
-        "🐼Pandita: Tenés que loguearte para escribir en el chat (!login contraseña).",
-        player.id,
-        0x78f4e3,
-        "bold",
-        2
-      );
-      return false;
-    }
-
     const { rankName, colorRank } = determineRank(playerStats[playerAuth].xp);
     playerStats[playerAuth].rank = rankName;
     if (playerStats && playerAuth in playerStats) {
