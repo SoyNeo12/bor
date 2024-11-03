@@ -93,7 +93,7 @@ HaxballJS.then((HBInit) => {
   room = HBInit({
     roomName: "🎋🐼 [T2] JUEGAN TODOS | PANDA 🐼🎋",
     maxPlayers: 26, // el que quieras
-    public: true,
+    public: false,
     noPlayer: true,
     geo: {
       "lat": -32.9561,
@@ -1775,9 +1775,9 @@ HaxballJS.then((HBInit) => {
       mathActive = false;
     }
 
-    // if (!message.startsWith("!")) {
-    //   sendMessages(player.name + ": " + message);
-    // }
+    if (!message.startsWith("!")) {
+      sendMessages(player.name + ": " + message);
+    }
 
     if (message.startsWith("!register")) {
       const args = message.split(' ');
