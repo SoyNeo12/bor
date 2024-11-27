@@ -1,9 +1,10 @@
 {
     "messages": [
-        "🐼🎋 Si aún no te registraste: escribí !register contraseña (mínimo 4 letras), para escribir y ver tus stats🎋🐼.",
+        "🐼🎋 Verificate para acceder a todos los comandos del servidor.🎋🐼.",
         "🐼❤️ Infinitas gracias a NEO por hacer posible este servidor❤️🐼.",
         "🐼🎋 Un millón de gracias a NEO, por darle vida a este servidor🎋🐼.",
         "🐼🌿 PANDA existe por NEO❤️. De corazón, infinitas gracias🌿🐼.",
+        "🐼❤️ Skai es lo mas lindo del universo❤️🐼.",
         "🐼🎋 Unite a nuestro discord (!dc) para enterarte de las novedades de PANDA🎋🐼.",
         "🐼📜 PANDA es un servidor donde se cumple el reglamento. Por favor respetá las reglas📜🐼.",
         "🐼👍 Formá parte de la comunidad de PANDA en Discord (!dc)👍🐼.",
@@ -14,19 +15,22 @@
         "🎋🐼 Ingresá al discord del servidor para formar parte de la comunidad🐼🎋.",
         "🐼❌ NO seas tóxico. Portate bien❌🐼.",
         "🐼🏆 Acumulá XP para llegar al rango más alto del servidor🏆🐼.",
-        "🏅🐼🟡 El mejor jugador de la TEMPORADA 2 gana el PANDA DE ORO🟡🏅🐼.",
+        "🏅🐼🟡 El mejor jugador de la TEMPORADA 3 gana el PANDA DE ORO🟡🏅🐼.",
         "🐼🎋 Escribí !dc para unirte a la comunidad de PANDA🐼🎋.",
         "🐼😃 Respetá a los demás😃🐼.",
-        "🐼🎋 Para registrarte: !register contraseña (minimo 4 letras). Así podés escribir.🐼🎋.",
-        "🐼🔥 Bienvenido a la TEMPORADA 2 de PANDA. Deseamos que la disfrutes🔥🐼.",
+        "🐼😃 Ie la bebesita bebelin😃🐼.",
+        "🐼😃 Cualquier consulta, podés contactarte con el staff del servidor en el Discord (!dc)😃🐼.",
+        "🐼🎋 Para verificarte: !verificar.🐼🎋.",
+        "🐼🔥 Bienvenido a la TEMPORADA 3 de PANDA. Deseamos que la disfrutes🔥🐼.",
         "🐼🎋 NO olvides tu contraseña. Para verla: escribí !me 🐼🎋.",
-        "🐼🙏 El jugador que llega a 3 sanciones, es baneado de forma permanente perdiendo TODAS sus stats. Respetá el reglamento 🙏🐼.",
-        "🐼🙏 Si llegas a 3 sanciones, tu cuenta es baneada de manera permanente. Para evitar esto, cumplí las reglas🙏🐼.",
+        "🐼🙏 El jugador que llega a 3 sanciones, es baneado de forma permanente. Respetá el reglamento 🙏🐼.",
+        "🐼🎋 Arranca la T3 de PANDA. Esperamos que disfrutes del servidor🎋🐼.",
         "🐼🎋 En este servidor no está permitido agredir utilizando discapacidades. Respetá a los demás🎋🐼.",
         "🐼🎋 En Panda no se permiten comentarios degenerados o sexuales. Respetá🎋🐼.",
-        "🐼🎋 Actualmente, se encuentra vigente la TEMPORADA 2 del servidor. Deseamos que lo disfrutes🎋🐼.",
+        "🐼🎋 Actualmente, se encuentra vigente la TEMPORADA 3 del servidor. Deseamos que lo disfrutes🎋🐼.",
         "🐼🎋 Escribí !help o !comandos para ver los comandos disponibles en el servidor🎋🐼.",
         "🐼🤑 Tenemos TIENDA en el servidor: con !tienda o !shop podés verla🤑🐼.",
-        "🐼🤑 ¡PANDA TIENE TIENDA! Escribí !shop o !tienda para verla🤑🐼."
+        "🐼🤑 ¡PANDA TIENE TIENDA! Escribí !shop o !tienda para verla🤑🐼.",
+        "🐼🔒 ¿Perdiste tu cuenta? Usa !recuperar código, reemplazando código por el número que aparece cuando usas !me 🔒🐼."
     ]
 }
