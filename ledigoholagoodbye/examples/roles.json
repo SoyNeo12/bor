@@ -4,222 +4,46 @@
       "users": [
         "xx026X9f-zo8AkSfsIdQG_B0ezv63GNU-OHoSzeehuE"
       ],
-      "commands": [
-        "!mute",
-        "!me",
-        "!stats",
-        "!afk",
-        "!bb",
-        "!nv",
-        "!help",
-        "!comandos",
-        "!discord",
-        "!dc",
-        "!admin",
-        "!ksk",
-        "!modo",
-        "!register",
-        "!sancionar",
-        "!agregar_rol"
-      ],
       "gameAdmin": true
     },
     "coowner": {
       "users": [
-        "cIf5Utnly0i4HxoQjkM77uoOF6uN8AJISkiu1rEqV2E"
-      ],
-      "commands": [
-        "!ban",
-        "!kick",
-        "!mute",
-        "!me",
-        "!stats",
-        "!afk",
-        "!bb",
-        "!nv",
-        "!help",
-        "!comandos",
-        "!discord",
-        "!dc",
-        "!admin",
-        "!ksk",
-        "!modo",
-        "!register",
-        "!sancionar",
-        "!agregar_rol"
+        "lGLObQoV_8MCQkhRCsCw2Tt4IInVNCD-l3ltJZFtTbE"
       ],
       "gameAdmin": true
     },
     "granpanda": {
-      "users": [
-        "5QvFK2VAyuscy46N94nvRI5NiHUZc8vX_ANj6YxhTSE",
-        "cIf5Utnly0i4HxoQjkM77uoOF6uN8AJISkiu1rEqV2E"
-      ],
-      "commands": [
-        "!ban",
-        "!kick",
-        "!mute",
-        "!me",
-        "!stats",
-        "!afk",
-        "!bb",
-        "!nv",
-        "!help",
-        "!comandos",
-        "!discord",
-        "!dc",
-        "!admin",
-        "!ksk",
-        "!modo",
-        "!register",
-        "!sancionar",
-        "!agregar_rol"
-      ],
+      "users": [],
       "gameAdmin": true
     },
     "jefepanda": {
-      "users": [
-        "nyTABalTzq0Rml8fmrYxQTViVWJIkHJJS3uTYHwvjsk",
-        "-Hhs7MF8l3L1xUA-Gca8Ojbq2rsRTqwSObQTHxUMSeE"
-      ],
-      "commands": [
-        "!ban",
-        "!kick",
-        "!mute",
-        "!me",
-        "!stats",
-        "!afk",
-        "!bb",
-        "!nv",
-        "!help",
-        "!comandos",
-        "!discord",
-        "!dc",
-        "!admin",
-        "!ksk",
-        "!modo",
-        "!register",
-        "!sancionar",
-        "!agregar_rol"
-      ],
+      "users": [],
       "gameAdmin": true
     },
     "maestropanda": {
-      "users": [
-        "1Qe4HxC_GNlSHBNwvrMD1ag3QOa1WwNMpDM494xRfew",
-        "SoK2dujdRquVVDk3dpTQ5PAUM1XIcP_ky8Io7QydkOA"
-      ],
-      "commands": [
-        "!ban",
-        "!kick",
-        "!mute",
-        "!me",
-        "!stats",
-        "!afk",
-        "!bb",
-        "!nv",
-        "!help",
-        "!comandos",
-        "!discord",
-        "!dc",
-        "!admin",
-        "!ksk",
-        "!modo",
-        "!register",
-        "!sancionar",
-        "!agregar_rol"
-      ],
+      "users": [],
       "gameAdmin": true
     },
     "liderpanda": {
-      "users": [
-        "AwCd7mrYBSYa9ceoFkZekEfUJwhvibLX7T527-E5OUA"
-      ],
-      "commands": [
-        "!ban",
-        "!kick",
-        "!mute",
-        "!me",
-        "!stats",
-        "!afk",
-        "!bb",
-        "!nv",
-        "!help",
-        "!comandos",
-        "!discord",
-        "!dc",
-        "!admin",
-        "!ksk",
-        "!modo",
-        "!register",
-        "!sancionar",
-        "!agregar_rol"
-      ],
+      "users": [],
       "gameAdmin": true
     },
     "subliderpanda": {
       "users": [],
-      "commands": [
-        "!ban",
-        "!kick",
-        "!mute",
-        "!me",
-        "!stats",
-        "!afk",
-        "!bb",
-        "!nv",
-        "!help",
-        "!comandos",
-        "!discord",
-        "!dc",
-        "!admin",
-        "!ksk",
-        "!modo",
-        "!register",
-        "!sancionar",
-        "!agregar_rol"
-      ],
       "gameAdmin": true
     },
     "asistente": {
       "users": [],
-      "commands": [
-        "!ban",
-        "!kick",
-        "!mute",
-        "!me",
-        "!stats",
-        "!afk",
-        "!bb",
-        "!nv",
-        "!help",
-        "!comandos",
-        "!discord",
-        "!dc",
-        "!admin",
-        "!ksk",
-        "!modo",
-        "!register",
-        "!sancionar",
-        "!agregar_rol"
-      ],
       "gameAdmin": true
+    },
+    "vips": {
+      "users": [
+        "lGLObQoV_8MCQkhRCsCw2Tt4IInVNCD-l3ltJZFtTbE"
+      ],
+      "gameAdmin": false
     },
     "usuarios": {
       "users": [],
-      "commands": [
-        "!me",
-        "!stats",
-        "!afk",
-        "!bb",
-        "!nv",
-        "!help",
-        "!comandos",
-        "!discord",
-        "!dc",
-        "!admin",
-        "!register"
-      ],
       "gameAdmin": false
     }
   }
