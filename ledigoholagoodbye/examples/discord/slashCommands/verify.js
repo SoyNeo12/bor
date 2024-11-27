@@ -11,7 +11,7 @@ module.exports = {
     .setDescription("Verifícate para poder usar todos los comandos y tener exp en HaxBall")
     .addStringOption(option =>
       option.setName("uuid")
-        .setDescription("UUID obtenido del comando !me dentro del host")
+        .setDescription("UUID obtenido del comando !verificar dentro del host")
         .setRequired(true)
     ),
   execute: async (interaction) => {
@@ -36,20 +36,20 @@ module.exports = {
     }
 
     try {
-      const verifyRequests = JSON.parse(await fs.readFile(verifyFilePath, 'utf-8')).requests || [];
-
-      verifyRequests.push({
-        uuid,
-        playerName: playerData.name,
-        timestamp: Date.now(),
-      });
+      let verifyRequests = [];
+      try {
+        const data = await fs.readFile(verifyFilePath, 'utf-8');
+        verifyRequests = JSON.parse(data).requests || [];
+      } catch (err) {
+        if (err.code !== 'ENOENT') throw err;
+      }
 
       await fs.writeFile(verifyFilePath, JSON.stringify({ requests: verifyRequests }, null, 2));
 
       await interaction.reply({ content: `Solicitud de verificación registrada. Ya puedes usar comandos, **${playerData.name}**.`, ephemeral: true });
       sendAnnouncement(`${playerData.name} ha solicitado verificación usando el comando /verificar`, null, 0x00FF00, "bold", 1);
       playerData.verified = true;
-      fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
+      await fs.writeFile(playersFilePath, JSON.stringify(playerStats, null, 2));
 
     } catch (error) {
       console.error("Error al guardar la solicitud de verificación:", error);
