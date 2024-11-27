@@ -27,20 +27,20 @@ module.exports = {
     }
 
     const statsEmbed = new EmbedBuilder()
-      .setColor('#0099ff')
+      .setColor('#1E90FF')
       .setTitle(`Estadísticas de ${stats.name}`)
       .addFields(
         { name: '🐼Partidos Jugados🐼', value: stats.games.toString(), inline: true },
-        { name: '✅Victorias✅', value: stats.victories.toString(), inline: true },
-        { name: '❌Derrotas❌', value: stats.defeats.toString(), inline: true },
-        { name: '⚽Goles⚽', value: stats.goals.toString(), inline: true },
-        { name: '👟Asistencias👟', value: stats.assists.toString(), inline: true },
-        { name: '🧤Vallas🧤', value: stats.vallas.toString(), inline: true },
-        { name: '📈Winrate📈', value: `${stats.winrate}%`, inline: true },
-        { name: '🆙XP🆙', value: stats.xp.toString(), inline: true },
-        { name: '🤡Autogoles🤡', value: stats.owngoals.toString(), inline: true },
-        { name: '💰Pandacoins💰', value: stats.pandacoins.toString(), inline: true },
-        { name: '👎Sanciones👎', value: stats.sanciones.toString(), inline: true },
+        { name: '✅Victorias✅', value: stats.victories.toString(), inline: false },
+        { name: '❌Derrotas❌', value: stats.defeats.toString(), inline: false },
+        { name: '⚽Goles⚽', value: stats.goals.toString(), inline: false },
+        { name: '👟Asistencias👟', value: stats.assists.toString(), inline: false },
+        { name: '🧤Vallas🧤', value: stats.vallas.toString(), inline: false },
+        { name: '📈Winrate📈', value: `${stats.winrate}%`, inline: false },
+        { name: '🆙XP🆙', value: stats.xp.toString(), inline: false },
+        { name: '🤡Autogoles🤡', value: stats.owngoals.toString(), inline: false },
+        { name: '💰Pandacoins💰', value: stats.pandacoins.toString(), inline: false },
+        { name: '👎Sanciones👎', value: stats.sanciones.toString(), inline: false },
       )
       .setTimestamp()
       .setFooter({ text: 'Datos obtenidos de Haxball' });

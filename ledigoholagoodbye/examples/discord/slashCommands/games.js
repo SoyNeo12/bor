@@ -6,9 +6,11 @@ let lastGameId = null;
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("game")
-    .setDescription("🐼🤩Recomienda un juego del sitio oficial de RAGW🐼🤩."),
+    .setDescription("🐼🤩Recomienda un juego del sitio oficial de RAWG🐼🤩."),
   execute: async (interaction) => {
     try {
+      await interaction.deferReply();
+
       const response = await axios.get("https://api.rawg.io/api/games", {
         params: {
           key: "68c2f47da8b1449a96bcee155b0d654c",
@@ -20,7 +22,7 @@ module.exports = {
       let games = response.data.results.filter(game => game.rating >= 4 && game.id !== lastGameId);
 
       if (!games || games.length === 0) {
-        await interaction.reply({ content: "No se encontraron juegos con calificación alta en este momento.", ephemeral: true });
+        await interaction.editReply({ content: "No se encontraron juegos con calificación alta en este momento.", ephemeral: true });
         return;
       }
 
@@ -37,10 +39,13 @@ module.exports = {
         })
         .setImage(game.background_image);
 
-      await interaction.reply({ embeds: [embed] });
+      const replyMessage = await interaction.editReply({ embeds: [embed] });
+
+      await replyMessage.react("✅");
+      await replyMessage.react("❌");
     } catch (error) {
       console.error("Error al obtener juegos de RAWG:", error);
-      await interaction.reply({ content: "❌Hubo un error al obtener la recomendación de juego❌.", ephemeral: true });
+      await interaction.editReply({ content: "❌Hubo un error al obtener la recomendación de juego❌.", ephemeral: true });
     }
   }
 };
