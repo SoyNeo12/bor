@@ -95,7 +95,7 @@ HaxballJS.then((HBInit) => {
         "lon": -60.6559,
         "code": "MO"
       },
-      token: "thr1.AAAAAGdHfsZ8tHoH_d326A.pZoa-FeEwg4"
+      token: "thr1.AAAAAGdItq2zhgxWptlcSQ.gItqxfl0xEs"
     });
     // | 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
     // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
@@ -176,8 +176,9 @@ HaxballJS.then((HBInit) => {
     const activities = {};
     const warnedPlayers = {};
     const afkTimestamps = {};
+    const mathTimestamps = {};
 
-    const palabrasCensuradas = ['puto', 'sida', 'cancer', 'cancerigeno', 'son un asco', 'son muy malos', 'mono', 'negro de mierda', 'argensimios', 'trolo', 'sidoso', 'sidosos', 'retrasado mental', 'putas', 'putos', 'coger', 'garchar', 'sexo', 'down', 'autismo', 'd0wn', 'travesti', 'mueranse', 'chupame la pija', 'la concha de tu madre', 'suicidate', 'matate', 'pegate un tiro', 'son una mierda', 'gay', 'traba', 'violar', 'pija', 'pelotudo', 'chupar', 'chupala', 'chupa', 'verga', 'autista', 'mongolico', 'mogolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos', 'chupas', 'nazi', 'nasi']; const POWER_HOLD_TIME = 1800;
+    const palabrasCensuradas = ['puto', 'horrendos', 'puta', 'sida', 'cancer', 'cancerigeno', 'son un asco', 'son muy malos', 'mono', 'negro de mierda', 'argensimios', 'trolo', 'sidoso', 'sidosos', 'retrasado mental', 'putas', 'putos', 'coger', 'garchar', 'sexo', 'down', 'autismo', 'd0wn', 'travesti', 'mueranse', 'chupame la pija', 'la concha de tu madre', 'suicidate', 'matate', 'pegate un tiro', 'son una mierda', 'gay', 'traba', 'violar', 'pija', 'pelotudo', 'chupar', 'chupala', 'chupa', 'verga', 'autista', 'mongolico', 'mogolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos', 'chupas', 'nazi', 'nasi']; const POWER_HOLD_TIME = 1800;
     const MODES = ['power', 'comba'];
     const BOOST_SPEEDS = [1.2, 1.5, 1.7, 2];
     const COLORS = [0xFF0204, 0xE60102, 0xB50002, 0x540202];
@@ -187,7 +188,7 @@ HaxballJS.then((HBInit) => {
     const GRAVITY_HOLD_TIME = 1800;
     const warningTime = 15000;
 
-    let powerEnabled = true;
+    let powerEnabled = false;
     let gravityEnabled = false;
     let gravityActive = false;
     let powerActive = false;
@@ -529,6 +530,11 @@ HaxballJS.then((HBInit) => {
             cMask: 0 | cf.wall
           });
         }
+
+        chaosModeTimer = setTimeout(() => {
+          resetChaosMode(mode);
+          room.sendAnnouncement(`MODO ${mode} RESETEADO`, null, null, "bold", 2);
+        }, remainingTime);
       }
     }
 
@@ -619,19 +625,16 @@ HaxballJS.then((HBInit) => {
     }
 
     function kickAFKs() {
-      for (let playerId in afkPlayers) {
-        const player = room.getPlayer(playerId);
-
-        if (player) {
+      const players = room.getPlayerList();
+      for (let player of players) {
+        if (afkPlayers[player.id]) {
           const playerAuth = playerId[player.id];
-
-          if (
-            (Date.now() - afkTimestamps[playerId]) >= 300000 &&
-            !rolesData.roles["vips"]?.users.includes(playerAuth)
-          ) {
-
-            room.kickPlayer(playerId, "AFK por 5 minutos, vuelve de nuevo.", false);
-            delete afkPlayers[playerId];
+          if (!rolesData.roles["vips"]?.users.includes(playerAuth)) {
+            const lastActive = afkTimestamps[player.id] || 0;
+            if ((Date.now() - lastActive) >= 300000) {
+              room.kickPlayer(player.id, "AFK por 5 minutos, vuelve de nuevo.", false);
+              delete afkPlayers[player.id];
+            }
           }
         }
       }
@@ -1183,7 +1186,7 @@ HaxballJS.then((HBInit) => {
         room.sendAnnouncement("Slots activados solamente para admins y vips.", null, 0x00FF00, "bold", 2);
       }
 
-      if (players.length >= 22) {
+      if (players.length > 22) {
         const playerAuth = p.auth;
 
         const allowedRoles = [
@@ -1631,7 +1634,7 @@ HaxballJS.then((HBInit) => {
           if (targetAuth && !bannedPlayers.some(entry => entry.auth === targetAuth)) {
             bannedPlayers.push({ name: kickedPlayer.name, auth: targetAuth });
             if (rolesData.roles[playerRole]) {
-              rolesData.roles[playerRole].users = rolesData.roles[playerRole].users.filter(userAuth => userAuth !== authToBan);
+              rolesData.roles[playerRole].users = rolesData.roles[playerRole].users.filter(userAuth => userAuth !== targetAuth);
             }
             delete playerStats[targetAuth];
             try {
@@ -1904,7 +1907,7 @@ HaxballJS.then((HBInit) => {
         sendMessages(player.name + ": " + message);
       } else {
         const now = Date.now();
-        const cooldownTime = 15000;
+        const cooldownTime = 5000;
         const lastUsed = cooldown[player.id] || 0
 
         if (now - lastUsed < cooldownTime) {
@@ -2374,18 +2377,21 @@ HaxballJS.then((HBInit) => {
           if (!playerStats[playerAuth].verified) {
             room.sendAnnouncement("Necesitas estar verificado para usar este comando", player.id, 0xFF0000, "bold", 2);
           } else {
+            const args = message.split(' ');
+            const reason = args.slice(1).join(' ').trim();
+
             if (!reason) {
               room.sendAnnouncement("Debes proporcionar una razon", player.id, 0xFF0000, "bold", 2);
               return false;
-            } else {
-              room.sendAnnouncement("Llamado enviado correctamente al discord, espera tu respuesta.", player.id, 0x00FF00, "bold", 1);
-              axios.post('https://discord.com/api/webhooks/1278864671549554740/I3lBBqBqfzqubZZYld3bh0ilkOhYhLP5yRVGmDPS7rMSO_SQInh7OHZycr5JHDXfP5qb', {
-                content: `||@everyone||\n**${player.name}** pide de su ayuda\nRazon: **${reason}**`
-              })
-                .catch(error => {
-                  console.error('Error al enviar el mensaje al Discord:', error);
-                });
             }
+
+            room.sendAnnouncement("Llamado enviado correctamente al discord, espera tu respuesta.", player.id, 0x00FF00, "bold", 1);
+            axios.post('https://discord.com/api/webhooks/1278864671549554740/I3lBBqBqfzqubZZYld3bh0ilkOhYhLP5yRVGmDPS7rMSO_SQInh7OHZycr5JHDXfP5qb', {
+              content: `||@everyone||\n**${player.name}** pide de su ayuda\nRazon: **${reason}**`
+            })
+              .catch(error => {
+                console.error('Error al enviar el mensaje al Discord:', error);
+              });
           }
         }
         return false;
@@ -2618,7 +2624,7 @@ HaxballJS.then((HBInit) => {
                     room.setPlayerDiscProperties(p.id, { radius: playerRadius });
 
                     if (playerSizes[p.id]) {
-                      room.setPlayerDiscProperties(p.id, { radius: playerRadius });
+                      room.setPlayerDiscProperties(p.id, { radius: playerSizes[p.id] });
                     }
                   }, 30000);
                 });
@@ -2661,7 +2667,7 @@ HaxballJS.then((HBInit) => {
                   }, 30000);
 
                   if (playerSizes[p.id]) {
-                    room.setPlayerDiscProperties(p.id, { radius: playerRadius });
+                    room.setPlayerDiscProperties(p.id, { radius: playerSizes[p.id] });
                   }
                 });
                 playerStats[playerAuth].pandacoins -= 4000;
@@ -2947,8 +2953,12 @@ HaxballJS.then((HBInit) => {
         playerStats[targetAuth].pandacoins = (playerStats[targetAuth].pandacoins || 0) + coinsAmount;
         return false;
       } else if (message === "!verificar") {
-        room.sendAnnouncement(`🐼 Pandita, esta es tu UUID: ${playerStats[playerAuth]?.uuid}`, player.id, 0x3eec4b, "bold", 2);
-        room.sendAnnouncement("🐼 En nuestro discord, tenés que escribir /verificar con el Bot de Panda.", player.id, 0x86ee8e, "bold", 2);
+        if (!playerStats[playerAuth].verified) {
+          room.sendAnnouncement(`🐼 Pandita, esta es tu UUID: ${playerStats[playerAuth]?.uuid}`, player.id, 0x3eec4b, "bold", 2);
+          room.sendAnnouncement("🐼 En nuestro discord, tenés que escribir /verificar con el Bot de Panda.", player.id, 0x86ee8e, "bold", 2);
+        } else {
+          room.sendAnnouncement("❌ No puedes usar este comando, ya estas verificado", player.id, 0xFF0000, "bold", 2);
+        }
         return false;
       } else if (message === "!ksk") {
         if (!rolesData.roles["vips"]?.users.includes(playerAuth)) {
@@ -2960,6 +2970,7 @@ HaxballJS.then((HBInit) => {
         room.sendAnnouncement(`🌟👕 ¡El VIP ${player.name} ha cambiado las camisetas! 👕🐼!`, player.id, 0x64b3ec, "bold", 2);
         votes = 0;
         votedPlayers = [];
+        return false;
       } else if (message.startsWith("!")) {
         room.sendAnnouncement("Comando desconocido o no existe, usa !help para ver los comandos", player.id, 0xFF0000, "bold", 2);
         return false;
@@ -2991,7 +3002,7 @@ HaxballJS.then((HBInit) => {
         "owner": { prefix: "🐼❤️ FUNDADOR PANDA", color: 0xff68ea },
         "coowner": { prefix: "🐼❤️ CO-FUNDADOR PANDA", color: 0x65B3C3 },
         "granpanda": { prefix: "⭐ GRAN PANDA", color: 0xd0a6f5 },
-        "jefepanda": { prefix: "JEFE PANDA", color: 0xA5F685 },
+        "jefepanda": { prefix: "COMANDANTE PANDA", color: 0xA5F685 },
         "maestropanda": { prefix: "MAESTRO PANDA", color: 0xfd6e6e },
         "liderpanda": { prefix: "LIDER PANDA", color: 0x2ff6fd },
         "subliderpanda": { prefix: "SUB-LIDER PANDA", color: 0x1ee8f0 },
@@ -3129,14 +3140,14 @@ HaxballJS.then((HBInit) => {
     }, 100);
 
     setInterval(() => {
-      if (isGameStart === true) {
-        chaosMode();
-      }
+      chaosMode();
     }, 180000);
 
-    setInterval(() => {
-      if (!mathActive) startMathMinigame();
-    }, 20000);
+    if (!mathActive) {
+      setInterval(() => {
+        startMathMinigame();
+      }, 120000);
+    }
 
     setInterval(generateRanking, 3600000);
   } catch (err) {
