@@ -1899,7 +1899,7 @@ HaxballJS.then((HBInit) => {
 
       if (mathActive && Math.abs(parseFloat(message) - parseFloat(currentAnswer)) < 0.01) {
         if (playerStats) playerStats[playerAuth].pandacoins += 4;
-        room.sendAnnouncement(`¡🎉 EL PANDITA ${player.name} ACERTÓ LA RESPUESTA CORRECTA. FELICITACIONES!`, null, 0xabffd0, "bold", 2);
+        room.sendAnnouncement(`¡🎉 EL PANDITA ${player.name} ACERTÓ LA RESPUESTA CORRECTA Y GANO 4 PANDACOINS. FELICITACIONES!`, null, 0xabffd0, "bold", 2);
         mathActive = false;
       }
 
@@ -2493,11 +2493,11 @@ HaxballJS.then((HBInit) => {
           if (!playerStats[playerAuth].verified) {
             room.sendAnnouncement("Necesitas estar verificado para usar este comando", player.id, 0xFF0000, "bold", 2);
           } else {
-            room.sendAnnouncement("!color [#hexacolor] - Cambia permanentemente el color de tus mensajes. (12000 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
-            room.sendAnnouncement("!size [tamaño] - Cambia tu tamaño -entre 10 y 20-. Se reinicia al terminar el partido. (1000 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
-            room.sendAnnouncement("!bigall - Todos gordos por 30 segs o hasta que metan gol. (4000 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
-            room.sendAnnouncement("!smallall - Todos pequeños por 30 segs o hasta que metan gol. (4000 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
-            room.sendAnnouncement("!festejo - Personalizá tu festejo al meter un gol -permanente-. (3000 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+            room.sendAnnouncement("!color [#hexacolor] - Cambia permanentemente el color de tus mensajes. (10000 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+            room.sendAnnouncement("!size [tamaño] - Cambia tu tamaño -entre 10 y 20-. Se reinicia al terminar el partido. (900 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+            room.sendAnnouncement("!bigall - Todos gordos por 30 segs o hasta que metan gol. (3200 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+            room.sendAnnouncement("!smallall - Todos pequeños por 30 segs o hasta que metan gol. (3200 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+            room.sendAnnouncement("!festejo - Personalizá tu festejo al meter un gol -permanente-. (2800 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
           }
         }
         return false;
@@ -2942,8 +2942,8 @@ HaxballJS.then((HBInit) => {
           return false;
         }
 
-        if (coinsAmount < 200) {
-          room.sendAnnouncement("La cantidad mínima para dar pandacoins es 200💰🐼.", player.id, 0xFF0000, "bold", 2);
+        if (coinsAmount < 50) {
+          room.sendAnnouncement("La cantidad mínima para dar pandacoins es 50💰🐼.", player.id, 0xFF0000, "bold", 2);
           return false;
         }
 
@@ -2954,8 +2954,8 @@ HaxballJS.then((HBInit) => {
         return false;
       } else if (message === "!verificar") {
         if (!playerStats[playerAuth].verified) {
-          room.sendAnnouncement(`🐼 Pandita, esta es tu UUID: ${playerStats[playerAuth]?.uuid}`, player.id, 0x3eec4b, "bold", 2);
-          room.sendAnnouncement("🐼 En nuestro discord, tenés que escribir /verificar con el Bot de Panda.", player.id, 0x86ee8e, "bold", 2);
+          room.sendAnnouncement(`🐼Tu código (UUID): ${playerStats[playerAuth]?.uuid}, COPIALO y mirá el msj de abajo.`, player.id, 0x3eec4b, "bold", 2);
+          room.sendAnnouncement("🐼En nuestro discord (!dc), en cualquier canal escribí /verificar codigo (interactuando con el bot de panda). Esto se hace solo una vez.", player.id, 0x86ee8e, "bold", 2);
         } else {
           room.sendAnnouncement("❌ No puedes usar este comando, ya estas verificado", player.id, 0xFF0000, "bold", 2);
         }
@@ -2997,17 +2997,20 @@ HaxballJS.then((HBInit) => {
       }
 
       const roles = rolesData.roles;
-      const playerRank = playerStats[playerAuth].rank ? playerStats[playerAuth].rank : "Sin rango(no verificado)";
+      const playerRank =
+        playerStats[playerAuth] && playerStats[playerAuth].verified && playerStats[playerAuth].rank
+          ? playerStats[playerAuth].rank
+          : "Sin rango(no verificado)";
       const rolesConfig = {
         "owner": { prefix: "🐼❤️ FUNDADOR PANDA", color: 0xff68ea },
         "coowner": { prefix: "🐼❤️ CO-FUNDADOR PANDA", color: 0x65B3C3 },
         "granpanda": { prefix: "⭐ GRAN PANDA", color: 0xd0a6f5 },
         "jefepanda": { prefix: "COMANDANTE PANDA", color: 0xA5F685 },
         "maestropanda": { prefix: "MAESTRO PANDA", color: 0xfd6e6e },
-        "liderpanda": { prefix: "LIDER PANDA", color: 0x2ff6fd },
+        "liderpanda": { prefix: "CAPITAN PANDA", color: 0x2ff6fd },
         "subliderpanda": { prefix: "SUB-LIDER PANDA", color: 0x1ee8f0 },
         "asistente": { prefix: "ASISTENTE PANDA", color: 0x17dde5 },
-        "vips": { prefix: "🌟VIP", color: playerStats[playerAuth].colorVip ? playerStats[playerAuth].colorVip : 0x7988f5 },
+        "vips": { prefix: "🌟VIP", color: playerStats[playerAuth]?.colorVip || 0x7988f5 },
       };
 
       for (const [role, { prefix, color }] of Object.entries(rolesConfig)) {
@@ -3023,9 +3026,9 @@ HaxballJS.then((HBInit) => {
       }
 
       const teamEmoji = player.team === 1 ? "🔴" : "🔵";
-      room.sendAnnouncement(`[${teamEmoji}] [${player.id}] / ${playerRank} ${player.name}: ${message}`, null, playerStats[playerAuth].color || 0xFFFFFF, "normal", 1);
+      room.sendAnnouncement(`[${teamEmoji}] [${player.id}] / ${playerRank} ${player.name}: ${message}`, null, playerStats[playerAuth]?.color || 0xFFFFFF, "normal", 1);
       return false;
-    };
+    }
 
     setInterval(() => {
       messagesRandom();
