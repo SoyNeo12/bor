@@ -88,7 +88,7 @@ HaxballJS.then((HBInit) => {
     room = HBInit({
       roomName: "🎄🐼 [T3] JUEGAN TODOS | PANDA 🐼🎄",
       maxPlayers: 24, // el que quieras
-      public: false,
+      public: true,
       noPlayer: true,
       geo: {
         "lat": -32.9561,
@@ -1635,11 +1635,10 @@ HaxballJS.then((HBInit) => {
             bannedPlayers.push({ name: kickedPlayer.name, auth: targetAuth });
             if (rolesData.roles[playerRole]) {
               rolesData.roles[playerRole].users = rolesData.roles[playerRole].users.filter(userAuth => userAuth !== targetAuth);
+              fs.writeFileSync(rolesFilePath, JSON.stringify(rolesData, null, 2));
             }
-            delete playerStats[targetAuth];
             try {
               fs.writeFileSync(bannedPlayersFilePath, JSON.stringify(bannedPlayers, null, 2));
-              fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
               console.log(`Jugador ${kickedPlayer.name} añadido a la lista de baneos.`);
             } catch (err) {
               console.error('Error al escribir el archivo de baneos:', err);
