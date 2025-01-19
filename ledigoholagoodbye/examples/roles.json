@@ -2,13 +2,12 @@
   "roles": {
     "owner": {
       "users": [
-        "xx026X9f-zo8AkSfsIdQG_B0ezv63GNU-OHoSzeehuE"
       ],
       "gameAdmin": true
     },
     "coowner": {
       "users": [
-        "lGLObQoV_8MCQkhRCsCw2Tt4IInVNCD-l3ltJZFtTbE"
+        "3138362E35322E3139312E313839"
       ],
       "gameAdmin": true
     },
@@ -38,7 +37,6 @@
     },
     "vips": {
       "users": [
-        "lGLObQoV_8MCQkhRCsCw2Tt4IInVNCD-l3ltJZFtTbE"
       ],
       "gameAdmin": false
     },
