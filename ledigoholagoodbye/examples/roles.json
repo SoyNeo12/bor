@@ -1,0 +1,50 @@
+{
+  "roles": {
+    "owner": {
+      "users": [
+        "xx026X9f-zo8AkSfsIdQG_B0ezv63GNU-OHoSzeehuE"
+      ],
+      "gameAdmin": true
+    },
+    "coowner": {
+      "users": [
+        "lGLObQoV_8MCQkhRCsCw2Tt4IInVNCD-l3ltJZFtTbE"
+      ],
+      "gameAdmin": true
+    },
+    "granpanda": {
+      "users": [],
+      "gameAdmin": true
+    },
+    "jefepanda": {
+      "users": [],
+      "gameAdmin": true
+    },
+    "maestropanda": {
+      "users": [],
+      "gameAdmin": true
+    },
+    "liderpanda": {
+      "users": [],
+      "gameAdmin": true
+    },
+    "subliderpanda": {
+      "users": [],
+      "gameAdmin": true
+    },
+    "asistente": {
+      "users": [],
+      "gameAdmin": true
+    },
+    "vips": {
+      "users": [
+        "lGLObQoV_8MCQkhRCsCw2Tt4IInVNCD-l3ltJZFtTbE"
+      ],
+      "gameAdmin": false
+    },
+    "usuarios": {
+      "users": [],
+      "gameAdmin": false
+    }
+  }
+}
