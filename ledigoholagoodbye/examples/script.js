@@ -2400,7 +2400,7 @@ HaxballJS.then((HBInit) => {
             }
 
             room.sendAnnouncement("Llamado enviado correctamente al discord, espera tu respuesta.", player.id, 0x00FF00, "bold", 1);
-            axios.post('https://discord.com/api/webhooks/1278864671549554740/I3lBBqBqfzqubZZYld3bh0ilkOhYhLP5yRVGmDPS7rMSO_SQInh7OHZycr5JHDXfP5qb', {
+            axios.post('https://discord.com/api/webhooks/1330572078574862499/9luIZ2o1YmKQageL2Tsgm2-tfm3ZfMWJr-TSmD7RMf1w0Pb2tYvjjat5kMVJC631eUhl', {
               content: `||@everyone||\n**${player.name}** pide de su ayuda\nRazon: **${reason}**`
             })
               .catch(error => {
