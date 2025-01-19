@@ -2240,7 +2240,7 @@ HaxballJS.then((HBInit) => {
 
             if (player.admin) {
               room.sendAnnouncement(`🔨 Comandos  Staff 🔨\n` +
-                `⚠️ Moderación: !sancionar #ID [razón] - !unban [@jugador] - !quitarsancion #ID - !unban [auth]\n` +
+                `⚠️ Moderación: !sancionar #ID [razón] - !unban [@jugador] - !quitarsancion #ID - !banconn [conn]\n` +
                 `🛠️ Gestión: !agregar [rol] [@jugador] - !power - !comba`,
                 player.id, 0x63d033, "small-bold", 1);
             }
