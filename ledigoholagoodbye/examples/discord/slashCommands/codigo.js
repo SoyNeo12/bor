@@ -17,7 +17,7 @@ module.exports = {
   execute: async (interaction) => {
     const playerName = interaction.options.getString('nombre');
     const matchingPlayers = Object.keys(playerStats)
-      .filter(auth => playerStats[auth]?.name.includes(playerName));
+      .filter(conn => playerStats[conn]?.name.includes(playerName));
 
     if (matchingPlayers.length === 0) {
       await interaction.reply({ content: 'Pandita no encontrado❌🐼.', ephemeral: true });
@@ -34,8 +34,8 @@ module.exports = {
       }
 
       if (matchingPlayers.length > 1) {
-        const options = matchingPlayers.map(auth => {
-          const player = playerStats[auth];
+        const options = matchingPlayers.map(conn => {
+          const player = playerStats[conn];
           let registrationDate = new Date(player.registrationDate);
           if (isNaN(registrationDate)) {
             registrationDate = 'Fecha no válida';
@@ -45,7 +45,7 @@ module.exports = {
           return {
             label: `${player.name} (Registro: ${registrationDate || "Sin fecha de registro"})`,
             description: `Selecciona para ver el código de ${player.name}`,
-            value: auth
+            value: conn
           };
         });
 
@@ -66,8 +66,8 @@ module.exports = {
         const collector = interaction.channel.createMessageComponentCollector({ filter, time: 15000 });
 
         collector.on('collect', async (i) => {
-          const selectedAuth = i.values[0];
-          const player = playerStats[selectedAuth];
+          const selectedConn = i.values[0];
+          const player = playerStats[selectedConn];
           const registrationDate = new Date(player.registrationDate).toLocaleDateString('es-ES');
           const recoveryCode = player.recoveryCode || "No se encontró el código de recuperación para este pandita❌.";
 
@@ -87,8 +87,8 @@ module.exports = {
         });
 
       } else {
-        const singleAuth = matchingPlayers[0];
-        const player = playerStats[singleAuth];
+        const singleConn = matchingPlayers[0];
+        const player = playerStats[singleConn];
         let registrationDate = new Date(player.registrationDate).toLocaleDateString('es-ES');
         const recoveryCode = player.recoveryCode || "No se encontró el código de recuperación para este pandita❌.";
 
