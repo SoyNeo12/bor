@@ -13,21 +13,21 @@ module.exports = {
   execute: async (interaction) => {
     const playerName = interaction.options.getString('nombre');
 
-    const playerAuth = Object.keys(playerStats).find(auth => playerStats[auth].name === playerName);
+    const playerConn = Object.keys(playerStats).find(conn => playerStats[conn].name === playerName);
 
-    if (!playerAuth) {
+    if (!playerConn) {
       await interaction.reply({ content: 'Pandita no encontrado🐼❌.', ephemeral: true });
       return;
     }
 
-    const stats = playerStats[playerAuth];
+    const stats = playerStats[playerConn];
 
     if (!stats) {
       await interaction.reply({ content: 'No se encontraron estadísticas para este jugador🐼❌.', ephemeral: true });
       return;
     }
 
-    const verifiedPlayer = verifyPlayers[playerAuth];
+    const verifiedPlayer = verifyPlayers[playerConn];
 
     if (!verifiedPlayer) {
       await interaction.reply({ content: 'Este jugador no está verificado. No se puede mostrar las stats.', ephemeral: true });
