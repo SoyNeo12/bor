@@ -89,7 +89,7 @@ HaxballJS.then((HBInit) => {
     room = HBInit({
       roomName: "🎋🐼 JUEGAN TODOS | PANDA 🐼🎋",
       maxPlayers: 24, // el que quieras
-      public: true,
+      public: false,
       noPlayer: true,
       geo: {
         "lat": -32.9561,
@@ -102,24 +102,24 @@ HaxballJS.then((HBInit) => {
     // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
     const ranks = {
       '[Pandita Bebé🐼]': { range: [0, 49], colorRank: 0xD4C1FF },
-      '[Pandita Aventurero🐼]': { range: [50, 99], colorRank: 0xffffff },
-      '[Recolector Bambú🐼🎋]': { range: [100, 149], colorRank: 0xffffff },
-      '[Guerrero Bambú🐼🎋]': { range: [150, 199], colorRank: 0xffffff },
-      '[Guardián Bambú🐼🎋]': { range: [200, 249], colorRank: 0xffffff },
-      '[Maestro Bambú🐼🎋]': { range: [250, 299], colorRank: 0xffffff },
-      '[Héroe Bambú🐼🎋]': { range: [300, 349], colorRank: 0xffffff },
-      '[Panda Guerrero🐼🛡️]': { range: [350, 429], colorRank: 0xffffff },
-      '[Panda Hechicero🐼🔮]': { range: [430, 509], colorRank: 0xffffff },
-      '[Panda Yakuza🐼🔪]': { range: [510, 589], colorRank: 0xffffff },
-      '[Panda Samurái🐼⚔️]': { range: [590, 669], colorRank: 0xffffff },
-      '[Panda Shōgun🐼💥]': { range: [670, 749], colorRank: 0xffffff },
-      '[Panda Sensei🐼🧠]': { range: [750, 829], colorRank: 0xffffff },
-      '[Panda Supremo🐼🌿]': { range: [830, 909], colorRank: 0xffffff },
-      '[Panda Rojo🦊🎋]': { range: [910, 1149], colorRank: 0xffffff },
-      '[Panda Rey🐼👑]': { range: [1150, 1449], colorRank: 0xffffff },
-      '[Panda Sagrado🐼💫]': { range: [1450, 1749], colorRank: 0xffffff },
-      '[Panda Divino🐼⭐]': { range: [1750, 2049], colorRank: 0xffffff },
-      '[Dios Panda🐼🌟]': { range: [2050, 2499], colorRank: 0xffffff },
+      '[Pandita Aventurero🐼]': { range: [50, 99], colorRank: 0xD4C1FF },
+      '[Recolector Bambú🐼🎋]': { range: [100, 149], colorRank: 0xD4C1FF },
+      '[Guerrero Bambú🐼🎋]': { range: [150, 199], colorRank: 0xD4C1FF },
+      '[Guardián Bambú🐼🎋]': { range: [200, 249], colorRank: 0xD4C1FF },
+      '[Maestro Bambú🐼🎋]': { range: [250, 299], colorRank: 0xD4C1FF },
+      '[Héroe Bambú🐼🎋]': { range: [300, 349], colorRank: 0xD4C1FF },
+      '[Panda Guerrero🐼🛡️]': { range: [350, 429], colorRank: 0xD4C1FF },
+      '[Panda Hechicero🐼🔮]': { range: [430, 509], colorRank: 0xD4C1FF },
+      '[Panda Yakuza🐼🔪]': { range: [510, 589], colorRank: 0xD4C1FF },
+      '[Panda Samurái🐼⚔️]': { range: [590, 669], colorRank: 0xD4C1FF },
+      '[Panda Shōgun🐼💥]': { range: [670, 749], colorRank: 0xD4C1FF },
+      '[Panda Sensei🐼🧠]': { range: [750, 829], colorRank: 0xD4C1FF },
+      '[Panda Supremo🐼🌿]': { range: [830, 909], colorRank: 0xD4C1FF },
+      '[Panda Rojo🦊🎋]': { range: [910, 1149], colorRank: 0xD4C1FF },
+      '[Panda Rey🐼👑]': { range: [1150, 1449], colorRank: 0xD4C1FF },
+      '[Panda Sagrado🐼💫]': { range: [1450, 1749], colorRank: 0xD4C1FF },
+      '[Panda Divino🐼⭐]': { range: [1750, 2049], colorRank: 0xD4C1FF },
+      '[Dios Panda🐼🌟]': { range: [2050, 2499], colorRank: 0xD4C1FF },
       '[✨🐼✨Panda Legendario✨🐼✨]': { range: [2500, Infinity], colorRank: 0xfcfa83 }
     };
     /**
@@ -178,7 +178,7 @@ HaxballJS.then((HBInit) => {
     const warnedPlayers = {};
     const afkTimestamps = {};
 
-    const palabrasCensuradas = ['puto', 'horrendos', 'puta', 'sida', 'cancer', 'cancerigeno', 'son un asco', 'son muy malos', 'mono', 'negro de mierda', 'argensimios', 'trolo', 'sidoso', 'sidosos', 'retrasado mental', 'putas', 'putos', 'coger', 'garchar', 'sexo', 'down', 'autismo', 'd0wn', 'travesti', 'mueranse', 'chupame la pija', 'la concha de tu madre', 'suicidate', 'matate', 'pegate un tiro', 'son una mierda', 'gay', 'traba', 'violar', 'pija', 'pelotudo', 'chupar', 'chupala', 'chupa', 'verga', 'autista', 'mongolico', 'mogolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos', 'chupas', 'nazi', 'nasi']; const POWER_HOLD_TIME = 1800;
+    const palabrasCensuradas = ['puto', 'horrendos', 'cojido', 'cogido', 'violin', 'payaso', 'puta', 'sida', 'cancer', 'cancerigeno', 'son un asco', 'son muy malos', 'mono', 'negro de mierda', 'argensimios', 'trolo', 'sidoso', 'sidosos', 'retrasado mental', 'putas', 'putos', 'coger', 'garchar', 'sexo', 'down', 'autismo', 'd0wn', 'travesti', 'mueranse', 'chupame la pija', 'la concha de tu madre', 'suicidate', 'matate', 'pegate un tiro', 'son una mierda', 'gay', 'traba', 'violar', 'pija', 'pelotudo', 'chupar', 'chupala', 'chupa', 'verga', 'autista', 'mongolico', 'mogolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos', 'chupas', 'nazi', 'nasi']; const POWER_HOLD_TIME = 1800;
     const MODES = ['power', 'comba'];
     const BOOST_SPEEDS = [1.2, 1.5, 1.7, 2];
     const COLORS = [0xFF0204, 0xE60102, 0xB50002, 0x540202];
@@ -454,7 +454,7 @@ HaxballJS.then((HBInit) => {
     function messagesRandom() {
       const mensajes = mensajesJSON.messages;
       const mensajeAleatorio = mensajes[Math.floor(Math.random() * mensajes.length)];
-      room.sendAnnouncement(mensajeAleatorio, null, 0x9bff7e, "bold", 2);
+      room.sendAnnouncement(mensajeAleatorio, null, 0xf3ff9a, "bold", 2);
     }
 
     function despedidasMessages(player) {
@@ -701,16 +701,10 @@ HaxballJS.then((HBInit) => {
     }
 
     function generateRanking() {
-      const topVallas = jugadoresSorteados("vallas").slice(0, 10);
-      let announcementVallas = "**🧤🥅Ranking de Vallas Invictas🧤🥅:**\n";
-      topVallas.forEach((player, index) => {
-        announcementVallas += `${index + 1}. ${player.name}: ${player.value} vallas\n`;
-      });
-
-      const topGoals = jugadoresSorteados("goals").slice(0, 10);
-      let announcementGoles = "**⚽Ranking de Goles⚽:**\n";
-      topGoals.forEach((player, index) => {
-        announcementGoles += `${index + 1}. ${player.name}: ${player.value} goles\n`;
+      const topJuegos = jugadoresSorteados("games").slice(0, 10);
+      let announcementJuegos = "**🎋Ranking de Juegos🎋:**\n";
+      topJuegos.forEach((player, index) => {
+        announcementJuegos += `${index + 1}. ${player.name}: ${player.value} juegos\n`;
       });
 
       const topVictorias = jugadoresSorteados("victories").slice(0, 10);
@@ -719,16 +713,22 @@ HaxballJS.then((HBInit) => {
         announcementVictorias += `${index + 1}. ${player.name}: ${player.value} victorias\n`;
       });
 
+      const topGoals = jugadoresSorteados("goals").slice(0, 10);
+      let announcementGoles = "**⚽Ranking de Goles⚽:**\n";
+      topGoals.forEach((player, index) => {
+        announcementGoles += `${index + 1}. ${player.name}: ${player.value} goles\n`;
+      });
+
       const topAsistencias = jugadoresSorteados("assists").slice(0, 10);
       let announcementAsistencias = "**👟🧙‍♂️Ranking de Asistencias👟🧙‍♂️:**\n";
       topAsistencias.forEach((player, index) => {
         announcementAsistencias += `${index + 1}. ${player.name}: ${player.value} asistencias\n`;
       });
 
-      const topJuegos = jugadoresSorteados("games").slice(0, 10);
-      let announcementJuegos = "**🎋Ranking de Juegos🎋:**\n";
-      topJuegos.forEach((player, index) => {
-        announcementJuegos += `${index + 1}. ${player.name}: ${player.value} juegos\n`;
+      const topVallas = jugadoresSorteados("vallas").slice(0, 10);
+      let announcementVallas = "**🧤🥅Ranking de Vallas Invictas🧤🥅:**\n";
+      topVallas.forEach((player, index) => {
+        announcementVallas += `${index + 1}. ${player.name}: ${player.value} vallas\n`;
       });
 
       const topWinrate = jugadoresSorteados("winrate").slice(0, 10);
@@ -865,31 +865,31 @@ HaxballJS.then((HBInit) => {
       switch (operator) {
         case '+':
           currentAnswer = num1 + num2;
-          room.sendAnnouncement(`🎲 ¿Cuál es el resultado de: ${num1} + ${num2}?`, null, 0xe8bdfd, "bold", 2);
+          room.sendAnnouncement(`🎲 ¿Cuál es el resultado de: ${num1} + ${num2}?`, null, 0xa9cffd, "bold", 2);
           break;
         case '-':
           currentAnswer = num1 - num2;
-          room.sendAnnouncement(`🎲 ¿Cuál es el resultado de: ${num1} - ${num2}?`, null, 0xe8bdfd, "bold", 2);
+          room.sendAnnouncement(`🎲 ¿Cuál es el resultado de: ${num1} - ${num2}?`, null, 0xa9cffd, "bold", 2);
           break;
         case '*':
           currentAnswer = num1 * num2;
-          room.sendAnnouncement(`🎲 ¿Cuál es el resultado de: ${num1} * ${num2}?`, null, 0xe8bdfd, "bold", 2);
+          room.sendAnnouncement(`🎲 ¿Cuál es el resultado de: ${num1} * ${num2}?`, null, 0xa9cffd, "bold", 2);
           break;
         case '/':
           currentAnswer = parseFloat((num1 / num2).toFixed(2));
-          room.sendAnnouncement(`🎲 ¿Cuál es el resultado de: ${num1} / ${num2}?`, null, 0xe8bdfd, "bold", 2);
+          room.sendAnnouncement(`🎲 ¿Cuál es el resultado de: ${num1} / ${num2}?`, null, 0xa9cffd, "bold", 2);
           break;
         case 'sqrt':
           currentAnswer = parseFloat(Math.sqrt(sqrtNumber).toFixed(2));
-          room.sendAnnouncement(`🎲 ¿Cuál es la raíz cuadrada de ${sqrtNumber}?`, null, 0xe8bdfd, "bold", 2);
+          room.sendAnnouncement(`🎲 ¿Cuál es la raíz cuadrada de ${sqrtNumber}?`, null, 0xa9cffd, "bold", 2);
           break;
         case '^':
           currentAnswer = Math.pow(exponentNumber1, exponentNumber2);
-          room.sendAnnouncement(`🎲 ¿Cuál es el resultado de: ${exponentNumber1} ^ ${exponentNumber2}?`, null, 0xe8bdfd, "bold", 2);
+          room.sendAnnouncement(`🎲 ¿Cuál es el resultado de: ${exponentNumber1} ^ ${exponentNumber2}?`, null, 0xa9cffd, "bold", 2);
           break;
         case 'ln':
           currentAnswer = parseFloat(Math.log(logNumber).toFixed(2));
-          room.sendAnnouncement(`🎲 ¿Cuál es el logaritmo natural de ${logNumber}?`, null, 0xe8bdfd, "bold", 2);
+          room.sendAnnouncement(`🎲 ¿Cuál es el logaritmo natural de ${logNumber}?`, null, 0xa9cffd, "bold", 2);
           break;
       }
 
@@ -907,7 +907,7 @@ HaxballJS.then((HBInit) => {
         room.setPlayerAvatar(player.id, "🤡");
       } else if (lowerMessage.startsWith("panda")) {
         room.setPlayerAvatar(player.id, "🐼");
-      } else if (lowerMessage.startsWith("ole")) {
+      } else if (lowerMessage.startsWith("ole") || lowerMessage.startsWith("uf") || lowerMessage.startsWith("uff") || lowerMessage.startsWith("q clava") || lowerMessage.startsWith("golazo")) {
         room.setPlayerAvatar(player.id, "🔥");
       } else if (message.startsWith("1")) {
         room.setPlayerAvatar(player.id, "🧤");
@@ -1182,11 +1182,11 @@ HaxballJS.then((HBInit) => {
       }
 
       if (playerStats[p.conn].xp >= 2050 && playerStats[p.conn].xp < 2499) {
-        room.sendAnnouncement(`¡ENTRÓ EL DIOS PANDA ${p.name}! Está a un paso del máximo rango.`, null, 0xd5da5f, "bold", 1); //   '[Dios Panda🐼🌟]': { range: [2050, 2499], colorRank: 0xffffff },
+        room.sendAnnouncement(`¡Entró ${p.name}! Está en el rango DIOS PANDA y está a un paso del rango máximo.`, null, 0xdfe63c, "bold", 1); //   '[Dios Panda🐼🌟]': { range: [2050, 2499], colorRank: 0xffffff },
       }
 
       if (playerStats[p.conn].xp >= 2500) {
-        room.sendAnnouncement(`INGRESÓ AL SERVIDOR EL ✨🐼✨PANDA LEGENDARIO✨🐼✨ ¡BIENVENIDO ${p.name}!`, null, 0xf1ef58, "bold", 1);
+        room.sendAnnouncement(`INGRESÓ AL SERVIDOR UN ✨🐼✨PANDA LEGENDARIO✨🐼✨ ¡BIENVENIDO ${p.name}!`, null, 0xf7f57b, "bold", 1);
       }
 
       const players = room.getPlayerList();
@@ -1197,7 +1197,7 @@ HaxballJS.then((HBInit) => {
       }
 
       if (players.length === 22) {
-        room.sendAnnouncement("Slots activados solamente para admins y vips.", null, 0x00FF00, "bold", 2);
+        room.sendAnnouncement("Activados los slots exclusivos para VIPS y STAFF de Panda.", null, 0x00FF00, "bold", 2);
       }
 
       if (players.length > 22) {
@@ -1216,7 +1216,7 @@ HaxballJS.then((HBInit) => {
         const hasRole = allowedRoles.some(role => rolesData.roles[role].users.includes(p.conn));
 
         if (!hasRole) {
-          room.kickPlayer(p.id, "Slots reservados solo para el STAFF DE PANDA.", false);
+          room.kickPlayer(p.id, "Slots reservados solo para VIPS y el STAFF DE PANDA.", false);
           return;
         }
       }
@@ -1591,7 +1591,7 @@ HaxballJS.then((HBInit) => {
 
       if (room.getPlayerList().length >= 6) {
         setTimeout(() => {
-          room.sendAnnouncement(`Para apostar por un equipo, escribí !bet red/blue [pandacoins]. Tienen 7 segundos.`, null, 0x82d5cb, "bold", 2);
+          room.sendAnnouncement(`Para apostar por un equipo, escribí !bet red/blue [pandacoins]. Tenés 7 segundos.`, null, 0x82d5cb, "bold", 2);
         }, 4000);
       }
 
@@ -1606,7 +1606,7 @@ HaxballJS.then((HBInit) => {
       if (room.getPlayerList().length >= 6) {
         setTimeout(() => {
           betCooldownActive = true;
-          room.sendAnnouncement("Apuestas cerradas.", null, 0x56c4b7, "bold", 2);
+          room.sendAnnouncement("🐼Apuestas cerradas. ¡Que arranque el partido!🐼", null, 0x56c4b7, "bold", 2);
         }, 14000);
       }
     };
@@ -1658,7 +1658,7 @@ HaxballJS.then((HBInit) => {
               console.error('Error al escribir el archivo de baneos:', err);
             }
           } else if (!targetConn) {
-            console.error("Error: No se encontró la autenticación para el jugador kickeado.");
+            console.error("Error: No se encontró la CONN para el jugador kickeado.");
           }
         }
       } // te amoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
@@ -1759,11 +1759,11 @@ HaxballJS.then((HBInit) => {
             if (player.team === winningTeam) {
               playerStats[playerConn].victories = (playerStats[playerConn].victories || 0) + 1;
               playerStats[playerConn].xp = (playerStats[playerConn].xp || 0) + 10;
-              playerStats[playerConn].pandacoins = (playerStats[playerConn].pandacoins || 0) + 10;
+              playerStats[playerConn].pandacoins = (playerStats[playerConn].pandacoins || 0) + 20;
             } else if (player.team === defeatTeam) {
               playerStats[playerConn].defeats = (playerStats[playerConn].defeats || 0) + 1;
               playerStats[playerConn].xp = (playerStats[playerConn].xp || 0) - 5;
-              playerStats[playerConn].pandacoins = (playerStats[playerConn].pandacoins || 0) - 0;
+              playerStats[playerConn].pandacoins = (playerStats[playerConn].pandacoins || 0) - 10;
             }
 
             if (playerStats[playerConn].xp < 0) {
@@ -1792,12 +1792,12 @@ HaxballJS.then((HBInit) => {
 
             if (scores.blue === 0 && gkredPlayer) {
               playerStats[playerConn].vallas = (playerStats[playerConn].vallas || 0) + 1;
-              playerStats[playerConn].xp = (playerStats[playerConn].xp || 0) + 15;
-              playerStats[playerConn].pandacoins = (playerStats[playerConn].pandacoins || 0) + 25;
+              playerStats[playerConn].xp = (playerStats[playerConn].xp || 0) + 12;
+              playerStats[playerConn].pandacoins = (playerStats[playerConn].pandacoins || 0) + 30;
             } else if (scores.red === 0 && gkbluePlayer) {
               playerStats[playerConn].vallas = (playerStats[playerConn].vallas || 0) + 1;
-              playerStats[playerConn].xp = (playerStats[playerConn].xp || 0) + 15;
-              playerStats[playerConn].pandacoins = (playerStats[playerConn].pandacoins || 0) + 25;
+              playerStats[playerConn].xp = (playerStats[playerConn].xp || 0) + 12;
+              playerStats[playerConn].pandacoins = (playerStats[playerConn].pandacoins || 0) + 30;
             }
           }
         }
@@ -1843,7 +1843,7 @@ HaxballJS.then((HBInit) => {
             `🏆🐼 PANDITA MVP del partido es: ${mvpPlayer.name} 🥇\nGoles: ${mvpGoals}, Asistencias: ${mvpAssists}`,
             null,
             0xfffca5,
-            "small-bold",
+            "bold",
             2
           );
         } else {
@@ -1882,7 +1882,7 @@ HaxballJS.then((HBInit) => {
         winnerTeam.playerName = playerName;
 
         if (streakWinning[playerIde] >= 3) {
-          room.sendAnnouncement(`¡🔥🔥🔥 ${winnerTeam.playerName} ESTÁ DE RACHA! Tiene un win-streaLleva ganando ${winnerTeam.counter} partidos seguidos.`, null, 0xE6D99E, "bold", 2);
+          room.sendAnnouncement(`¡🔥 ${winnerTeam.playerName} ESTÁ DE RACHA! Tiene un win-streak de ${winnerTeam.counter} partidos seguidos! 🔥`, null, 0xE6D99E, "bold", 2);
         }
       });
 
@@ -1893,7 +1893,7 @@ HaxballJS.then((HBInit) => {
         ripTeam.playerName = playerName;
 
         if (streakWinning[playerIde] > 1) {
-          room.sendAnnouncement(`❌🐼❌ Se acabó la racha del pandita ${ripTeam.playerName}. Llevaba ganando ${streakWinning[playerIde]} partidos seguidos.`, null, 0xffa54a, "normal", 2);
+          room.sendAnnouncement(`❌ Terminó la racha de ${ripTeam.playerName}. Llevaba ganando ${streakWinning[playerIde]} partidos seguidos.`, null, 0xffa54a, "normal", 2);
           delete streakWinning[playerIde];
         }
       });
@@ -1912,8 +1912,8 @@ HaxballJS.then((HBInit) => {
       const playerRole = getPlayerRole(playerConn);
 
       if (mathActive && Math.abs(parseFloat(message) - parseFloat(currentAnswer)) < 0.01) {
-        if (playerStats) playerStats[playerConn].pandacoins += 4;
-        room.sendAnnouncement(`¡🎉 EL PANDITA ${player.name} ACERTÓ LA RESPUESTA CORRECTA Y GANO 4 PANDACOINS. FELICITACIONES!`, null, 0xabffd0, "bold", 2);
+        if (playerStats) playerStats[playerConn].pandacoins += 6;
+        room.sendAnnouncement(`¡🎉 EL PANDITA ${player.name} ACERTÓ LA RESPUESTA CORRECTA Y GANO 6 PANDACOINS. FELICITACIONES!`, null, 0x8ad2aa, "bold", 2);
         mathActive = false;
       }
 
@@ -1926,7 +1926,7 @@ HaxballJS.then((HBInit) => {
         }
 
         const now = Date.now();
-        const cooldownTime = 5000;
+        const cooldownTime = 3000;
         const lastUsed = cooldown[player.id] || 0
 
         if (now - lastUsed < cooldownTime) {
@@ -2029,7 +2029,7 @@ HaxballJS.then((HBInit) => {
         return false;
       } else if (message === "!me") {
         if (playerStats[playerConn]) {
-          room.sendAnnouncement(`🐼Pandita, esta es tu UUID: ${playerStats[playerConn].uuid}\n`, player.id, 0x94b8f8, "bold", 2);
+          room.sendAnnouncement(`🐼Pandita, esta es tu UUID: ${playerStats[playerConn].uuid}\n`, player.id, 0xdbdf4e, "bold", 2);
 
           if (playerStats[playerConn].verified) {
             if (!playerStats[playerConn].registrationDate) {
@@ -2037,7 +2037,7 @@ HaxballJS.then((HBInit) => {
               playerStats[playerConn].registrationDate = registrationDate;
             }
 
-            room.sendAnnouncement(`🐼Código de recuperación: ${playerStats[playerConn].recoveryCode}`, player.id, 0x88CFE9, "bold", 2);
+            room.sendAnnouncement(`🐼CODIGO DE RECUPERACIÓN: ${playerStats[playerConn].recoveryCode}`, player.id, 0xfcff99, "bold", 2);
 
             const playerXp = playerStats[playerConn].xp || 0;
             const { currentRank, nextRank, xpRemaining } = getRankAndXpRemaining(playerXp);
@@ -2128,7 +2128,7 @@ HaxballJS.then((HBInit) => {
           if (powerEnabled) {
             room.sendAnnouncement(`✅👍 POWER ACTIVADO POR ${player.name}`, null, 0xff7bb5, "bold", 2);
           } else {
-            room.sendAnnouncement(`❌👎 POWER DESACTIVADO ${player.name}`, null, 0xd83264, "bold", 2);
+            room.sendAnnouncement(`❌👎 POWER DESACTIVADO POR ${player.name}`, null, 0xd83264, "bold", 2);
             ballHeldBy = null;
             powerActive = false;
             powerLevel = 0;
@@ -2240,7 +2240,7 @@ HaxballJS.then((HBInit) => {
 
             if (player.admin) {
               room.sendAnnouncement(`🔨 Comandos  Staff 🔨\n` +
-                `⚠️ Moderación: !sancionar #ID [razón] - !unban [@jugador] - !quitarsancion #ID - !banconn [conn]\n` +
+                `⚠️ Moderación: !sancionar #ID [razón] - !unban [@jugador] - !quitarsancion #ID - !unban [auth]\n` +
                 `🛠️ Gestión: !agregar [rol] [@jugador] - !power - !comba`,
                 player.id, 0x63d033, "small-bold", 1);
             }
@@ -2399,8 +2399,8 @@ HaxballJS.then((HBInit) => {
               return false;
             }
 
-            room.sendAnnouncement("Llamado enviado correctamente al discord, espera tu respuesta.", player.id, 0x00FF00, "bold", 1);
-            axios.post('https://discord.com/api/webhooks/1330572078574862499/9luIZ2o1YmKQageL2Tsgm2-tfm3ZfMWJr-TSmD7RMf1w0Pb2tYvjjat5kMVJC631eUhl', {
+            room.sendAnnouncement("Llamaste al Staff de Panda. Esperá tu respueta y recorda que el mal uso del comando es motivo de sanción.", player.id, 0x00FF00, "bold", 1);
+            axios.post('https://discord.com/api/webhooks/1278864671549554740/I3lBBqBqfzqubZZYld3bh0ilkOhYhLP5yRVGmDPS7rMSO_SQInh7OHZycr5JHDXfP5qb', {
               content: `||@everyone||\n**${player.name}** pide de su ayuda\nRazon: **${reason}**`
             })
               .catch(error => {
@@ -2507,11 +2507,11 @@ HaxballJS.then((HBInit) => {
           if (!playerStats[playerConn].verified) {
             room.sendAnnouncement("Necesitas estar verificado para usar este comando", player.id, 0xFF0000, "bold", 2);
           } else {
-            room.sendAnnouncement("!color [#hexacolor] - Cambia permanentemente el color de tus mensajes. (10000 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
-            room.sendAnnouncement("!size [tamaño] - Cambia tu tamaño -entre 10 y 20-. Se reinicia al terminar el partido. (900 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
-            room.sendAnnouncement("!bigall - Todos gordos por 30 segs o hasta que metan gol. (3200 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
-            room.sendAnnouncement("!smallall - Todos pequeños por 30 segs o hasta que metan gol. (3200 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
-            room.sendAnnouncement("!festejo - Personalizá tu festejo al meter un gol -permanente-. (2800 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+            room.sendAnnouncement("!color [#hexacolor] - Cambia permanentemente el color de tus mensajes. (3500 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+            room.sendAnnouncement("!size [tamaño] - Cambia tu tamaño -entre 10 y 20-. Se reinicia al terminar el partido. (1000 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+            room.sendAnnouncement("!bigall - Todos gordos por 30 segs o hasta que metan gol. (1000 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+            room.sendAnnouncement("!smallall - Todos pequeños por 30 segs o hasta que metan gol. (1000 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+            room.sendAnnouncement("!festejo - Personalizá tu festejo al meter un gol -permanente-. (3500 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
           }
         }
         return false;
@@ -2530,7 +2530,7 @@ HaxballJS.then((HBInit) => {
           if (!playerStats[playerConn].verified) {
             room.sendAnnouncement("Necesitas estar verificado para usar este comando", player.id, 0xFF0000, "bold", 2);
           } else {
-            if (playerStats[playerConn].pandacoins < 12000) {
+            if (playerStats[playerConn].pandacoins < 3500) {
               room.sendAnnouncement(`❌😢No tenés suficientes pandacoins para comprar y usar este comando😢❌.`, player.id, 0x3bb4cb, "bold", 2);
             } else {
               const args = message.split(' ');
@@ -2550,7 +2550,7 @@ HaxballJS.then((HBInit) => {
 
               playerStats[playerConn].color = color;
               playerStats[playerConn].colorVip = color;
-              playerStats[playerConn].pandacoins -= 12000;
+              playerStats[playerConn].pandacoins -= 3500;
               room.sendAnnouncement(`🐼🎨 ¡Color cambiado a ${playerStats[playerConn].color}!`, player.id, 0xacffed, "bold", 2);
               fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
             }
@@ -2586,7 +2586,7 @@ HaxballJS.then((HBInit) => {
           if (!playerStats[playerConn].verified) {
             room.sendAnnouncement("Necesitas estar verificado para usar este comando", player.id, 0xFF0000, "bold", 2);
           } else {
-            if (playerStats[playerConn].pandacoins < 3000) {
+            if (playerStats[playerConn].pandacoins < 3500) {
               room.sendAnnouncement(`❌😢No tenés suficientes pandacoins para comprar y usar este comando😢❌.`, player.id, 0x3bb4cb, "bold", 2);
             } else {
               const args = message.split(' ');
@@ -2610,7 +2610,7 @@ HaxballJS.then((HBInit) => {
 
               fs.writeFileSync(messagesFilePath, JSON.stringify(festejoMessage, null, 2));
               const mensajeFinal = festejo.replace('{s}', player.name);
-              playerStats[playerConn].pandacoins -= 3000;
+              playerStats[playerConn].pandacoins -= 3500;
               fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
               room.sendAnnouncement(`🐼🎉 ¡Festejo actualizado! Tu festejo al meter un gol será: ${mensajeFinal} 🐼🎉`, player.id, 0xacffed, "bold", 2);
             }
@@ -2622,7 +2622,7 @@ HaxballJS.then((HBInit) => {
           if (!playerStats[playerConn].verified) {
             room.sendAnnouncement("Necesitas estar verificado para usar este comando", player.id, 0xFF0000, "bold", 2);
           } else {
-            if (playerStats[playerConn].pandacoins < 4000) {
+            if (playerStats[playerConn].pandacoins < 1000) {
               room.sendAnnouncement(`❌😢No tenés suficientes pandacoins para comprar y usar este comando😢❌.`, player.id, 0x3bb4cb, "bold", 2);
             } else {
               const players = room.getPlayerList();
@@ -2642,7 +2642,7 @@ HaxballJS.then((HBInit) => {
                     }
                   }, 30000);
                 });
-                playerStats[playerConn].pandacoins -= 4000;
+                playerStats[playerConn].pandacoins -= 1000;
                 fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
                 bigUses++;
 
@@ -2664,7 +2664,7 @@ HaxballJS.then((HBInit) => {
           if (!playerStats[playerConn].verified) {
             room.sendAnnouncement("Necesitas estar verificado para usar este comando", player.id, 0xFF0000, "bold", 2);
           } else {
-            if (playerStats[playerConn].pandacoins < 4000) {
+            if (playerStats[playerConn].pandacoins < 1000) {
               room.sendAnnouncement(`❌😢No tenés suficientes pandacoins para comprar y usar este comando😢❌.`, player.id, 0x3bb4cb, "bold", 2);
             } else {
               const players = room.getPlayerList();
@@ -2684,7 +2684,7 @@ HaxballJS.then((HBInit) => {
                     room.setPlayerDiscProperties(p.id, { radius: playerSizes[p.id] });
                   }
                 });
-                playerStats[playerConn].pandacoins -= 4000;
+                playerStats[playerConn].pandacoins -= 1000;
                 fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
                 smallUses++;
 
@@ -2720,13 +2720,13 @@ HaxballJS.then((HBInit) => {
           return false;
         }
 
-        if (betAmount < 50) {
-          room.sendAnnouncement("⚠️ La apuesta tiene que ser mayor a 50", player.id, 0xFF0000, "bold", 2);
+        if (betAmount < 49) {
+          room.sendAnnouncement("⚠️ La apuesta tiene que ser entre 50 y 200.", player.id, 0xFF0000, "bold", 2);
           return false;
         }
 
-        if (betAmount > 200) {
-          room.sendAnnouncement("⚠️ La apuesta tiene que ser menor a 200", player.id, 0xFF0000, "bold", 2);
+        if (betAmount > 201) {
+          room.sendAnnouncement("⚠️ La apuesta tiene que ser entre 50 y 200.", player.id, 0xFF0000, "bold", 2);
           return false;
         }
 
@@ -2792,13 +2792,13 @@ HaxballJS.then((HBInit) => {
           return false;
         }
 
-        if (betAmount <= 50) {
-          room.sendAnnouncement("⚠️ La apuesta tiene que ser mayor a 50", player.id, 0xFF0000, "bold", 2);
+        if (betAmount <= 49) {
+          room.sendAnnouncement("⚠️ La apuesta tiene que ser entre 50 y 200.", player.id, 0xFF0000, "bold", 2);
           return false;
         }
 
-        if (betAmount >= 200) {
-          room.sendAnnouncement("⚠️ La apuesta tiene que ser menor a 200", player.id, 0xFF0000, "bold", 2);
+        if (betAmount >= 201) {
+          room.sendAnnouncement("⚠️ La apuesta tiene que ser entre 50 y 200.", player.id, 0xFF0000, "bold", 2);
           return false;
         }
 
@@ -2988,7 +2988,9 @@ HaxballJS.then((HBInit) => {
       } else if (message.startsWith("!")) {
         room.sendAnnouncement("Comando desconocido o no existe, usa !help para ver los comandos", player.id, 0xFF0000, "bold", 2);
         return false;
-      } else if (message.startsWith("https:")) {
+      } else if (message.toLowerCase().includes("https:")) {
+        return false;
+      } else if (message.toLowerCase().includes("http:")) {
         return false;
       } else if (contienePalabraCensurada(message)) {
         room.sendAnnouncement(`SE ACTIVÓ EL FILTRO DE PANDA: ${player.name} fue kickeado.🌿🐼`, null, 0xead2c0, "bold", 2);
@@ -3017,7 +3019,7 @@ HaxballJS.then((HBInit) => {
           : "Sin rango(no verificado)";
       const rolesConfig = {
         "owner": { prefix: "🐼❤️ FUNDADOR PANDA", color: 0xff68ea },
-        "coowner": { prefix: "🐼❤️ CO-FUNDADOR PANDA", color: 0x65B3C3 },
+        "coowner": { prefix: "🐼❤️ FUNDADOR PANDA", color: 0x6bd497 },
         "granpanda": { prefix: "⭐ GRAN PANDA", color: 0xd0a6f5 },
         "jefepanda": { prefix: "COMANDANTE PANDA", color: 0xA5F685 },
         "maestropanda": { prefix: "MAESTRO PANDA", color: 0xfd6e6e },
@@ -3194,4 +3196,4 @@ function getPlayerList() {
   return { players, red, blue, specs };
 }
 
-module.exports = { getRoomLink, playerStats, playerId, sendAnnouncement, getPlayerList, bannedPlayers, playersFilePath, bannedPlayersFilePath };
+module.exports = { getRoomLink, playerStats, playerId, playerIdConn, sendAnnouncement, getPlayerList, bannedPlayers, playersFilePath, bannedPlayersFilePath };
