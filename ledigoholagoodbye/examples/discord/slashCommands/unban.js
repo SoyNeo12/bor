@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
-const { bannedPlayers, playerId, bannedPlayersFilePath } = require("../../script");
+const { bannedPlayers, playerIdConn, bannedPlayersFilePath } = require("../../script");
 const fs = require('fs');
 
 const allowedRoles = [
@@ -17,7 +17,7 @@ module.exports = {
     ),
   execute: async (interaction) => {
     const playerName = interaction.options.getString('usuario');
-    const index = bannedPlayers.findIndex(auth => playerId[auth] === playerName);
+    const index = bannedPlayers.findIndex(conn => playerIdConn[conn] === playerName);
 
     if (index === -1) {
       await interaction.reply({ content: "No se encontró al jugador o no está baneado.", ephemeral: true });
