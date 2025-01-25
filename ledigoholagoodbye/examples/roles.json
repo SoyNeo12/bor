@@ -2,12 +2,13 @@
   "roles": {
     "owner": {
       "users": [
+        "3139302E3133372E38362E323034"
       ],
       "gameAdmin": true
     },
     "coowner": {
       "users": [
-        "3138362E35322E3139312E313839"
+        "3136372E36322E3132362E323332"
       ],
       "gameAdmin": true
     },
@@ -37,6 +38,7 @@
     },
     "vips": {
       "users": [
+        "lGLObQoV_8MCQkhRCsCw2Tt4IInVNCD-l3ltJZFtTbE"
       ],
       "gameAdmin": false
     },
