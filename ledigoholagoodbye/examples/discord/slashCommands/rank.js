@@ -11,14 +11,14 @@ module.exports = {
         .setRequired(true)),
   execute: async (interaction) => {
     const playerName = interaction.options.getString("nombre");
-    const playerAuth = Object.keys(playerStats).find(auth => playerStats[auth].name === playerName);
+    const playerConn = Object.keys(playerStats).find(conn => playerStats[conn].name === playerName);
 
-    if (!playerAuth) {
+    if (!playerConn) {
       await interaction.reply({ content: 'Pandita no encontrado❌🐼.', ephemeral: true });
       return;
     }
 
-    const stats = playerStats[playerAuth]
+    const stats = playerStats[playerConn]
 
     if (!stats) {
       await interaction.reply({ content: 'No se encontraron estadisticas para este jugador🐼❌.', ephemeral: true });
