@@ -1,15 +1,11 @@
 {
   "roles": {
     "owner": {
-      "users": [
-        "3139302E3133372E38362E323034"
-      ],
+      "users": [],
       "gameAdmin": true
     },
     "coowner": {
-      "users": [
-        "3136372E36322E3132362E323332"
-      ],
+      "users": [],
       "gameAdmin": true
     },
     "granpanda": {
@@ -37,9 +33,7 @@
       "gameAdmin": true
     },
     "vips": {
-      "users": [
-        "lGLObQoV_8MCQkhRCsCw2Tt4IInVNCD-l3ltJZFtTbE"
-      ],
+      "users": [],
       "gameAdmin": false
     },
     "usuarios": {
