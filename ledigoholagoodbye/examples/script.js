@@ -817,9 +817,6 @@ HaxballJS.then((HBInit) => {
       const webhookURL = 'https://discord.com/api/webhooks/1330245802584707092/_1_LylV6uumIQM_Qu_jXkr5oJYIXDu3Xmo5TZPyxNwynmbmHkMvjk8gi7c_t3EJAmxcS';
 
       axios.post(webhookURL, embed)
-        .then(() => {
-          console.log('Embed enviado con éxito');
-        })
         .catch(err => {
           console.error('Error al enviar el embed:', err.message);
         });
