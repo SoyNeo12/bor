@@ -78,7 +78,7 @@ client.on('messageCreate', async (message) => {
   }
 
   if (message && message.channelId === '1276988562650435584') {
-    sendAnnouncement(`${message.author.globalName}: ${message.content}`, null, 0xB766CC, 1);
+    sendAnnouncement(`${message.author.username}: ${message.content}`, null, 0xB766CC, 1);
   }
 });
 
