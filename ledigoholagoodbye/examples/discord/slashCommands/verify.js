@@ -27,19 +27,19 @@ module.exports = {
     const playerAuth = Object.keys(playerStats).find(auth => playerStats[auth].uuid === uuid);
 
     if (!playerAuth) {
-      await interaction.reply({ content: "Ese UUID no existe en el registro de jugadores.", ephemeral: true });
+      await interaction.reply({ content: "Ese UUID no existe en el registro de jugadores.", flags: MessageFlags.Ephemeral });
       return;
     }
 
     const playerData = playerStats[playerAuth];
 
     if (playerData.verified) {
-      await interaction.reply({ content: "Este UUID ya ha sido verificado anteriormente. No puedes verificarlo de nuevo.", ephemeral: true });
+      await interaction.reply({ content: "Este UUID ya ha sido verificado anteriormente. No puedes verificarlo de nuevo.", flags: MessageFlags.Ephemeral });
       return;
     }
 
     if (!playerData.name) {
-      await interaction.reply({ content: "Jugador no existente o nombre no asignado.", ephemeral: true });
+      await interaction.reply({ content: "Jugador no existente o nombre no asignado.", flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -47,7 +47,7 @@ module.exports = {
 
     fs.writeFileSync(verifyFilePath, JSON.stringify(verifyPlayers, null, 2));
 
-    await interaction.reply({ content: `Solicitud de verificación registrada. Ya puedes usar comandos, **${playerData.name}**.`, ephemeral: true });
+    await interaction.reply({ content: `Solicitud de verificación registrada. Ya puedes usar comandos, **${playerData.name}**.`, flags: MessageFlags.Ephemeral });
     sendAnnouncement(`${playerData.name} ha solicitado verificación usando el comando /verificar`, null, 0x00FF00, "bold", 1);
     playerData.verified = true;
     fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
@@ -57,7 +57,7 @@ module.exports = {
       await interaction.user.send(`Para no olvidarte, tu código de recuperación es \`${playerData.recoveryCode}\`.`);
     } catch (error) {
       console.error("Error al enviar mensaje directo:", error);
-      await interaction.followUp({ content: "No pude enviarte un mensaje directo. Verifica que tengas habilitados los MD en este servidor.", ephemeral: true });
+      await interaction.followUp({ content: "No pude enviarte un mensaje directo. Verifica que tengas habilitados los MD en este servidor.", flags: MessageFlags.Ephemeral });
     }
   },
   verifyPlayers,
