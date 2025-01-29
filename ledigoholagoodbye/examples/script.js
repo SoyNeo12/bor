@@ -186,6 +186,7 @@ HaxballJS.then((HBInit) => {
         const inactivityThreshold = 15000;
         const GRAVITY_HOLD_TIME = 1800;
         const warningTime = 15000;
+        const webhookCooldown = 5000;
 
         let powerEnabled = false;
         let gravityEnabled = false;
@@ -212,6 +213,7 @@ HaxballJS.then((HBInit) => {
         let remainingTime = 30000;
         let bigUses = 0;
         let smallUses = 0;
+        let lastWebhookTime = 0;
 
         let gravityTimer = null;
         let powerIncreaseInterval = null;
@@ -296,12 +298,16 @@ HaxballJS.then((HBInit) => {
             { name: "Argentina Visita 2014", team: 2, avatarColor: 0x74821A, angle: 90, colors: [0x060B36, 0x091152, 0x111F9C] },
         ];
         // ---
-
+        
         /**/
-
+        
         // ---
+        function delay(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
         let RecSistem = {
-            sendDiscordWebhook: function () {
+            sendDiscordWebhook: async function () {
                 const recordingData = room.stopRecording();
 
                 if (!recordingData || recordingData.byteLength <= 4) {
@@ -366,16 +372,17 @@ HaxballJS.then((HBInit) => {
 
                 form.append('payload_json', JSON.stringify({ embeds: [embed] }));
 
-                axios.post('https://discord.com/api/webhooks/1334221116235055185/vNbOuJF3fAOdCevCNnqjtlaiQYK7PBSgwUggEyd_ot0aNMK8H_bjOfddjDSyvasWOXRu', form, {
-                    headers: { ...form.getHeaders() }
-                })
-                    .then(() => {
-                        room.sendAnnouncement("[📹] La grabación del partido está en el discord (canal JUGADOS-REC). Muchísimas gracias por jugar en PANDA🎋🐼.", null, null, "bold", 2);
-                    })
-                    .catch(error => {
-                        console.error("Error al enviar la grabación y el embed al Discord:", error);
-                        room.sendAnnouncement("[❌] Error al enviar la grabación y el embed.", null, null, "bold", 2);
+                try {
+                    await axios.post('https://discord.com/api/webhooks/1334221116235055185/vNbOuJF3fAOdCevCNnqjtlaiQYK7PBSgwUggEyd_ot0aNMK8H_bjOfddjDSyvasWOXRu', form, {
+                        headers: { ...form.getHeaders() }
                     });
+                    room.sendAnnouncement("[📹] La grabación del partido está en el discord (canal JUGADOS-REC). Muchísimas gracias por jugar en PANDA🎋🐼.", null, null, "bold", 2);
+                } catch (error) {
+                    console.error("Error al enviar la grabación y el embed al Discord:", error);
+                    room.sendAnnouncement("[❌] Error al enviar la grabación y el embed.", null, null, "bold", 2);
+                }
+
+                await delay(1000);
             }
         };
 
@@ -387,6 +394,7 @@ HaxballJS.then((HBInit) => {
             }
             return null;
         }
+
 
         function determineRank(playerXP) {
             for (const [rankName, { range, colorRank }] of Object.entries(ranks)) {
@@ -1849,7 +1857,13 @@ HaxballJS.then((HBInit) => {
         };
 
         room.onTeamVictory = (scores) => {
-            RecSistem.sendDiscordWebhook();
+            const currentTime = Date.now();
+            if (currentTime - lastWebhookTime > webhookCooldown) {
+                RecSistem.sendDiscordWebhook();
+                lastWebhookTime = currentTime;
+            } else {
+                console.log("Demasiadas solicitudes. Esperando...");
+            }
             const winningTeam = scores.red > scores.blue ? 1 : 2;
             const defeatTeam = winningTeam === 1 ? 2 : 1;
             const players = room.getPlayerList().filter(p => p.team !== 0);
