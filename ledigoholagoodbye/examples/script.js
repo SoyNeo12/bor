@@ -568,7 +568,7 @@ HaxballJS.then((HBInit) => {
     }
 
     function sendMessages(message) {
-      axios.post('https://discord.com/api/webhooks/1330244400483270721/plhgp5YbKRgQ5EN8lp7rP173snSyUdLIdct_07b0aKgfpDAp_HENEioIWnG3erxiNKA1', {
+      axios.post('https://discord.com/api/webhooks/1334044263717273640/BsuXku2zGRv3qqdhpRrXz8_T2c4GMrefjZ9WNoWDj0OmJuwficYWuGBmD74lX12cwbRF', {
         content: message
       })
     }
@@ -2028,7 +2028,9 @@ HaxballJS.then((HBInit) => {
       }
 
       if (!message.startsWith("!")) {
-        sendMessages(player.name + ": " + message);
+        if (!message.includes("@everyone") && !message.toLowerCase().includes("https:") && !message.toLowerCase().includes("http:")) {
+          sendMessages(player.name + ": " + message);
+        }
       } else {
         if (message.trim() === "!") {
           room.sendAnnouncement("No puedes usar solo `!` como comando.", player.id, 0xFF0000, "bold", 2);
@@ -3101,6 +3103,8 @@ HaxballJS.then((HBInit) => {
       } else if (message.toLowerCase().includes("https:")) {
         return false;
       } else if (message.toLowerCase().includes("http:")) {
+        return false;
+      } else if (message.includes("@everyone")) {
         return false;
       } else if (contienePalabraCensurada(message)) {
         room.sendAnnouncement(`SE ACTIVÓ EL FILTRO DE PANDA: ${player.name} fue kickeado.🌿🐼`, null, 0xead2c0, "bold", 2);
