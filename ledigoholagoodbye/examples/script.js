@@ -366,7 +366,7 @@ HaxballJS.then((HBInit) => {
 
         form.append('payload_json', JSON.stringify({ embeds: [embed] }));
 
-        axios.post('https://discord.com/api/webhooks/1330245126139936899/GdX1auSibNLT0l3MTGETB1pQ0oL_MRms8FcF3KJFvx5TiiWwQ4pOviXa2hZveYtSpG2Y', form, {
+        axios.post('https://discord.com/api/webhooks/1334221116235055185/vNbOuJF3fAOdCevCNnqjtlaiQYK7PBSgwUggEyd_ot0aNMK8H_bjOfddjDSyvasWOXRu', form, {
           headers: { ...form.getHeaders() }
         })
           .then(() => {
