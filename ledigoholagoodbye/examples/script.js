@@ -983,11 +983,17 @@ HaxballJS.then((HBInit) => {
       }, 2000);
     }
 
-    function isBallCloseToPlayer(x1, y1) {
-      return Math.sqrt(
-        Math.pow(x1.x - y1.x, 2) +
-        Math.pow(x1.y - y1.y, 2)
+    function isBallCloseToPlayer(ballPosition, playerPosition) {
+      if (!ballPosition || !playerPosition) {
+        return false;
+      }
+
+      const distance = Math.sqrt(
+        Math.pow(ballPosition.x - playerPosition.x, 2) +
+        Math.pow(ballPosition.y - playerPosition.y, 2)
       );
+
+      return distance < 30;
     }
 
     room.onRoomLink = (link) => {
