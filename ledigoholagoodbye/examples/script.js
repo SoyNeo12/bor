@@ -1184,7 +1184,7 @@ HaxballJS.then((HBInit) => {
         "vips"
       ];
 
-      const hasRole = allowedRoles.some(role => rolesData.roles[role].users.includes(p.auth));
+      const hasRole = allowedRoles.some(role => rolesData.roles[role]?.users.includes(p.auth));
 
       if (!playerStats[p.auth].uuid) {
         playerStats[p.auth].uuid = uuidv4();
