@@ -6,7 +6,8 @@
     },
     "coowner": {
       "users": [
-        "pg1NcTDoK2a8R2yRFlgr0VHbk3kV1rYD11b2FtI5n5w"
+        "pg1NcTDoK2a8R2yRFlgr0VHbk3kV1rYD11b2FtI5n5w",
+        "BpddqC3hczMWp9NCPis3FMVaqJdWxes3ON_AL0jPmmI"
       ],
       "gameAdmin": true
     },
@@ -36,7 +37,8 @@
     },
     "vips": {
       "users": [
-        "pg1NcTDoK2a8R2yRFlgr0VHbk3kV1rYD11b2FtI5n5w"
+        "pg1NcTDoK2a8R2yRFlgr0VHbk3kV1rYD11b2FtI5n5w",
+        "BpddqC3hczMWp9NCPis3FMVaqJdWxes3ON_AL0jPmmI"
       ],
       "gameAdmin": false
     },
