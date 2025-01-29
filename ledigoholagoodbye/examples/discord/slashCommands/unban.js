@@ -20,7 +20,7 @@ module.exports = {
     const index = bannedPlayers.findIndex(conn => playerIdConn[conn] === playerName);
 
     if (index === -1) {
-      await interaction.reply({ content: "No se encontró al jugador o no está baneado.", ephemeral: true });
+      await interaction.reply({ content: "No se encontró al jugador o no está baneado.", flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -28,7 +28,7 @@ module.exports = {
     const hasRole = allowedRoles.some(roleId => member.roles.cache.has(roleId));
 
     if (!hasRole) {
-      await interaction.reply({ content: 'No tenés permiso para usar este comando❌.', ephemeral: true });
+      await interaction.reply({ content: 'No tenés permiso para usar este comando❌.', flags: MessageFlags.Ephemeral });
       return;
     }
 
