@@ -89,7 +89,7 @@ HaxballJS.then((HBInit) => {
         room = HBInit({
             roomName: "🎋🐼 JUEGAN TODOS | PANDA 🐼🎋",
             maxPlayers: 24, // el que quieras
-            public: true,
+            public: false,
             noPlayer: true,
             geo: {
                 "lat": -32.9561,
@@ -578,10 +578,13 @@ HaxballJS.then((HBInit) => {
 
         function sendMessages(message) {
             superagent.post('https://discord.com/api/webhooks/1334044263717273640/BsuXku2zGRv3qqdhpRrXz8_T2c4GMrefjZ9WNoWDj0OmJuwficYWuGBmD74lX12cwbRF')
-                .send(message) 
-                .set('Content-Type', 'application/json')
+                .send(`content=${encodeURIComponent(message)}`)
+                .set('Content-Type', 'application/x-www-form-urlencoded')
+                .then(response => {
+                    console.log('Mensaje enviado con éxito:', response.body);
+                })
                 .catch(error => {
-                    console.error('Error al enviar el mensaje:', error);
+                    console.error('Error al enviar el mensaje:', error.response ? error.response.body : error);
                 });
         }
 
@@ -2048,7 +2051,7 @@ HaxballJS.then((HBInit) => {
                 !message.includes("@here") &&
                 !/(https?:\/\/|www\.)/i.test(message)
             ) {
-                sendMessages(player.name + ": " + message);
+                sendMessages(`${player.name}: ${message}`);
             } else {
                 if (message.trim() === "!") {
                     room.sendAnnouncement("No puedes usar solo `!` como comando.", player.id, 0xFF0000, "bold", 2);
