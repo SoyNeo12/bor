@@ -983,6 +983,13 @@ HaxballJS.then((HBInit) => {
       }, 2000);
     }
 
+    function isBallCloseToPlayer(x1, y1) {
+      return Math.sqrt(
+        Math.pow(x1.x - y1.x, 2) +
+        Math.pow(x1.y - y1.y, 2)
+      );
+    }
+
     room.onRoomLink = (link) => {
       roomLink = link;
       console.log(roomLink);
