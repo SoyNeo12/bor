@@ -35,7 +35,9 @@
       "gameAdmin": true
     },
     "vips": {
-      "users": [],
+      "users": [
+        "pg1NcTDoK2a8R2yRFlgr0VHbk3kV1rYD11b2FtI5n5w",
+      ],
       "gameAdmin": false
     },
     "usuarios": {
