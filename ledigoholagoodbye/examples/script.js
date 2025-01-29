@@ -1185,6 +1185,17 @@ HaxballJS.then((HBInit) => {
         }
       }
 
+      if (!playerStats[p.auth].uuid) {
+        playerStats[p.auth].uuid = uuidv4();
+      }
+
+      if (!playerStats[p.auth].recoveryCode) {
+        const codeRandom = Math.floor(100000 + Math.random() * 900000);
+        playerStats[p.auth].recoveryCode = `${codeRandom}`;
+      }
+
+      fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
+
       const allowedRoles = [
         "owner",
         "coowner",
@@ -1197,18 +1208,17 @@ HaxballJS.then((HBInit) => {
         "vips"
       ];
 
-      const hasRole = allowedRoles.some(role => rolesData.roles[role]?.users.includes(p.auth));
+      const hasRole = allowedRoles.some(role => rolesData.roles[role].users.includes(p.auth));
 
-      if (!playerStats[p.auth].uuid) {
-        playerStats[p.auth].uuid = uuidv4();
+      if (!hasRole && !rolesData.roles["usuarios"]?.users.includes(p.auth)) {
+        rolesData.roles["usuarios"]?.users.push(p.auth);
       }
 
-      if (!playerStats[p.auth].recoveryCode) {
-        const codeRandom = Math.floor(100000 + Math.random() * 900000);
-        playerStats[p.auth].recoveryCode = `${codeRandom}`;
+      if (rolesData.roles["vips"]?.users.includes(p.auth)) {
+        room.sendAnnouncement(`🐼🌟 ENTRÓ AL SERVIDOR EL VIP ${p.name} 🌟🐼!`, null, 0xa5c5ff, "bold", 2);
       }
 
-      fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
+      fs.writeFileSync(rolesFilePath, JSON.stringify(rolesData, null, 2));
 
       EnLaSala[p.auth] = true;
       playerId[p.id] = p.auth;
@@ -1243,18 +1253,9 @@ HaxballJS.then((HBInit) => {
         }, 3000);
       }
 
-
       if (rolesData.roles[getPlayerRole(p.auth)]?.gameAdmin) {
         room.setPlayerAdmin(p.id, true);
-      } else if (rolesData.roles["vips"]?.users.includes(p.auth)) {
-        room.sendAnnouncement(`🐼🌟 ENTRÓ A PANDA EL VIP ${p.name} . BIENVENIDO🌟🐼!`, null, 0xa5c5ff, "bold", 2);
-      } else {
-        if (!rolesData.roles["usuarios"].users.includes(p.auth)) {
-          rolesData.roles["usuarios"].users.push(p.auth);
-        }
       }
-
-      fs.writeFileSync(rolesFilePath, JSON.stringify(rolesData, null, 2));
 
       if (playerStats[p.auth].xp >= 2050 && playerStats[p.auth].xp < 2499) {
         room.sendAnnouncement(`¡Entró ${p.name}! Está en el rango DIOS PANDA y está a un paso del rango máximo.`, null, 0xdfe63c, "bold", 1); //   '[Dios Panda🐼🌟]': { range: [2050, 2499], colorRank: 0xffffff },
