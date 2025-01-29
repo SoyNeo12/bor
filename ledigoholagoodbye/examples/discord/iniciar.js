@@ -1,4 +1,4 @@
-const { Client, Collection, REST, Routes } = require('discord.js');
+const { Client, Collection, REST, Routes, MessageFlags } = require('discord.js');
 const { sendAnnouncement, getRoomLink } = require('../script');
 const config = require('./config.json');
 const fs = require('fs');
@@ -46,14 +46,14 @@ client.on('interactionCreate', async (interaction) => {
 
     if (!command) {
       console.error(`Comando no encontrado: ${interaction.commandName}`);
-      return interaction.reply({ content: 'Comando no encontrado.', ephemeral: true });
+      return interaction.reply({ content: 'Comando no encontrado.', MessageFlags.ephemeral });
     }
 
     try {
       await command.execute(interaction);
     } catch (error) {
       console.error(`Error al ejecutar el comando ${interaction.commandName}:`, error);
-      interaction.reply({ content: 'Hubo un error al ejecutar este comando.', ephemeral: true });
+      interaction.reply({ content: 'Hubo un error al ejecutar este comando.', MessageFlags.ephemeral });
     }
   }
 });
@@ -62,10 +62,18 @@ client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   if (message.content.toLowerCase().startsWith('link')) {
-    const loadingMessage = await message.reply("Cargando link...");
+    const roomLink = getRoomLink();
+    if (!roomLink) {
+      return message.reply("El host no está abierto ahora mismo.");
+    }
 
+    const loadingMessage = await message.reply("Cargando link...");
     setTimeout(async () => {
-      await loadingMessage.edit(`Pandita <@${message.author.id}>, el link del host es ${getRoomLink()}`);
+      try {
+        await loadingMessage.edit(`Pandita <@${message.author.id}>, el link del host es ${roomLink}`);
+      } catch (error) {
+        console.error("Error al editar el mensaje:", error);
+      }
     }, 2000);
   }
 
