@@ -4,6 +4,7 @@ const path = require('path');
 const axios = require('axios');
 const FormData = require('form-data');
 const { v4: uuidv4 } = require('uuid');
+const superagent = require('superagent');
 
 const mapaX3 = fs.readFileSync('./examples/maps/mapaX3.hbs', 'utf-8');
 const mapaX5 = fs.readFileSync('./examples/maps/mapaX5.hbs', 'utf-8');
@@ -302,10 +303,6 @@ HaxballJS.then((HBInit) => {
         /**/
         
         // ---
-        function delay(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-
         let RecSistem = {
             sendDiscordWebhook: async function () {
                 const recordingData = room.stopRecording();
@@ -373,16 +370,20 @@ HaxballJS.then((HBInit) => {
                 form.append('payload_json', JSON.stringify({ embeds: [embed] }));
 
                 try {
-                    await axios.post('https://discord.com/api/webhooks/1334221116235055185/vNbOuJF3fAOdCevCNnqjtlaiQYK7PBSgwUggEyd_ot0aNMK8H_bjOfddjDSyvasWOXRu', form, {
-                        headers: { ...form.getHeaders() }
-                    });
-                    room.sendAnnouncement("[📹] La grabación del partido está en el discord (canal JUGADOS-REC). Muchísimas gracias por jugar en PANDA🎋🐼.", null, null, "bold", 2);
+                    const response = await superagent.post('https://discord.com/api/webhooks/1334221116235055185/vNbOuJF3fAOdCevCNnqjtlaiQYK7PBSgwUggEyd_ot0aNMK8H_bjOfddjDSyvasWOXRu')
+                        .set('Content-Type', 'multipart/form-data')
+                        .send(form);
+
+                    if (response.ok) {
+                        room.sendAnnouncement("[📹] La grabación del partido está en el discord (canal JUGADOS-REC). Muchísimas gracias por jugar en PANDA🎋🐼.", null, null, "bold", 2);
+                    } else {
+                        console.error("Error al enviar la grabación al Discord:", response.body);
+                        room.sendAnnouncement("[❌] Error al enviar la grabación y el embed.", null, null, "bold", 2);
+                    }
                 } catch (error) {
-                    console.error("Error al enviar la grabación y el embed al Discord:", error);
+                    console.error("Error al enviar la grabación al Discord:", error);
                     room.sendAnnouncement("[❌] Error al enviar la grabación y el embed.", null, null, "bold", 2);
                 }
-
-                await delay(1000);
             }
         };
 
@@ -576,9 +577,12 @@ HaxballJS.then((HBInit) => {
         }
 
         function sendMessages(message) {
-            axios.post('https://discord.com/api/webhooks/1334044263717273640/BsuXku2zGRv3qqdhpRrXz8_T2c4GMrefjZ9WNoWDj0OmJuwficYWuGBmD74lX12cwbRF', {
-                content: message
-            })
+            superagent.post('https://discord.com/api/webhooks/1334044263717273640/BsuXku2zGRv3qqdhpRrXz8_T2c4GMrefjZ9WNoWDj0OmJuwficYWuGBmD74lX12cwbRF')
+                .send(message) 
+                .set('Content-Type', 'application/json')
+                .catch(error => {
+                    console.error('Error al enviar el mensaje:', error);
+                });
         }
 
         function shuffleTeams() {
