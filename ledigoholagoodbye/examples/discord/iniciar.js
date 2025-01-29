@@ -46,14 +46,14 @@ client.on('interactionCreate', async (interaction) => {
 
     if (!command) {
       console.error(`Comando no encontrado: ${interaction.commandName}`);
-      return interaction.reply({ content: 'Comando no encontrado.', MessageFlags.ephemeral });
+      return interaction.reply({ content: 'Comando no encontrado.', flags: MessageFlags.Ephemeral });
     }
 
     try {
       await command.execute(interaction);
     } catch (error) {
       console.error(`Error al ejecutar el comando ${interaction.commandName}:`, error);
-      interaction.reply({ content: 'Hubo un error al ejecutar este comando.', MessageFlags.ephemeral });
+      interaction.reply({ content: 'Hubo un error al ejecutar este comando.', flags: MessageFlags.Ephemeral });
     }
   }
 });
