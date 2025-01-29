@@ -77,9 +77,11 @@ client.on('messageCreate', async (message) => {
     }, 2000);
   }
 
-  if (message && message.channelId === '1276988562650435584') {
-    sendAnnouncement(`${message.author.username}: ${message.content}`, null, 0xB766CC, 1);
-  }
+  setTimeout(() => {
+    if (message && message.channelId === '1276988562650435584') {
+      sendAnnouncement(`${message.author.username}: ${message.content}`, null, 0xB766CC, 1);
+    }
+  }, 1000);
 });
 
 client.login(config.CLIENT_TOKEN);
