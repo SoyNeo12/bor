@@ -1733,6 +1733,29 @@ HaxballJS.then((HBInit) => {
                     } else if (!targetAuth) {
                         console.error("Error: No se encontró la AUTH para el jugador kickeado.");
                     }
+                    const embed = {
+                            title: "Nuevo baneo",
+                            description: `** Víctima:** ${kickedPlayer.name}\n ** Baneado por:** ${byPlayer.name}\n ** Razón:** ${reason || "Sin razon"}`,
+                            color: 0x00FF00,
+                            timestamp: new Date(),
+                            footer: {
+                                text: "Sistema de Sanciones",
+                            },
+                        };
+
+                        axios.post("https://discord.com/api/webhooks/1330244875114905762/4JR1uWMnJqUf4d776DKg41swkaDEcYyYEASuXaQ_rsqV9YgGEO8AUi3qDeLx4FeOXUXX", {
+                            content: null,
+                            embeds: [embed],
+                        })
+                            .then(() => console.log("Webhook enviado con éxito"))
+                            .catch(err => console.error("No se pudo enviar el webhook", err));
+
+                        try {
+                            fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
+                        } catch (err) {
+                            console.error('Error al escribir el archivo de jugadores:', err);
+                        }
+                    }
                 }
             } // te amoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
         };
