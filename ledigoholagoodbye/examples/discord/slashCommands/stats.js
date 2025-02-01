@@ -27,13 +27,12 @@ module.exports = {
       return;
     }
 
-    const verifiedPlayer = verifyPlayers[playerAuth];
-
-    if (!verifiedPlayer) {
+    if (!stats.verified) {
       await interaction.reply({ content: 'Este jugador no está verificado. No se puede mostrar las stats.', flags: MessageFlags.Ephemeral });
       return;
     }
-
+    
+    const verifiedPlayer = verifyPlayers[playerAuth];
     const discordName = verifiedPlayer.discordName || 'Desconocido';
 
     const statsEmbed = new EmbedBuilder()
