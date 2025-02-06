@@ -617,19 +617,6 @@ HaxballJS.then((HBInit) => {
             }
         }
 
-        function moveDiscToMainDisc(ballPosition) {
-            if (x3Active) {
-                room.setDiscProperties(5, { x: ballPosition.x });
-                room.setDiscProperties(6, { x: ballPosition.x });
-            } else if (x5Active) {
-                room.setDiscProperties(5, { x: ballPosition.x });
-                room.setDiscProperties(6, { x: ballPosition.x });
-            } else if (x7Active) {
-                room.setDiscProperties(5, { x: ballPosition.x });
-                room.setDiscProperties(6, { x: ballPosition.x });
-            }
-        }
-
         function handleAfkPlayers() {
             const players = room.getPlayerList();
 
@@ -1244,9 +1231,9 @@ HaxballJS.then((HBInit) => {
                 playerStats[p.auth].uuid = uuidv4();
             }
 
-            if (!playerStats[playerAuth].registrationDate) {
+            if (!playerStats[p.auth].registrationDate) {
                 const registrationDate = new Date().toLocaleDateString('es-ES');
-                playerStats[playerAuth].registrationDate = registrationDate;
+                playerStats[p.auth].registrationDate = registrationDate;
             }
 
             if (!playerStats[p.auth].recoveryCode) {
@@ -1860,7 +1847,6 @@ HaxballJS.then((HBInit) => {
         room.onGameTick = () => {
             handleAfkPlayers();
             kickAFKs();
-            moveDiscToMainDisc(room.getBallPosition());
             // const players = room.getPlayerList().filter(p => p.team !== 0);
             // const ballPosition = room.getBallPosition();
 
