@@ -587,16 +587,22 @@ HaxballJS.then((HBInit) => {
             });
         }
 
-        function sendMessages(message) {
-            superagent.post('https://discord.com/api/webhooks/1334044263717273640/BsuXku2zGRv3qqdhpRrXz8_T2c4GMrefjZ9WNoWDj0OmJuwficYWuGBmD74lX12cwbRF')
-                .send(`content=${encodeURIComponent(message)}`)
-                .set('Content-Type', 'application/x-www-form-urlencoded')
-                .then(response => {
-                    console.log('Mensaje enviado con éxito:', response.body);
-                })
-                .catch(error => {
+        async function sendMessages(message) {
+            try {
+                const response = await superagent.post('https://discord.com/api/webhooks/1334044263717273640/BsuXku2zGRv3qqdhpRrXz8_T2c4GMrefjZ9WNoWDj0OmJuwficYWuGBmD74lX12cwbRF')
+                    .send(`content=${encodeURIComponent(message)}`)
+                    .set('Content-Type', 'application/x-www-form-urlencoded');
+
+                console.log('Mensaje enviado con éxito:', response.body);
+            } catch (error) {
+                if (error.response && error.response.body && error.response.body.retry_after) {
+                    const waitTime = error.response.body.retry_after * 1000; 
+                    console.warn(`Rate limit alcanzado. Reintentando en ${waitTime}ms...`);
+                    setTimeout(() => sendMessages(message), waitTime);
+                } else {
                     console.error('Error al enviar el mensaje:', error.response ? error.response.body : error);
-                });
+                }
+            }
         }
 
         function shuffleTeams() {
