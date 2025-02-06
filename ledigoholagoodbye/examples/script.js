@@ -83,6 +83,9 @@ if (fs.existsSync(messagesFilePath)) {
 const despedidasJSON = require('./despedidas.json');
 
 let roomLink = '';
+let x3Active = false;
+let x5Active = false;
+let x7Active = false;
 
 HaxballJS.then((HBInit) => {
     try {
@@ -96,7 +99,7 @@ HaxballJS.then((HBInit) => {
                 "lon": -60.6559,
                 "code": "MO"
             },
-            token: "thr1.AAAAAGeYaw9duFCE14c2wg.IjfLvtFh0ZI"
+            token: "thr1.AAAAAGeiceaM_0Zm80CnyA.JTId7F2UwM8"
         });
         // | 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
         // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
@@ -197,9 +200,6 @@ HaxballJS.then((HBInit) => {
         let chaosModeActive = false;
         let betCooldownActive = false;
         let mathActive = false;
-        let x3Active = false;
-        let x5Active = false;
-        let x7Active = false;
 
         let team1Name = '';
         let team2Name = '';
@@ -299,12 +299,12 @@ HaxballJS.then((HBInit) => {
             { name: "Argentina Visita 2014", team: 2, avatarColor: 0x74821A, angle: 90, colors: [0x060B36, 0x091152, 0x111F9C] },
         ];
         // ---
-        
+
         /**/
-        
+
         // ---
         let RecSistem = {
-            sendDiscordWebhook: async function () {
+            sendDiscordWebhook: function () {
                 const recordingData = room.stopRecording();
 
                 if (!recordingData || recordingData.byteLength <= 4) {
@@ -370,16 +370,11 @@ HaxballJS.then((HBInit) => {
                 form.append('payload_json', JSON.stringify({ embeds: [embed] }));
 
                 try {
-                    const response = await superagent.post('https://discord.com/api/webhooks/1334221116235055185/vNbOuJF3fAOdCevCNnqjtlaiQYK7PBSgwUggEyd_ot0aNMK8H_bjOfddjDSyvasWOXRu')
-                        .set('Content-Type', 'multipart/form-data')
-                        .send(form);
+                    axios.post('https://discord.com/api/webhooks/1334221116235055185/vNbOuJF3fAOdCevCNnqjtlaiQYK7PBSgwUggEyd_ot0aNMK8H_bjOfddjDSyvasWOXRu', form, {
+                        headers: form.getHeaders()
+                    });
 
-                    if (response.ok) {
-                        room.sendAnnouncement("[📹] La grabación del partido está en el discord (canal JUGADOS-REC). Muchísimas gracias por jugar en PANDA🎋🐼.", null, null, "bold", 2);
-                    } else {
-                        console.error("Error al enviar la grabación al Discord:", response.body);
-                        room.sendAnnouncement("[❌] Error al enviar la grabación y el embed.", null, null, "bold", 2);
-                    }
+                    room.sendAnnouncement("[📹] La grabación del partido está en el discord (canal JUGADOS-REC). Muchísimas gracias por jugar en PANDA🎋🐼.", null, null, "bold", 2);
                 } catch (error) {
                     console.error("Error al enviar la grabación al Discord:", error);
                     room.sendAnnouncement("[❌] Error al enviar la grabación y el embed.", null, null, "bold", 2);
@@ -451,14 +446,20 @@ HaxballJS.then((HBInit) => {
                 room.setCustomStadium(mapaX3);
                 room.setTimeLimit(3);
                 room.setScoreLimit(3);
+                x3Active = true;
+                x7Active = false;
             } else if (playerCount >= 8 && playerCount <= 15) {
                 room.setCustomStadium(mapaX5);
                 room.setTimeLimit(7);
                 room.setScoreLimit(5);
+                x5Active = true;
+                x3Active = false;
             } else if (playerCount >= 16) {
                 room.setCustomStadium(mapaX7);
                 room.setTimeLimit(7);
                 room.setScoreLimit(5);
+                x7Active = true;
+                x5Active = false;
             }
         }
 
@@ -494,7 +495,7 @@ HaxballJS.then((HBInit) => {
                 if (!chaosModeActive) return;
                 let mode;
                 do {
-                    mode = Math.floor(Math.random() * 5) + 1;
+                    mode = Math.floor(Math.random() * 6) + 1;
                 } while (mode === lastMode);
                 lastMode = mode;
 
@@ -536,6 +537,12 @@ HaxballJS.then((HBInit) => {
                     room.setDiscProperties(0, {
                         cMask: 0 | cf.wall
                     });
+                } else if (mode === 6) {
+                    room.sendAnnouncement("🐼¡Sexto modo de juego!🐼", null, null, "bold", 2);
+                    room.sendAnnouncement("¡SUPER REBOTE!", null, 0x09c49f, "bold", 2);
+                    room.setDiscProperties(0, {
+                        bCoef: 1.3
+                    });
                 }
 
                 chaosModeTimer = setTimeout(() => {
@@ -565,6 +572,10 @@ HaxballJS.then((HBInit) => {
             } else if (mode === 5) {
                 room.setDiscProperties(0, {
                     cMask: 63
+                });
+            } else if (mode === 6) {
+                room.setDiscProperties(0, {
+                    bCoef: 0.4
                 });
             }
             remainingTime = 30000;
@@ -603,6 +614,19 @@ HaxballJS.then((HBInit) => {
                     const newTeam = index < half ? 1 : 2;
                     room.setPlayerTeam(player.id, newTeam);
                 });
+            }
+        }
+
+        function moveDiscToMainDisc(ballPosition) {
+            if (x3Active) {
+                room.setDiscProperties(5, { x: ballPosition.x });
+                room.setDiscProperties(6, { x: ballPosition.x });
+            } else if (x5Active) {
+                room.setDiscProperties(5, { x: ballPosition.x });
+                room.setDiscProperties(6, { x: ballPosition.x });
+            } else if (x7Active) {
+                room.setDiscProperties(5, { x: ballPosition.x });
+                room.setDiscProperties(6, { x: ballPosition.x });
             }
         }
 
@@ -1008,6 +1032,25 @@ HaxballJS.then((HBInit) => {
             return distance < 30;
         }
 
+        function explosionEffect(x, y) {
+            let players = room.getPlayerList();
+            players.forEach(player => {
+                let playerDisc = room.getPlayerDiscProperties(player.id);
+                if (!playerDisc) return;
+
+                let dx = playerDisc.x - x;
+                let dy = playerDisc.y - y;
+                let dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < x3Active ? 240 : x5Active ? 460 : x7Active ? 560 : 500) {
+                    let force = 25;
+                    room.setPlayerDiscProperties(player.id, {
+                        xspeed: (dx / dist) * force,
+                        yspeed: (dy / dist) * force
+                    });
+                }
+            });
+        }
+
         room.onRoomLink = (link) => {
             roomLink = link;
             console.log(roomLink);
@@ -1199,6 +1242,11 @@ HaxballJS.then((HBInit) => {
 
             if (!playerStats[p.auth].uuid) {
                 playerStats[p.auth].uuid = uuidv4();
+            }
+
+            if (!playerStats[playerAuth].registrationDate) {
+                const registrationDate = new Date().toLocaleDateString('es-ES');
+                playerStats[playerAuth].registrationDate = registrationDate;
             }
 
             if (!playerStats[p.auth].recoveryCode) {
@@ -1530,6 +1578,7 @@ HaxballJS.then((HBInit) => {
                 room.setPlayerAvatar(scorer.id, '⚽');
                 resetSize(scorer);
                 resetAvatar(scorer);
+                explosionEffect(room.getBallPosition().x, room.getBallPosition().y);
             }
 
             if (team === 1) {
@@ -1540,10 +1589,10 @@ HaxballJS.then((HBInit) => {
                 room.setDiscProperties(0, { color: 0x0000FF, radius: 6.25 * 3 });
             }
 
-            if (players === 1) {
-                room.stopGame();
-                room.startGame();
-            }
+            // if (players === 1) {
+            //     room.stopGame();
+            //     room.startGame();
+            // }
 
             try {
                 fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
@@ -1733,29 +1782,6 @@ HaxballJS.then((HBInit) => {
                     } else if (!targetAuth) {
                         console.error("Error: No se encontró la AUTH para el jugador kickeado.");
                     }
-                    const embed = {
-                            title: "Nuevo baneo",
-                            description: `** Víctima:** ${kickedPlayer.name}\n ** Baneado por:** ${byPlayer.name}\n ** Razón:** ${reason || "Sin razon"}`,
-                            color: 0x00FF00,
-                            timestamp: new Date(),
-                            footer: {
-                                text: "Sistema de Sanciones",
-                            },
-                        };
-
-                        axios.post("https://discord.com/api/webhooks/1330244875114905762/4JR1uWMnJqUf4d776DKg41swkaDEcYyYEASuXaQ_rsqV9YgGEO8AUi3qDeLx4FeOXUXX", {
-                            content: null,
-                            embeds: [embed],
-                        })
-                            .then(() => console.log("Webhook enviado con éxito"))
-                            .catch(err => console.error("No se pudo enviar el webhook", err));
-
-                        try {
-                            fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
-                        } catch (err) {
-                            console.error('Error al escribir el archivo de jugadores:', err);
-                        }
-                    }
                 }
             } // te amoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
         };
@@ -1767,14 +1793,6 @@ HaxballJS.then((HBInit) => {
                     clearTimeout(warnedPlayers[byPlayer.id]);
                     delete warnedPlayers[byPlayer.id];
                 }
-            }
-
-            if (newStadiumName === "PANDA x3 by sanTos") {
-                x3Active = true;
-            } else if (newStadiumName === "PANDA x5 by sanTos") {
-                x5Active = true;
-            } else if (newStadiumName === "PANDA x7 by sanTos") {
-                x7Active = true;
             }
         }
 
@@ -1842,6 +1860,7 @@ HaxballJS.then((HBInit) => {
         room.onGameTick = () => {
             handleAfkPlayers();
             kickAFKs();
+            moveDiscToMainDisc(room.getBallPosition());
             // const players = room.getPlayerList().filter(p => p.team !== 0);
             // const ballPosition = room.getBallPosition();
 
@@ -2188,11 +2207,6 @@ HaxballJS.then((HBInit) => {
                     room.sendAnnouncement(`🐼Pandita, esta es tu UUID: ${playerStats[playerAuth].uuid}\n`, player.id, 0xdbdf4e, "bold", 2);
 
                     if (playerStats[playerAuth].verified) {
-                        if (!playerStats[playerAuth].registrationDate) {
-                            const registrationDate = new Date().toLocaleDateString('es-ES');
-                            playerStats[playerAuth].registrationDate = registrationDate;
-                        }
-
                         room.sendAnnouncement(`🐼CODIGO DE RECUPERACIÓN: ${playerStats[playerAuth].recoveryCode}`, player.id, 0xfcff99, "bold", 2);
 
                         const playerXp = playerStats[playerAuth].xp || 0;
@@ -2391,7 +2405,7 @@ HaxballJS.then((HBInit) => {
                             `📊 STATS: !stats #ID - !top [ranking]\n` +
                             `💬 SOCIAL: !ds / !dc / !discord - !llamaradmin RAZON y NOMBRE user reportado.\n` +
                             `💵 TIENDA: !tienda / !shop - !ruleta cantidad - !bet team cantidad - !dar [pandacoins] [#idusuario].\n` +
-                            `⚽ JUEGO: !gk - !nv / !bb - !modos / !modo - !changecolors - !afk - !ksk (solo vips)`,
+                            `⚽ JUEGO: !gk - !nv / !bb - !modos / !modo - !changecolors - !afk - !ksk (solo vips) - !gks`,
                             player.id, 0x84e35a, "small-bold", 1);
 
                         if (player.admin) {
@@ -3137,9 +3151,18 @@ HaxballJS.then((HBInit) => {
                 }
 
                 changeColors();
-                room.sendAnnouncement(`🌟👕 ¡El VIP ${player.name} ha cambiado las camisetas! 👕🐼!`, player.id, 0x64b3ec, "bold", 2);
+                room.sendAnnouncement(`🌟👕 ¡El VIP ${player.name} ha cambiado las camisetas! 👕🐼!`, null, 0x64b3ec, "bold", 2);
                 votes = 0;
                 votedPlayers = [];
+                return false;
+            } else if (message === "!gks") {
+                if (room.getScores() !== null) {
+                    room.sendAnnouncement("No es posible usar este comando por ahora.", player.id, 0xFF0000, "bold", 2);
+                    return false;
+                }
+
+                room.sendAnnouncement(`🧤🔴 GK DEL ROJO: ${gkred[0].name || "Sin GK"}`, null, 0xdb7a7a, "normal", 1);
+                room.sendAnnouncement(`🧤🔵 GK DEL AZUL: ${gkblue[0].name || "Sin GK"}`, null, 0x64b3ec, "normal", 1);
                 return false;
             } else if (message.startsWith("!")) {
                 room.sendAnnouncement("Comando desconocido o no existe, usa !help para ver los comandos", player.id, 0xFF0000, "bold", 2);
@@ -3148,7 +3171,7 @@ HaxballJS.then((HBInit) => {
                 return false;
             } else if (message.toLowerCase().includes("http:")) {
                 return false;
-            } else if (message.includes("@everyone")) {
+            } else if (message.includes("@everyone") || message.includes("@here")) {
                 return false;
             } else if (contienePalabraCensurada(message)) {
                 room.sendAnnouncement(`SE ACTIVÓ EL FILTRO DE PANDA: ${player.name} fue kickeado.🌿🐼`, null, 0xead2c0, "bold", 2);
@@ -3354,4 +3377,4 @@ function getPlayerList() {
     return { players, red, blue, specs };
 }
 
-module.exports = { getRoomLink, playerStats, playerId, sendAnnouncement, getPlayerList, bannedPlayers, playersFilePath, bannedPlayersFilePath };
+module.exports = { getRoomLink, playerStats, playerId, sendAnnouncement, getPlayerList, bannedPlayers, playersFilePath, bannedPlayersFilePath, mapaX3, mapaX5, mapaX7, x3Active, x5Active, x7Active };
