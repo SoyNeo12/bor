@@ -541,7 +541,7 @@ HaxballJS.then((HBInit) => {
                     room.sendAnnouncement("🐼¡Sexto modo de juego!🐼", null, null, "bold", 2);
                     room.sendAnnouncement("¡SUPER REBOTE!", null, 0x09c49f, "bold", 2);
                     room.setDiscProperties(0, {
-                        bCoef: 1.5
+                        bCoeff: 1.5
                     });
                 }
 
@@ -575,7 +575,7 @@ HaxballJS.then((HBInit) => {
                 });
             } else if (mode === 6) {
                 room.setDiscProperties(0, {
-                    bCoef: 0.4
+                    bCoeff: 0.4
                 });
             }
             remainingTime = 30000;
