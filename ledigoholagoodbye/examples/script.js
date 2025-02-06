@@ -2085,7 +2085,7 @@ HaxballJS.then((HBInit) => {
                 !message.includes("@here") &&
                 !/(https?:\/\/|www\.)/i.test(message)
             ) {
-                sendMessages(`${player.name}: ${message}`);
+                // sendMessages(`${player.name}: ${message}`);
             } else {
                 if (message.trim() === "!") {
                     room.sendAnnouncement("No puedes usar solo `!` como comando.", player.id, 0xFF0000, "bold", 2);
