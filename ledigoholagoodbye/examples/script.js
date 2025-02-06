@@ -92,14 +92,14 @@ HaxballJS.then((HBInit) => {
         room = HBInit({
             roomName: "🎋🐼 JUEGAN TODOS | PANDA 🐼🎋",
             maxPlayers: 24, // el que quieras
-            public: false,
+            public: true,
             noPlayer: true,
             geo: {
                 "lat": -32.9561,
                 "lon": -60.6559,
                 "code": "MO"
             },
-            token: "thr1.AAAAAGeiceaM_0Zm80CnyA.JTId7F2UwM8"
+            token: "thr1.AAAAAGekFykRP2c9AdJgpg.zKTXL0gery0"
         });
         // | 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
         // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
@@ -541,7 +541,7 @@ HaxballJS.then((HBInit) => {
                     room.sendAnnouncement("🐼¡Sexto modo de juego!🐼", null, null, "bold", 2);
                     room.sendAnnouncement("¡SUPER REBOTE!", null, 0x09c49f, "bold", 2);
                     room.setDiscProperties(0, {
-                        bCoef: 1.3
+                        bCoef: 1.5
                     });
                 }
 
@@ -596,7 +596,7 @@ HaxballJS.then((HBInit) => {
                 console.log('Mensaje enviado con éxito:', response.body);
             } catch (error) {
                 if (error.response && error.response.body && error.response.body.retry_after) {
-                    const waitTime = error.response.body.retry_after * 1000; 
+                    const waitTime = error.response.body.retry_after * 1000;
                     console.warn(`Rate limit alcanzado. Reintentando en ${waitTime}ms...`);
                     setTimeout(() => sendMessages(message), waitTime);
                 } else {
