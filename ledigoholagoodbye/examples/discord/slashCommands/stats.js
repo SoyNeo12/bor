@@ -32,12 +32,12 @@ module.exports = {
       return;
     }
     
-    const verifiedPlayer = verifyPlayers[playerAuth];
-    const discordName = verifiedPlayer.discordName || 'Desconocido';
+    // const verifiedPlayer = verifyPlayers[playerAuth];
+    // const discordName = verifiedPlayer.discordName || 'Desconocido';
 
     const statsEmbed = new EmbedBuilder()
       .setColor('#1E90FF')
-      .setTitle(`Estadísticas de ${stats.name} (Discord: ${discordName})`)
+      .setTitle(`Estadísticas de ${stats.name}`) // (Discord: ${discordName))
       .addFields(
         { name: '🐼Partidos Jugados🐼', value: stats.games.toString(), inline: true },
         { name: '✅Victorias✅', value: stats.victories.toString(), inline: false },
