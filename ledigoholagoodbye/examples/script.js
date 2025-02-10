@@ -1734,11 +1734,11 @@ HaxballJS.then((HBInit) => {
                     color: 0xe43e3e,
                     timestamp: new Date(),
                     footer: {
-                        text: "Sistema de sanciones",
+                        text: "Sistema de baneos",
                     },
                 };
 
-                axios.post("https://discord.com/api/webhooks/1278152698952290327/RQvTuL8-zXfTF-_d59Z79ZgcCfBuv9OvcZZlIMulCkrPY9a-Q17YhqzbJIL7W72nWcuI", {
+                axios.post("https://discord.com/api/webhooks/1330244875114905762/4JR1uWMnJqUf4d776DKg41swkaDEcYyYEASuXaQ_rsqV9YgGEO8AUi3qDeLx4FeOXUXX", {
                     content: null,
                     embeds: [embed]
                 })
