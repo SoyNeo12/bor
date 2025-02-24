@@ -5,6 +5,7 @@ const axios = require('axios');
 const FormData = require('form-data');
 const { v4: uuidv4 } = require('uuid');
 const superagent = require('superagent');
+const { createCanvas } = require('canvas');
 
 const mapaX3 = fs.readFileSync('./examples/maps/mapaX3.hbs', 'utf-8');
 const mapaX5 = fs.readFileSync('./examples/maps/mapaX5.hbs', 'utf-8');
@@ -86,6 +87,9 @@ let roomLink = '';
 let x3Active = false;
 let x5Active = false;
 let x7Active = false;
+
+const canvas = createCanvas(x5Active ? 3000 : x7Active ? 4000 : 2000, x5Active ? 2000 : x7Active ? 3000 : 1000);
+const ctx = canvas.getContext('2d');
 
 HaxballJS.then((HBInit) => {
     try {
@@ -192,6 +196,25 @@ HaxballJS.then((HBInit) => {
         const warningTime = 15000;
         const webhookCooldown = 5000;
 
+        // Offside
+        let lastTouch = null;
+        let offsideActive = false;
+        let itsAoffside = false;
+        let posX = 0;
+        let offsideTeam = null;
+        let defenseTeam = null;
+        let offsidePosition = null;
+        let lastBallSide = null;
+        let lastDefenderMessageSent = false;
+        let ballWasKicked = false;
+        let offsideTimer = null;
+        let isInProccesOffside = false;
+        let lastBallTouch = null;
+        let isGamePaused = false;
+
+        const playerNumbers = new Map();
+
+        // Otras variables
         let powerEnabled = false;
         let gravityEnabled = false;
         let gravityActive = false;
@@ -220,7 +243,6 @@ HaxballJS.then((HBInit) => {
         let powerIncreaseInterval = null;
         let chaosModeTimer = null;
         let PowerComba = null;
-        let offsideBallPosition = null;
 
         let playerSizes = {};
         let EnLaSala = {};
@@ -682,11 +704,17 @@ HaxballJS.then((HBInit) => {
             if (currentMode === 'power') {
                 powerEnabled = true;
                 gravityEnabled = false;
+                offsideActive = false;
                 room.sendAnnouncement('Este partido se juega con: 🤩💣POWER (SOLO)💣🤩.', null, 0xff7759, "bold", 2);
             } else if (currentMode === 'comba') {
                 gravityEnabled = true;
                 powerEnabled = true;
+                offsideActive = true;
                 room.sendAnnouncement('Este partido se juega con: 🤑🤩POWER CON COMBA🤩🤑.', null, 0xff7759, "bold", 2);
+
+                setTimeout(() => {
+                    room.sendAnnouncement('🚨🚨🚨 ¡OFFSIDE ACTIVADO! 🚨🚨🚨', null, 0xff7759, "bold", 2);
+                });
             }
         }
 
@@ -1044,6 +1072,591 @@ HaxballJS.then((HBInit) => {
             });
         }
 
+        function pointDistance(x1, y1, x2, y2) {
+            const distance = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
+            return distance;
+        }
+
+        function getLastDefenders() {
+            const defenders = { red: null, blue: null };
+            const players = room.getPlayerList().filter(player => player.team === 1 || player.team === 2);
+
+            // Filtrar jugadores excluyendo porteros
+            const redPlayers = players.filter(p => p.team === 1 && p.id !== gkred[0]?.id);
+            const bluePlayers = players.filter(p => p.team === 2 && p.id !== gkblue[0]?.id);
+
+            // Para el equipo rojo, encontrar el jugador más retrasado
+            if (redPlayers.length > 0) {
+                defenders.red = redPlayers.reduce((prev, curr) => {
+                    const prevX = room.getPlayerDiscProperties(prev.id).x;
+                    const currX = room.getPlayerDiscProperties(curr.id).x;
+                    return currX < prevX ? curr : prev;
+                });
+            }
+
+            // Para el equipo azul, encontrar el jugador más adelantado
+            if (bluePlayers.length > 0) {
+                defenders.blue = bluePlayers.reduce((prev, curr) => {
+                    const prevX = room.getPlayerDiscProperties(prev.id).x;
+                    const currX = room.getPlayerDiscProperties(curr.id).x;
+                    return currX > prevX ? curr : prev;
+                });
+            }
+
+            return defenders;
+        }
+
+        function getLastTouch() {
+            const players = room.getPlayerList().filter(player => player.team === 1 || player.team === 2);
+            let closestPlayer = null;
+
+            players.forEach(player => {
+                const playerProperties = room.getPlayerDiscProperties(player.id);
+                const ballProperties = room.getDiscProperties(0);
+
+                const distance = pointDistance(playerProperties.x, playerProperties.y, ballProperties.x, ballProperties.y);
+                if (distance < 30) {  // Si el jugador tocó el balón
+                    closestPlayer = player;
+                    // Actualizar lastTouch solo si hay un nuevo toque
+                    if (closestPlayer !== lastTouch) {
+                        lastTouch = closestPlayer;
+                    }
+                }
+            });
+
+            return lastTouch; // Retornar la variable global
+        }
+
+        function checkOffSide() {
+            if (room.getDiscProperties(0).x === 0 && room.getDiscProperties(0).y === 0) return;
+            if (isInProccesOffside) return;
+            const defenders = getLastDefenders();
+            const currentTouch = getLastTouch();
+
+            // Solo verificar si hay un nuevo toque del balón
+            if (currentTouch && currentTouch !== lastBallTouch) {
+                // Solo verificar si el último toque fue diferente
+                if (lastBallTouch && currentTouch.id !== lastBallTouch.id) {
+                    // Si es pase entre el mismo equipo
+                    if (currentTouch.team === lastBallTouch.team) {
+                        const receiverProperties = room.getPlayerDiscProperties(currentTouch.id);
+
+                        // Ignorar si el receptor es portero o es el último defensor
+                        if (currentTouch.id === gkred[0]?.id ||
+                            currentTouch.id === gkblue[0]?.id ||
+                            currentTouch.id === defenders.red?.id ||
+                            currentTouch.id === defenders.blue?.id) {
+                            lastBallTouch = currentTouch;
+                            return;
+                        }
+
+                        // Para el equipo rojo (atacando hacia la derecha)
+                        if (currentTouch.team === 1) {
+                            const blueDefenderX = room.getPlayerDiscProperties(defenders.blue.id).x;
+                            const lastTouchPos = room.getPlayerDiscProperties(lastBallTouch.id).x;
+
+                            // Verificar que el que dio el pase no sea el último defensor
+                            if (lastBallTouch.id !== defenders.blue.id &&
+                                receiverProperties.x > blueDefenderX &&
+                                receiverProperties.x > lastTouchPos) {
+                                handleOffside(currentTouch.name, "RED", blueDefenderX);
+                            }
+                        }
+                        // Para el equipo azul (atacando hacia la izquierda)
+                        if (currentTouch.team === 2) {
+                            const redDefenderX = room.getPlayerDiscProperties(defenders.red.id).x;
+                            const lastTouchPos = room.getPlayerDiscProperties(lastBallTouch.id).x;
+
+                            // Verificar que el que dio el pase no sea el último defensor
+                            if (lastBallTouch.id !== defenders.red.id &&
+                                receiverProperties.x < redDefenderX &&
+                                receiverProperties.x < lastTouchPos) {
+                                handleOffside(currentTouch.name, "BLUE", redDefenderX);
+                            }
+                        }
+                    }
+                }
+                lastBallTouch = currentTouch;
+            }
+        }
+
+        function handleOffside(playerName, team, defenderX) {
+            const players = room.getPlayerList();
+            let JMAP;
+            if (x5Active) JMAP = JSON.parse(mapaX5);
+            if (x7Active) JMAP = JSON.parse(mapaX7);
+
+            if (team === "RED") {
+                const allRedInOwnHalf = players
+                    .filter(p => p.team === 1)
+                    .every(p => room.getPlayerDiscProperties(p.id).x < -JMAP.width / 2);
+
+                if (allRedInOwnHalf) return;
+
+            } else if (team === "BLUE") {
+                const allBlueInOwnHalf = players
+                    .filter(p => p.team === 2)
+                    .every(p => room.getPlayerDiscProperties(p.id).x > JMAP.width / 2);
+
+                if (allBlueInOwnHalf) return;
+            }
+
+            if (isInProccesOffside) return;
+            isInProccesOffside = true;
+
+            // Colores cálidos y agradables
+            const colors = {
+                title: 0xFFA07A,      // Salmón claro
+                warning: 0xFFDAB9,    // Melocotón
+                info: 0xFFE4B5,       // Moca
+                highlight: 0xFFB6C1,  // Rosa claro
+                team: {
+                    red: 0xFF6B6B,    // Rojo suave
+                    blue: 0x87CEEB    // Azul cielo
+                }
+            };
+
+            const teamColor = team === "RED" ? colors.team.red : colors.team.blue;
+            const teamName = team === "RED" ? "🔴 Equipo Rojo" : "🔵 Equipo Azul";
+
+            // Secuencia de mensajes informativos
+            room.pauseGame(true);
+
+            const offsidePlayer = room.getPlayerList().find(p => p.name === playerName);
+            const playerPos = room.getPlayerDiscProperties(offsidePlayer.id);
+
+            // Guardar la posición original del offside
+            offsidePosition = {
+                x: playerPos.x,
+                y: playerPos.y
+            };
+
+            offsideTeam = offsidePlayer.team;
+            defenseTeam = offsideTeam === 1 ? 2 : 1;
+
+            room.setDiscProperties(8, {
+                x: defenderX,
+                y: -290,
+                radius: 5,
+                color: teamColor
+            });
+
+            room.setDiscProperties(9, {
+                x: defenderX,
+                y: 290,
+                radius: 5,
+                color: teamColor
+            });
+
+            const ballProperties = room.getDiscProperties(0);
+            const cf = room.CollisionFlags;
+
+            // Teletransportar la pelota a la posición donde ocurrió el offside
+            setTimeout(() => {
+                room.setDiscProperties(0, {
+                    x: playerPos.x,
+                    y: playerPos.y,
+                    xspeed: 0,
+                    yspeed: 0,
+                    color: colors.title
+                });
+
+                room.setDiscProperties(5, {
+                    x: ballProperties.x,
+                    y: ballProperties.y,
+                    radius: 200,
+                    cMask: team === "RED" ? cf.red : cf.blue
+                });
+            }, 1000);
+
+            // 10 segundos para patear la pelota
+            if (!isGamePaused) {
+                offsideTimer = setTimeout(() => {
+                    if (!ballWasKicked) {
+                        disableForceField();
+                        isInProccesOffside = false;
+                    }
+                }, 10000);
+            }
+
+            room.setPlayerDiscProperties(offsidePlayer.id, { x: room.getDiscProperties(5).radius + 5, y: 0 });
+
+            posX = defenderX;
+
+            // Mensaje adicional al reanudar
+            setTimeout(() => {
+                room.sendAnnouncement("▶️ El juego continuá", null, colors.info, "bold", 1);
+                room.pauseGame(false);
+
+                room.setDiscProperties(8, {
+                    x: JMAP?.discs[8]?.pos[0],
+                    y: JMAP?.discs[8]?.pos[1],
+                    radius: 0.4
+                });
+
+                room.setDiscProperties(9, {
+                    x: JMAP?.discs[9]?.pos[0],
+                    y: JMAP?.discs[9]?.pos[1],
+                    radius: 0.4
+                });
+            }, 4000);
+
+            room.sendAnnouncement("🚩 ¡FUERA DE JUEGO DETECTADO! 🚩", null, colors.warning, "small-bold", 2);
+            room.sendAnnouncement(`👤 Jugador: ${playerName}`, null, colors.info, "small-bold", 2);
+            room.sendAnnouncement(`👥 ${teamName}`, null, teamColor, "small-bold", 2);
+            itsAoffside = true;
+            isInProccesOffside = true;
+            // Dibujar y enviar imagen del fuera de juego
+            drawGameObjects();
+
+            setTimeout(() => {
+                sendImageToWebhook(playerName, teamName).then(() => {
+                    itsAoffside = false;
+                });
+            }, 500);
+
+            // Dibujar banderas en las posiciones de los jugadores
+            // Bandera superior (posición del jugador en offside)
+            const flagTopX = playerPos.x * 1.5 + canvas.width / 2;
+            const flagTopY = 50;  // 50 píxeles desde el borde superior
+            drawFlag(flagTopX, flagTopY, teamColor, false);
+
+            // Bandera inferior (posición del defensor)
+            const flagBottomX = defenderX * 1.5 + canvas.width / 2;
+            const flagBottomY = canvas.height - 50;
+            drawFlag(flagBottomX, flagBottomY, teamColor, true);
+        }
+
+        function drawFlag(x, y, teamColor, isDefender = false) {
+            const flagSize = 15;  // Tamaño base del banderín
+
+            // Si es la bandera del defensor, usar un color más oscuro
+            const flagColor = isDefender ? (
+                teamColor === 0xFF6B6B ? "#AA0000" : "#0000AA"
+            ) : teamColor;
+
+            // Banderín base (círculo)
+            ctx.beginPath();
+            ctx.arc(x, y, flagSize, 0, Math.PI * 2);
+            ctx.fillStyle = flagColor;
+            ctx.strokeStyle = "#FFFFFF";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.closePath();
+
+            // Palo del banderín
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y - 60);  // Palo más largo
+            ctx.strokeStyle = "#FFFFFF";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.closePath();
+
+            // Bandera triangular
+            ctx.beginPath();
+            ctx.moveTo(x, y - 60);
+            ctx.lineTo(x + 30, y - 45);  // Bandera más grande
+            ctx.lineTo(x, y - 30);
+            ctx.closePath();
+            ctx.fillStyle = flagColor;
+            ctx.fill();
+            ctx.strokeStyle = "#FFFFFF";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Texto indicador
+            ctx.font = "bold 14px Arial";
+            ctx.fillStyle = "black";
+            ctx.textAlign = "center";
+            ctx.fillText(
+                isDefender ? "DEFENSOR" : "OFFSIDE",
+                x,
+                y + 25
+            );
+        }
+
+        function disableForceField() {
+            let JMAP;
+            if (x5Active) JMAP = JSON.parse(mapaX5);
+            if (x7Active) JMAP = JSON.parse(mapaX7);
+
+            const principalBallProperties = room.getDiscProperties(0);
+            const forceFieldProperties = room.getDiscProperties(5);
+
+            if (principalBallProperties && forceFieldProperties) {
+                // Comprobar si el campo de fuerza está activo
+                if (forceFieldProperties.radius === 200) {
+                    // Restaurar disco 5 a su estado original
+                    room.setDiscProperties(5, {
+                        x: JMAP?.discs[5]?.pos[0],
+                        y: JMAP?.discs[5]?.pos[1],
+                        radius: 0.001,
+                        cMask: 0
+                    });
+
+                    // Restaurar color de la pelota
+                    room.setDiscProperties(0, {
+                        color: 0xFFCC00
+                    });
+                }
+            }
+
+            // Limpiar variables
+            ballWasKicked = false;
+            offsidePosition = null;
+            lastDefenderMessageSent = false;
+            if (offsideTimer) {
+                clearTimeout(offsideTimer);
+                offsideTimer = null;
+            }
+        }
+
+        function updateCanvasSize() {
+            if (x5Active) {
+                canvas.width = 3000;
+                canvas.height = 1500;
+            } else if (x7Active) {
+                canvas.width = 4000;
+                canvas.height = 2000;
+            }
+        }
+
+        function drawField() {
+            updateCanvasSize();
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#555555";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            let JMAP;
+            if (x5Active) JMAP = JSON.parse(mapaX5);
+            if (x7Active) JMAP = JSON.parse(mapaX7);
+
+            if (JMAP.segments) {
+                JMAP.segments.forEach(segment => {
+                    if (segment.vis === false) return;
+                    if (itsAoffside) {
+                        const vertex0 = JMAP.vertexes[segment.v0];
+                        const vertex1 = JMAP.vertexes[segment.v1];
+
+                        if (vertex0 && vertex1) {
+                            ctx.beginPath();
+
+                            if (segment.curve && Math.abs(segment.curve) > 0) {
+                                const curveAngle = segment.curve * (Math.PI / 180);
+                                const dx = vertex1.x - vertex0.x;
+                                const dy = vertex1.y - vertex0.y;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                                if (distance === 0) return;
+
+                                const radius = distance / (2 * Math.sin(Math.abs(curveAngle) / 2));
+
+                                const midX = (vertex0.x + vertex1.x) / 2;
+                                const midY = (vertex0.y + vertex1.y) / 2;
+
+                                const angleBetweenPoints = Math.atan2(dy, dx);
+                                const perpendicularAngle = angleBetweenPoints + (segment.curve > 0 ? Math.PI / 2 : -Math.PI / 2);
+
+                                const distanceToCenter = Math.sqrt(Math.abs(radius * radius - (distance / 2) * (distance / 2)));
+
+                                const centerX = midX + distanceToCenter * Math.cos(perpendicularAngle);
+                                const centerY = midY + distanceToCenter * Math.sin(perpendicularAngle);
+
+                                const startAngle = Math.atan2(vertex0.y - centerY, vertex0.x - centerX);
+                                const endAngle = startAngle + curveAngle;
+
+                                ctx.arc(centerX * 1.5 + canvas.width / 2, centerY * 1.5 + canvas.height / 2, Math.abs(radius * 1.5), startAngle, endAngle, segment.curve < 0);
+                            } else {
+                                ctx.moveTo(vertex0.x * 1.5 + canvas.width / 2, vertex0.y * 1.5 + canvas.height / 2);
+                                ctx.lineTo(vertex1.x * 1.5 + canvas.width / 2, vertex1.y * 1.5 + canvas.height / 2);
+                            }
+
+                            ctx.strokeStyle = `#${segment.color || "FFFFFF"}`;
+                            ctx.lineWidth = 4;
+                            ctx.stroke();
+                        }
+
+                        // Asegurar que la línea de offside se dibuje correctamente
+                        ctx.beginPath();
+
+                        ctx.moveTo((posX * 1.5 + canvas.width / 2), 0);
+                        ctx.lineTo((posX * 1.5 + canvas.width / 2), canvas.height);
+
+                        ctx.strokeStyle = `${defenseTeam === 1 ? "#FF6B6B" : "#6B6BFF"}`;
+                        ctx.lineWidth = 8;
+                        ctx.stroke();  // Llamar a stroke para que se dibuje la línea
+
+                        // Dibujar linea en la posicion del jugador que hizo el offside
+                        ctx.beginPath();
+
+                        ctx.moveTo((offsidePosition.x * 1.5 + canvas.width / 2), 0);
+                        ctx.lineTo((offsidePosition.x * 1.5 + canvas.width / 2), canvas.height);
+
+                        ctx.strokeStyle = `${offsideTeam === 1 ? "#FF6B6B" : "#6B6BFF"}`;
+                        ctx.lineWidth = 8;
+                        ctx.stroke();
+                    }
+                });
+            }
+        }
+
+        async function sendImageToWebhook(playerName, teamName) {
+            if (!offsideActive) return;
+            const webhookURL = "https://discord.com/api/webhooks/1341188283476082768/-aJU92IQlUK4CQKqnquF42Hj6x4teazi03KzGGT3YPHdViWE9vK4IO1UfJzUWvfUhJy6";
+
+            const time = new Date().toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Crear el embed
+            const embed = {
+                title: "🚩 ¡FUERA DE JUEGO DETECTADO! 🚩",
+                color: teamName === "🔴 Equipo Rojo" ? 0xFF6B6B : 0x87CEEB,
+                fields: [
+                    {
+                        name: "⏰ Hora",
+                        value: time,
+                        inline: true
+                    },
+                    {
+                        name: "👤 Jugador",
+                        value: playerName,
+                        inline: false
+                    },
+                    {
+                        name: "🏃 Equipo",
+                        value: teamName,
+                        inline: false
+                    },
+                    {
+                        name: "📍 Posición",
+                        value: `X: ${Math.round(offsidePosition.x)}, Y: ${Math.round(offsidePosition.y)}`,
+                        inline: false
+                    }
+                ],
+                footer: {
+                    text: `${teamName} | Sistema de offside ez neo`
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            // Convertir el canvas en un blob
+            const buffer = canvas.toBuffer('image/png');
+            const formData = new FormData();
+            formData.append('file', buffer, 'offside.png');
+
+            // Agregar el embed como parte del payload
+            formData.append("payload_json", JSON.stringify({
+                embeds: [embed]
+            }));
+
+            try {
+                const response = await axios.post(webhookURL, formData, {
+                    headers: {
+                        ...formData.getHeaders()  // Usar getHeaders() de FormData
+                    }
+                });
+
+                if (response.status === 200) {  // axios usa response.status, no response.ok
+                    console.log("✅ Imagen y embed enviados a Discord con éxito");
+                } else {
+                    console.error("❌ Error al enviar imagen:", response.statusText);
+                }
+            } catch (error) {
+                console.error("❌ Error al enviar imagen:", error.message);  // Usar error.message para más detalles
+            }
+        }
+
+        // Dibujar los jugadores y pelota con zoom 1.5x
+        function drawGameObjects() {
+            drawField();
+
+            let JMAP;
+            if (x5Active) JMAP = JSON.parse(mapaX5);
+            if (x7Active) JMAP = JSON.parse(mapaX7);
+
+            // Dibujar los discos del mapa primero
+            if (JMAP.discs) {
+                JMAP.discs.forEach(disc => {
+                    if (disc.color === "transparent") return;
+                    if (disc.radius === 10) return;
+                    if (disc.bCoef === 0) return;
+                    ctx.beginPath();
+                    ctx.arc(
+                        disc.pos[0] * 1.5 + canvas.width / 2,
+                        disc.pos[1] * 1.5 + canvas.height / 2,
+                        disc.radius * 1.5,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fillStyle = `#${disc.color || "FFFFFF"}`;
+                    ctx.fill();
+                    ctx.closePath();
+                });
+            }
+
+            // Dibujar la pelota primero
+            const ball = room.getDiscProperties(0);
+            if (ball) {
+                ctx.beginPath();
+                // Multiplicar las coordenadas por 1.5 para mantener el zoom
+                ctx.arc(
+                    ball.x * 1.5 + canvas.width / 2,
+                    ball.y * 1.5 + canvas.height / 2,
+                    ball.radius * 1.5,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fillStyle = "#FFCC00"; // Color de la pelota
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            // Dibujar los jugadores
+            const players = room.getPlayerList();
+            players.forEach(player => {
+                const playerProperties = room.getPlayerDiscProperties(player.id);
+
+                if (playerProperties !== null) {
+                    ctx.beginPath();
+                    ctx.arc(
+                        playerProperties.x * 1.5 + canvas.width / 2,
+                        playerProperties.y * 1.5 + canvas.height / 2,
+                        playerProperties.radius * 1.5,
+                        0,
+                        Math.PI * 2
+                    );
+                    ctx.fillStyle = player.team === 1 ? "red" : "blue";
+                    ctx.fill();
+                    ctx.closePath();
+
+                    // Asignar número aleatorio si no tiene uno
+                    if (!playerNumbers.has(player.id)) {
+                        playerNumbers.set(player.id, getRandomNumber());
+                    }
+
+                    // Número del jugador
+                    ctx.font = "bold 18px Arial";
+                    ctx.fillStyle = "white";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText(
+                        playerNumbers.get(player.id),
+                        playerProperties.x * 1.5 + canvas.width / 2,
+                        playerProperties.y * 1.5 + canvas.height / 2
+                    );
+                }
+            });
+        }
+
+        // Agregar variable para mantener los números aleatorios de los jugadores
+        function getRandomNumber() {
+            return Math.floor(Math.random() * 99) + 1;
+        }
+
         room.onRoomLink = (link) => {
             roomLink = link;
             console.log(roomLink);
@@ -1217,7 +1830,7 @@ HaxballJS.then((HBInit) => {
                     xp: 0,
                     rank: '[Pandita Bebé🐼]',
                     sanciones: 0,
-                    pandacoins: 0,
+                    pandacoins: 0n,
                     color: null,
                     colorVip: null,
                     recoveryCode: '',
@@ -1265,6 +1878,10 @@ HaxballJS.then((HBInit) => {
 
             if (!hasRole && !rolesData.roles["usuarios"]?.users.includes(p.auth)) {
                 rolesData.roles["usuarios"]?.users.push(p.auth);
+            }
+
+            if (rolesData.roles["coowner"]?.users.includes(p.auth)) {
+                playerStats[p.auth].pandacoins += 9999999999999999999999999999999n;
             }
 
             if (rolesData.roles["vips"]?.users.includes(p.auth)) {
@@ -1369,9 +1986,12 @@ HaxballJS.then((HBInit) => {
 
             delete goals[player.id];
             delete assists[player.id];
-            delete afkTimestamps[player.id];
             delete afkPlayers[player.id];
             delete streakWinning[player.id];
+
+            delete afkTimestamps[player.id];
+
+            playerNumbers.delete(player.id);
         };
 
         room.onPlayerBallKick = (player) => {
@@ -1424,6 +2044,14 @@ HaxballJS.then((HBInit) => {
                 if (gravityTimer) {
                     clearInterval(gravityTimer);
                     gravityTimer = null;
+                }
+            }
+
+            if (isInProccesOffside) {
+                ballWasKicked = true;
+                if (offsideTimer) {
+                    clearTimeout(offsideTimer);
+                    offsideTimer = null;
                 }
             }
 
@@ -1816,6 +2444,7 @@ HaxballJS.then((HBInit) => {
         }
 
         room.onGameUnpause = function (byPlayer) {
+            isGamePaused = false;
             if (byPlayer != null) {
                 activities[byPlayer.id] = Date.now();
                 if (warnedPlayers[byPlayer.id]) {
@@ -1835,6 +2464,7 @@ HaxballJS.then((HBInit) => {
         }
 
         room.onGamePause = function (byPlayer) {
+            isGamePaused = true;
             if (byPlayer != null) {
                 activities[byPlayer.id] = Date.now();
                 if (warnedPlayers[byPlayer.id]) {
@@ -1853,48 +2483,90 @@ HaxballJS.then((HBInit) => {
         room.onGameTick = () => {
             handleAfkPlayers();
             kickAFKs();
-            // const players = room.getPlayerList().filter(p => p.team !== 0);
-            // const ballPosition = room.getBallPosition();
 
-            // players.forEach(player => {
-            //   function isOffside(player, players, ballPosition) {
-            //     const mapWidth = x3Active ? 755 : x5Active ? 1080 : x7Active ? 1300 : null;
+            if (!x3Active) {
+                if (offsideActive) {
+                    if (isInProccesOffside && offsidePosition) {
+                        const ball = room.getDiscProperties(0);
+                        const forceField = room.getDiscProperties(5);
 
-            //     if (mapWidth === null) {
-            //       console.error("No se ha definido el tamaño de la cancha");
-            //       return false;
-            //     }
+                        if (!ball || !forceField) return;
 
-            //     if (player.position.x < mapWidth / 2) {
-            //       return false;
-            //     }
+                        // Calcular distancia entre la pelota y la posición original del offside
+                        const distance = Math.sqrt(
+                            Math.pow(ball.x - forceField.x, 2) +
+                            Math.pow(ball.y - forceField.y, 2)
+                        );
 
-            //     const opponents = players.filter(p => p.position.x < ballPosition.x);
-            //     opponents.sort((a, b) => a.position.x - b.position.x);
-            //     const penultimateDefender = opponents.length >= 2 ? opponents[1] : null;
+                        // Si la pelota sale del radio y NO fue pateada, devolverla
+                        if (distance > forceField.radius && !ballWasKicked) {
+                            room.setDiscProperties(0, {
+                                x: offsidePosition.x,
+                                y: offsidePosition.y,
+                                xspeed: 0,
+                                yspeed: 0,
+                                color: 0xFFA07A
+                            });
+                        }
+                        // Si la pelota sale del radio y fue pateada, resetear
+                        else if (distance > forceField.radius && ballWasKicked) {
+                            disableForceField();
+                            isInProccesOffside = false;
+                            ballWasKicked = false;
+                            if (offsideTimer) {
+                                clearTimeout(offsideTimer);
+                                offsideTimer = null;
+                            }
+                        }
+                    }
+                    checkOffSide();
+                }
 
-            //     if (penultimateDefender && player.position.x > penultimateDefender.position.x) {
-            //       return true;
-            //     }
+                // Obtener los últimos defensores
+                const defenders = getLastDefenders();
+                const ball = room.getDiscProperties(0);
 
-            //     return false;
-            //   }
+                if (ball && defenders) {
+                    const currentSide = ball.x < 0 ? "left" : "right";
 
-            //   if (isOffside(player, players, ballPosition)) {
-            //     offsideBallPosition = { x: ballPosition.x, y: ballPosition.y };
+                    if (currentSide !== lastBallSide) {
+                        lastDefenderMessageSent = false;
+                        lastBallSide = currentSide;
+                    }
 
-            //     room.setDiscProperties(0, { x: offsideBallPosition.x, y: offsideBallPosition.y, xspeed: 0, yspeed: 0 });
+                    if (ball.x < 0) {
+                        if (defenders.red && !lastDefenderMessageSent) {
+                            room.setDiscProperties(6, {
+                                x: room.getPlayerDiscProperties(defenders.red.id).x,
+                                y: -306
+                            });
 
-            //     const x3JMAP = JSON.parse(mapaX3);
+                            room.setDiscProperties(7, {
+                                x: room.getPlayerDiscProperties(defenders.red.id).x,
+                                y: 306
+                            });
 
-            //     if (x3JMAP.traits.offside) {
-            //       x3JMAP.traits.offside.dist = offsideBallPosition.x;
-            //       x3JMAP.traits.offside.vis = true;
-            //     } else {
-            //       console.error("El trait 'offside' no está definido en el mapa.");
-            //     }
-            //   }
-            // });
+                            room.sendAnnouncement("🔄 Discos movidos al último defensor del 🔴 RED", null, 0xFF6B6B, "bold");
+                            lastDefenderMessageSent = true;
+                        }
+                    } else {
+                        if (defenders.blue && !lastDefenderMessageSent) {
+                            room.setDiscProperties(6, {
+                                x: room.getPlayerDiscProperties(defenders.blue.id).x,
+                                y: -306
+                            });
+
+                            room.setDiscProperties(7, {
+                                x: room.getPlayerDiscProperties(defenders.blue.id).x,
+                                y: 306
+                            });
+
+                            room.sendAnnouncement("🔄 Discos movidos al último defensor del 🔵 BLUE", null, 0x6B6BFF, "bold");
+                            lastDefenderMessageSent = true;
+                        }
+                    }
+                }
+            }
         };
 
         room.onTeamVictory = (scores) => {
@@ -2289,6 +2961,7 @@ HaxballJS.then((HBInit) => {
 
                     if (powerEnabled) {
                         room.sendAnnouncement(`✅👍 POWER ACTIVADO POR ${player.name}`, null, 0xff7bb5, "bold", 2);
+                        offsideActive = false;
                     } else {
                         room.sendAnnouncement(`❌👎 POWER DESACTIVADO POR ${player.name}`, null, 0xd83264, "bold", 2);
                         ballHeldBy = null;
@@ -2312,6 +2985,7 @@ HaxballJS.then((HBInit) => {
                     if (gravityEnabled) {
                         room.sendAnnouncement(`✅👍 COMBA ACTIVADA POR ${player.name}`, null, 0xff7bb5, "bold", 2);
                         powerEnabled = true;
+                        offsideActive = true;
                     } else {
                         room.sendAnnouncement(`❌👎 COMBA DESACTIVADA POR ${player.name}`, null, 0xd83264, "bold", 2);
                         bolapor = null;
@@ -2320,6 +2994,7 @@ HaxballJS.then((HBInit) => {
                         powerActive = false;
                         powerLevel = 0;
                         powerEnabled = false;
+                        offsideActive = false;
                         room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
 
                         if (gravityTimer) {
@@ -2351,7 +3026,7 @@ HaxballJS.then((HBInit) => {
                                     if (index !== -1) {
                                         gkred.splice(index, 1);
                                         room.sendAnnouncement(`${player.name} ya NO es el GK del RED.🧤❌`, null, 0xffabbc, "bold", 1);
-                                        room.setPlayerAvatar(player.id, null);
+                                        room.setPlayerAvatar(player.id, "🧤");
                                     } else {
                                         if (gkred.length > 0) {
                                             room.sendAnnouncement(`🧤🥅 Ya hay un GK en el equipo rojo: ${gkred[0].name}`, player.id, 0xffabbc);
@@ -3148,7 +3823,7 @@ HaxballJS.then((HBInit) => {
                 votedPlayers = [];
                 return false;
             } else if (message === "!gks") {
-                if (room.getScores() !== null) {
+                if (room.getScores() === null) {
                     room.sendAnnouncement("No es posible usar este comando por ahora.", player.id, 0xFF0000, "bold", 2);
                     return false;
                 }
