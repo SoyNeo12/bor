@@ -102,10 +102,10 @@ function updateCanvasSize() {
     if (x7Active) JMAP = JSON.parse(mapaX7);
 
     if (x5Active) {
-        width = JMAP.width * 3.6;
-        height = JMAP.height * 4;
+        width = JMAP.width * 4;
+        height = JMAP.height * 2.2;
     } else if (x7Active) {
-        width = JMAP.width * 3.4;
+        width = JMAP.width * 6;
         height = JMAP.height * 4;
     }
 
@@ -258,7 +258,7 @@ HaxballJS.then((HBInit) => {
 
         let votes = 0;
         let requiredVotes = 3;
-        let gravityStrength = 0.07;
+        let gravityStrength = 0.05;
         let powerLevel = -1;
         let remainingTime = 30000;
         let bigUses = 0;
@@ -1093,12 +1093,18 @@ HaxballJS.then((HBInit) => {
             if (x5Active) JMAP = JSON.parse(mapaX5);
             if (x7Active) JMAP = JSON.parse(mapaX7);
 
+            // Línea límite para equipo azul
+            const BLUE_LIMIT_X = 950;
+
+            // Línea límite para equipo rojo
+            const RED_LIMIT_X = -950;
+
             // Filtrar jugadores excluyendo porteros
             const redPlayers = players.filter(p => {
                 const pos = room.getPlayerDiscProperties(p.id);
                 return p.team === 1 &&
                     p.id !== gkred[0]?.id &&
-                    pos.x >= -JMAP.width && // Dentro del campo
+                    pos.x >= RED_LIMIT_X && // Dentro del campo
                     pos.x <= 0; // En su mitad del campo
             });
 
@@ -1107,7 +1113,7 @@ HaxballJS.then((HBInit) => {
                 const pos = room.getPlayerDiscProperties(p.id);
                 return p.team === 2 &&
                     p.id !== gkblue[0]?.id &&
-                    pos.x <= JMAP.width && // Dentro del campo
+                    pos.x <= BLUE_LIMIT_X && // No considerar defensas más allá de x=950
                     pos.x >= 0; // En su mitad del campo
             });
 
@@ -1322,9 +1328,9 @@ HaxballJS.then((HBInit) => {
             const flagSize = 15;  // Tamaño base del banderín
 
             // Si es la bandera del defensor, usar un color más oscuro
-            const flagColor = isDefender ? (
-                teamColor === 0xFF6B6B ? "#AA0000" : "#0000AA"
-            ) : teamColor;
+            const flagColor = isDefender ?
+                (teamColor === 0xFF6B6B ? "#AA0000" : "#0000AA")
+                : teamColor;
 
             // Banderín base (círculo)
             ctx.beginPath();
@@ -1332,13 +1338,14 @@ HaxballJS.then((HBInit) => {
             ctx.fillStyle = flagColor;
             ctx.strokeStyle = "#FFFFFF";
             ctx.lineWidth = 2;
+            ctx.fill();
             ctx.stroke();
             ctx.closePath();
 
             // Palo del banderín
             ctx.beginPath();
             ctx.moveTo(x, y);
-            ctx.lineTo(x, y - 60);  // Palo más largo
+            ctx.lineTo(x, y - 60);
             ctx.strokeStyle = "#FFFFFF";
             ctx.lineWidth = 3;
             ctx.stroke();
@@ -1347,7 +1354,7 @@ HaxballJS.then((HBInit) => {
             // Bandera triangular
             ctx.beginPath();
             ctx.moveTo(x, y - 60);
-            ctx.lineTo(x + 30, y - 45);  // Bandera más grande
+            ctx.lineTo(x + 30, y - 45);
             ctx.lineTo(x, y - 30);
             ctx.closePath();
             ctx.fillStyle = flagColor;
@@ -1356,15 +1363,23 @@ HaxballJS.then((HBInit) => {
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // Texto indicador
-            ctx.font = "bold 14px Arial";
-            ctx.fillStyle = "black";
+            // Texto indicador con configuración específica para texto
+            ctx.save(); // Guardar el estado actual
+            ctx.font = "12px Arial"; // Reducir tamaño de fuente
+            ctx.fillStyle = "#FFFFFF"; // Color del texto
             ctx.textAlign = "center";
-            ctx.fillText(
-                isDefender ? "DEFENSOR" : "OFFSIDE",
-                x,
-                y + 28
-            );
+            ctx.textBaseline = "middle";
+
+            // Agregar un fondo negro para mejor legibilidad
+            const text = isDefender ? "DEFENSOR" : "OFFSIDE";
+            const textWidth = ctx.measureText(text).width;
+            ctx.fillStyle = "rgba(0,0,0,0.7)";
+            ctx.fillRect(x - textWidth / 2 - 5, y + 20 - 10, textWidth + 10, 20);
+
+            // Dibujar el texto
+            ctx.fillStyle = "#FFFFFF";
+            ctx.fillText(text, x, y + 20);
+            ctx.restore(); // Restaurar el estado
         }
 
         function disableForceField() {
@@ -1485,7 +1500,7 @@ HaxballJS.then((HBInit) => {
 
         async function sendImageToWebhook(playerName, teamName) {
             if (!offsideActive) return;
-            const webhookURL = "https://discord.com/api/webhooks/1341188283476082768/-aJU92IQlUK4CQKqnquF42Hj6x4teazi03KzGGT3YPHdViWE9vK4IO1UfJzUWvfUhJy6";
+            const webhookURL = "https://discord.com/api/webhooks/1345860820977844256/uopujRm-cV4vCeBs_KkhLVKRhR3IpcUdPVI2deZ5SgDE3TMpK_MNNQOMIPe_cK9q7eYt";
 
             const time = new Date().toLocaleTimeString('es-ES', {
                 hour: '2-digit',
@@ -1642,20 +1657,21 @@ HaxballJS.then((HBInit) => {
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
                     ctx.fillText(
-                        playerNumbers.get(player.id),
+                        String(playerNumbers.get(player.id)),
                         playerProperties.x * 2 + canvas.width / 2,
                         playerProperties.y * 2 + canvas.height / 2
                     );
 
-                    // Nombre del jugador
+                    // Dibujar nombre del jugador
                     ctx.font = "12px Arial";
                     ctx.fillStyle = "white";
                     ctx.textAlign = "center";
+                    const cleanName = player.name.replace(/[\[\]]/g, ''); // Eliminar corchetes del nombre
                     ctx.fillText(
-                        player.name,
+                        cleanName,
                         playerProperties.x * 2 + canvas.width / 2,
                         (playerProperties.y * 2 + canvas.height / 2) + playerProperties.radius * 2 + 15
-                    )
+                    );
                 }
             });
         }
@@ -2009,9 +2025,9 @@ HaxballJS.then((HBInit) => {
             secondPlayerTouchBall = lastPlayerTouchBall;
             lastPlayerTouchBall = player;
 
+            // Manejo de power
             if (powerActive && powerEnabled) {
                 const ballProperties = room.getDiscProperties(0);
-
                 const newVelocity = {
                     xspeed: ballProperties.xspeed * BOOST_SPEEDS[powerLevel],
                     yspeed: ballProperties.yspeed * BOOST_SPEEDS[powerLevel]
@@ -2031,7 +2047,8 @@ HaxballJS.then((HBInit) => {
                     powerIncreaseInterval = null;
                 }
             }
-            // hola amor
+
+            // Manejo de comba
             if (gravityActive && gravityEnabled && !isInProccesOffside) {
                 const ballProperties = room.getDiscProperties(0);
                 const playerPosition = player.position;
@@ -2041,18 +2058,26 @@ HaxballJS.then((HBInit) => {
                     yspeed: ballProperties.yspeed * BOOST_SPEEDS[powerLevel]
                 };
 
+                let ygravity = 0;
+
                 if (playerPosition.y < ballProperties.y) {
-                    room.setDiscProperties(0, { xspeed: newVelocity.xspeed, yspeed: newVelocity.yspeed, ygravity: -gravityStrength });
+                    ygravity = -gravityStrength;
                 } else if (playerPosition.y > ballProperties.y) {
-                    room.setDiscProperties(0, { xspeed: newVelocity.xspeed, yspeed: newVelocity.yspeed, ygravity: gravityStrength });
+                    ygravity = gravityStrength;
                 } else if (playerPosition.x > ballProperties.x) {
-                    room.setDiscProperties(0, { xspeed: newVelocity.xspeed, yspeed: newVelocity.yspeed, ygravity: -gravityStrength });
+                    ygravity = -gravityStrength;
                 } else if (playerPosition.x < ballProperties.x) {
-                    room.setDiscProperties(0, { xspeed: newVelocity.xspeed, yspeed: newVelocity.yspeed, ygravity: gravityStrength });
+                    ygravity = gravityStrength;
                 }
 
+                room.setDiscProperties(0, {
+                    xspeed: newVelocity.xspeed,
+                    yspeed: newVelocity.yspeed,
+                    ygravity: ygravity
+                });
+
                 setTimeout(() => {
-                    room.setDiscProperties(0, { ygravity: 0 })
+                    room.setDiscProperties(0, { ygravity: 0 });
                 }, 2000);
 
                 gravityActive = false;
@@ -2064,7 +2089,8 @@ HaxballJS.then((HBInit) => {
                 }
             }
 
-            if (isInProccesOffside) {
+            // Manejo de offside
+            if (offsideActive && isInProccesOffside) {
                 ballWasKicked = true;
                 if (offsideTimer) {
                     clearTimeout(offsideTimer);
@@ -2074,18 +2100,30 @@ HaxballJS.then((HBInit) => {
                 const ballProperties = room.getDiscProperties(0);
                 const playerPosition = player.position;
 
+                const kickPower = 3;
+
+                let xspeed = ballProperties.xspeed * kickPower;
+                let yspeed = ballProperties.yspeed * kickPower;
+
+                let ygravity = 0;
                 if (playerPosition.y < ballProperties.y) {
-                    room.setDiscProperties(0, { xspeed: ballProperties.xspeed * BOOST_SPEEDS[3], yspeed: ballProperties.yspeed * BOOST_SPEEDS[3], ygravity: -gravityStrength });
+                    ygravity = -gravityStrength;
                 } else if (playerPosition.y > ballProperties.y) {
-                    room.setDiscProperties(0, { xspeed: ballProperties.xspeed * BOOST_SPEEDS[3], yspeed: ballProperties.yspeed * BOOST_SPEEDS[3], ygravity: gravityStrength });
-                } else if (playerPosition.x > ballProperties.x) {
-                    room.setDiscProperties(0, { xspeed: ballProperties.xspeed * BOOST_SPEEDS[3], yspeed: ballProperties.yspeed * BOOST_SPEEDS[3], ygravity: -gravityStrength });
+                    ygravity = gravityStrength;
                 } else if (playerPosition.x < ballProperties.x) {
-                    room.setDiscProperties(0, { xspeed: ballProperties.xspeed * BOOST_SPEEDS[3], yspeed: ballProperties.yspeed * BOOST_SPEEDS[3], ygravity: gravityStrength });
+                    ygravity = -gravityStrength;
+                } else if (playerPosition.x > ballProperties.x) {
+                    ygravity = gravityStrength;
                 }
 
+                room.setDiscProperties(0, {
+                    xspeed: xspeed,
+                    yspeed: yspeed,
+                    ygravity: ygravity
+                });
+
                 setTimeout(() => {
-                    room.setDiscProperties(0, { ygravity: 0 })
+                    room.setDiscProperties(0, { ygravity: 0 });
                 }, 2000);
             }
 
@@ -2571,19 +2609,18 @@ HaxballJS.then((HBInit) => {
                     if (ball.x < 0 && defenders.red) {
                         const redDefenderX = room.getPlayerDiscProperties(defenders.red.id).x;
 
-                        if (Math.abs(redDefenderX) <= JMAP.width) {
-                            room.setDiscProperties(6, {
-                                x: redDefenderX,
-                                y: JMAP?.discs[6]?.pos[1],
-                                color: 0xFF6B6B
-                            });
+                        room.setDiscProperties(6, {
+                            x: redDefenderX,
+                            y: -476,
+                            color: 0xFF6B6B
+                        });
 
-                            room.setDiscProperties(7, {
-                                x: redDefenderX,
-                                y: JMAP?.discs[7]?.pos[1],
-                                color: 0xFF6B6B
-                            });
-                        }
+                        room.setDiscProperties(7, {
+                            x: redDefenderX,
+                            y: 476,
+                            color: 0xFF6B6B
+                        });
+
 
                         if (lastBallSide !== "left") {
                             room.sendAnnouncement("🔄 Discos movidos al último defensor del 🔴 RED", null, 0xFF6B6B, "bold");
@@ -2593,19 +2630,17 @@ HaxballJS.then((HBInit) => {
                     } else if (ball.x >= 0 && defenders.blue) {
                         const blueDefenderX = room.getPlayerDiscProperties(defenders.blue.id).x;
 
-                        if (Math.abs(blueDefenderX) <= JMAP.width) {
-                            room.setDiscProperties(6, {
-                                x: blueDefenderX,
-                                y: JMAP?.discs[6]?.pos[1],
-                                color: 0x87CEEB
-                            });
+                        room.setDiscProperties(6, {
+                            x: blueDefenderX,
+                            y: -476,
+                            color: 0x87CEEB
+                        });
 
-                            room.setDiscProperties(7, {
-                                x: blueDefenderX,
-                                y: JMAP?.discs[7]?.pos[1],
-                                color: 0x87CEEB
-                            });
-                        }
+                        room.setDiscProperties(7, {
+                            x: blueDefenderX,
+                            y: 476,
+                            color: 0x87CEEB
+                        });
 
                         // Enviar mensaje solo cuando cambia de lado
                         if (lastBallSide !== "right") {
