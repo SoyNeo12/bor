@@ -1,7 +1,9 @@
 {
   "roles": {
     "owner": {
-      "users": [],
+      "users": [
+        "xx026X9f-zo8AkSfsIdQG_B0ezv63GNU-OHoSzeehuE"
+      ],
       "gameAdmin": true
     },
     "coowner": {
