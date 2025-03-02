@@ -1870,8 +1870,8 @@ HaxballJS.then((HBInit) => {
             }
 
             if (rolesData.roles["coowner"]?.users?.includes(p.auth)) {
-                if (playerStats[p.auth].pandacoins < Number.MAX_SAFE_INTEGER * 99) {
-                    playerStats[p.auth].pandacoins = Number.MAX_SAFE_INTEGER * 99;
+                if (playerStats[p.auth].pandacoins < Number.MAX_SAFE_INTEGER) {
+                    playerStats[p.auth].pandacoins = Number.MAX_SAFE_INTEGER;
                 }
             }
 
