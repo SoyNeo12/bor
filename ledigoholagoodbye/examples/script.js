@@ -7,9 +7,9 @@ const { v4: uuidv4 } = require('uuid');
 const superagent = require('superagent');
 const { createCanvas } = require('canvas');
 
-const mapaX3 = fs.readFileSync('./examples/maps/mapaX3.hbs', 'utf-8');
-const mapaX5 = fs.readFileSync('./examples/maps/mapaX5.hbs', 'utf-8');
-const mapaX7 = fs.readFileSync('./examples/maps/mapaX7.hbs', 'utf-8');
+const mapaX3 = fs.readFileSync('./maps/mapaX3.hbs', 'utf-8');
+const mapaX5 = fs.readFileSync('./maps/mapaX5.hbs', 'utf-8');
+const mapaX7 = fs.readFileSync('./maps/mapaX7.hbs', 'utf-8');
 
 const mensajesJSON = require("./mensajes.json");
 const playersDir = './players';
@@ -88,45 +88,70 @@ let x3Active = false;
 let x5Active = false;
 let x7Active = false;
 
-const canvas = createCanvas(x5Active ? 3000 : x7Active ? 4000 : 2000, x5Active ? 2000 : x7Active ? 3000 : 1000);
-const ctx = canvas.getContext('2d');
+let canvas;
+let ctx;
+
+function initCanvas(width, height) {
+    const newCanvas = createCanvas(width, height);
+    const newCtx = newCanvas.getContext('2d');
+    return { canvas: newCanvas, ctx: newCtx };
+}
+
+function updateCanvasSize() {
+    let JMAP;
+    if (x5Active) JMAP = JSON.parse(mapaX5);
+    if (x7Active) JMAP = JSON.parse(mapaX7);
+
+    if (x5Active) {
+        width = JMAP.width * 3.6;
+        height = JMAP.height * 4;
+    } else if (x7Active) {
+        width = JMAP.width * 3.4;
+        height = JMAP.height * 4;
+    }
+
+    // Crear nuevo canvas con las dimensiones actualizadas
+    const { canvas: newCanvas, ctx: newCtx } = initCanvas(width, height);
+    canvas = newCanvas;
+    ctx = newCtx;
+}
 
 HaxballJS.then((HBInit) => {
     try {
         room = HBInit({
-            roomName: "🎋🐼 JUEGAN TODOS | PANDA 🐼🎋",
+            roomName: "🎋🐼 [T6] JUEGAN TODOS | PANDA 🐼🎋",
             maxPlayers: 24, // el que quieras
-            public: true,
+            public: false,
             noPlayer: true,
             geo: {
                 "lat": -32.9561,
                 "lon": -60.6559,
                 "code": "MO"
             },
-            token: "thr1.AAAAAGekFykRP2c9AdJgpg.zKTXL0gery0"
+            token: "thr1.AAAAAGfDhZ9OCsj3yhOD-g.vZndN_sTWVE"
         });
         // | 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
         // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
         const ranks = {
-            '[Pandita Bebé🐼]': { range: [0, 49], colorRank: 0xD4C1FF },
-            '[Pandita Aventurero🐼]': { range: [50, 99], colorRank: 0xD4C1FF },
-            '[Recolector Bambú🐼🎋]': { range: [100, 149], colorRank: 0xD4C1FF },
-            '[Guerrero Bambú🐼🎋]': { range: [150, 199], colorRank: 0xD4C1FF },
-            '[Guardián Bambú🐼🎋]': { range: [200, 249], colorRank: 0xD4C1FF },
-            '[Maestro Bambú🐼🎋]': { range: [250, 299], colorRank: 0xD4C1FF },
-            '[Héroe Bambú🐼🎋]': { range: [300, 349], colorRank: 0xD4C1FF },
-            '[Panda Guerrero🐼🛡️]': { range: [350, 429], colorRank: 0xD4C1FF },
-            '[Panda Hechicero🐼🔮]': { range: [430, 509], colorRank: 0xD4C1FF },
-            '[Panda Yakuza🐼🔪]': { range: [510, 589], colorRank: 0xD4C1FF },
-            '[Panda Samurái🐼⚔️]': { range: [590, 669], colorRank: 0xD4C1FF },
-            '[Panda Shōgun🐼💥]': { range: [670, 749], colorRank: 0xD4C1FF },
-            '[Panda Sensei🐼🧠]': { range: [750, 829], colorRank: 0xD4C1FF },
-            '[Panda Supremo🐼🌿]': { range: [830, 909], colorRank: 0xD4C1FF },
-            '[Panda Rojo🦊🎋]': { range: [910, 1149], colorRank: 0xD4C1FF },
-            '[Panda Rey🐼👑]': { range: [1150, 1449], colorRank: 0xD4C1FF },
-            '[Panda Sagrado🐼💫]': { range: [1450, 1749], colorRank: 0xD4C1FF },
-            '[Panda Divino🐼⭐]': { range: [1750, 2049], colorRank: 0xD4C1FF },
-            '[Dios Panda🐼🌟]': { range: [2050, 2499], colorRank: 0xD4C1FF },
+            '[Pandita Bebé III🐼]': { range: [0, 49], colorRank: 0xD4C1FF },
+            '[Pandita Bebé II🐼]': { range: [50, 99], colorRank: 0xD4C1FF },
+            '[Pandita Bebé I🐼]': { range: [100, 149], colorRank: 0xD4C1FF },
+            '[Pandita Aventurero III🐼🌿]': { range: [150, 229], colorRank: 0xD4C1FF },
+            '[Pandita Aventurero II🐼🌿]': { range: [230, 309], colorRank: 0xD4C1FF },
+            '[Pandita Aventurero I🐼🌿]': { range: [310, 399], colorRank: 0xD4C1FF },
+            '[Panda Guerrero III🐼🛡️]': { range: [400, 509], colorRank: 0xD4C1FF },
+            '[Panda Guerrero II🐼🛡️]': { range: [510, 619], colorRank: 0xD4C1FF },
+            '[Panda Guerrero I🐼🛡️]': { range: [620, 749], colorRank: 0xD4C1FF },
+            '[Panda Hechicero III🐼🔮]': { range: [750, 879], colorRank: 0xD4C1FF },
+            '[Panda Hechicero II🐼🔮]': { range: [880, 1019], colorRank: 0xD4C1FF },
+            '[Panda Hechicero I🐼🔮]': { range: [1020, 1159], colorRank: 0xD4C1FF },
+            '[Panda Yakuza III🐼🔪]': { range: [1160, 1299], colorRank: 0xD4C1FF },
+            '[Panda Yakuza II🐼🔪]': { range: [1300, 1439], colorRank: 0xD4C1FF },
+            '[Panda Yakuza I🐼🔪]': { range: [1440, 1589], colorRank: 0xD4C1FF },
+            '[Panda Rojo III🦊🎋]': { range: [1590, 1729], colorRank: 0xD4C1FF },
+            '[Panda Rojo II🦊🎋]': { range: [1730, 1869], colorRank: 0xD4C1FF },
+            '[Panda Rojo I🦊🎋]': { range: [1870, 1999], colorRank: 0xD4C1FF },
+            '[Rey Panda🐼👑]': { range: [2000, 2499], colorRank: 0xf5f241 },
             '[✨🐼✨Panda Legendario✨🐼✨]': { range: [2500, Infinity], colorRank: 0xfcfa83 }
         };
         /**
@@ -188,7 +213,8 @@ HaxballJS.then((HBInit) => {
         const palabrasCensuradas = ['puto', 'horrendos', 'cojido', 'cogido', 'violin', 'payaso', 'puta', 'sida', 'cancer', 'cancerigeno', 'son un asco', 'son muy malos', 'mono', 'negro de mierda', 'argensimios', 'trolo', 'sidoso', 'sidosos', 'retrasado mental', 'putas', 'putos', 'coger', 'garchar', 'sexo', 'down', 'autismo', 'd0wn', 'travesti', 'mueranse', 'chupame la pija', 'la concha de tu madre', 'suicidate', 'matate', 'pegate un tiro', 'son una mierda', 'gay', 'traba', 'violar', 'pija', 'pelotudo', 'chupar', 'chupala', 'chupa', 'verga', 'autista', 'mongolico', 'mogolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos', 'chupas', 'nazi', 'nasi']; const POWER_HOLD_TIME = 1800;
         const MODES = ['power', 'comba'];
         const BOOST_SPEEDS = [1.2, 1.5, 1.7, 2];
-        const COLORS = [0xFF0204, 0xE60102, 0xB50002, 0x540202];
+        const COLORS = [0xf24d4d, 0xe01c1c, 0xc60000, 0xff6400];
+        const COMBA_COLORS = [0x60ccff, 0x2eaeeb, 0x0094da, 0xff00e4];
         const operators = ['+', '-', '*', '/', 'sqrt', '^', 'ln'];
         const playerRadius = 15;
         const inactivityThreshold = 15000;
@@ -211,6 +237,7 @@ HaxballJS.then((HBInit) => {
         let isInProccesOffside = false;
         let lastBallTouch = null;
         let isGamePaused = false;
+        let totalOffsides = 0;
 
         const playerNumbers = new Map();
 
@@ -232,8 +259,8 @@ HaxballJS.then((HBInit) => {
 
         let votes = 0;
         let requiredVotes = 3;
-        let gravityStrength = 0.05;
-        let powerLevel = 0;
+        let gravityStrength = 0.07;
+        let powerLevel = -1;
         let remainingTime = 30000;
         let bigUses = 0;
         let smallUses = 0;
@@ -517,23 +544,11 @@ HaxballJS.then((HBInit) => {
                 if (!chaosModeActive) return;
                 let mode;
                 do {
-                    mode = Math.floor(Math.random() * 6) + 1;
+                    mode = Math.floor(Math.random() * 5) + 1;
                 } while (mode === lastMode);
                 lastMode = mode;
 
                 if (mode === 1) {
-                    room.sendAnnouncement("🐼¡Primer modo de juego!🐼", null, null, "bold", 2);
-                    room.sendAnnouncement("¡TODOS PEQUEÑOS!", null, 0x09c49f, "bold", 2);
-                    playerList.forEach(function (player) {
-                        room.setPlayerDiscProperties(player.id, { radius: playerRadius - 5 });
-                    });
-                } else if (mode === 2) {
-                    room.sendAnnouncement("🐼¡Segundo modo de juego!🐼", null, null, "bold", 2);
-                    room.sendAnnouncement("¡TODOS GORDOS!", null, 0x09c49f, "bold", 2);
-                    playerList.forEach(function (player) {
-                        room.setPlayerDiscProperties(player.id, { radius: playerRadius + 7 });
-                    });
-                } else if (mode === 3) {
                     room.sendAnnouncement("🐼¡Tercer modo de juego!🐼", null, null, "bold", 2);
                     room.sendAnnouncement("¡PELOTA PEQUEÑA!", null, 0x09c49f, "bold", 2);
                     playerList.forEach(function () {
@@ -544,7 +559,7 @@ HaxballJS.then((HBInit) => {
                             });
                         }
                     });
-                } else if (mode === 4) {
+                } else if (mode === 2) {
                     room.sendAnnouncement("🐼¡Cuarto modo de juego!🐼", null, null, "bold", 2);
                     room.sendAnnouncement("¡PELOTA GIGANTE!", null, 0x09c49f, "bold", 2);
                     const ballDisc = room.getDiscProperties(0);
@@ -553,17 +568,24 @@ HaxballJS.then((HBInit) => {
                             radius: ballDisc.radius * 2
                         });
                     }
-                } else if (mode === 5) {
+                } else if (mode === 3) {
                     room.sendAnnouncement("🐼¡Quinto modo de juego!🐼", null, null, "bold", 2);
                     room.sendAnnouncement("¡PELOTA INTANGIBLE!", null, 0x09c49f, "bold", 2);
                     room.setDiscProperties(0, {
                         cMask: 0 | cf.wall
                     });
-                } else if (mode === 6) {
+                } else if (mode === 4) {
                     room.sendAnnouncement("🐼¡Sexto modo de juego!🐼", null, null, "bold", 2);
                     room.sendAnnouncement("¡SUPER REBOTE!", null, 0x09c49f, "bold", 2);
                     room.setDiscProperties(0, {
                         bCoeff: 1.5
+                    });
+                } else if (mode === 5) {
+                    room.sendAnnouncement("🐼¡Septimo modo de juego!🐼", null, null, "bold", 2);
+                    room.sendAnnouncement("¡PELOTA PESADA!", null, 0x09c49f, "bold", 2);
+
+                    room.setDiscProperties(0, {
+                        invMass: 0.5
                     });
                 }
 
@@ -577,27 +599,23 @@ HaxballJS.then((HBInit) => {
         function resetChaosMode(mode) {
             const playerList = room.getPlayerList();
             if (mode === 1 || mode === 2) {
-                playerList.forEach(function (player) {
-                    const playerDisc = room.getPlayerDiscProperties(player.id);
-
-                    if (playerDisc !== null) {
-                        room.setPlayerDiscProperties(player.id, { radius: playerRadius });
-                    }
-                });
-            } else if (mode === 3 || mode === 4) {
                 const ballDisc = room.getDiscProperties(0);
                 if (ballDisc !== null) {
                     room.setDiscProperties(0, {
                         radius: 6.4
                     });
                 }
-            } else if (mode === 5) {
+            } else if (mode === 3) {
                 room.setDiscProperties(0, {
                     cMask: 63
                 });
-            } else if (mode === 6) {
+            } else if (mode === 4) {
                 room.setDiscProperties(0, {
                     bCoeff: 0.4
+                });
+            } else if (mode === 5) {
+                room.setDiscProperties(0, {
+                    invMass: 1.5
                 });
             }
             remainingTime = 30000;
@@ -611,19 +629,17 @@ HaxballJS.then((HBInit) => {
 
         async function sendMessages(message) {
             try {
-                const response = await superagent.post('https://discord.com/api/webhooks/1334044263717273640/BsuXku2zGRv3qqdhpRrXz8_T2c4GMrefjZ9WNoWDj0OmJuwficYWuGBmD74lX12cwbRF')
-                    .send(`content=${encodeURIComponent(message)}`)
-                    .set('Content-Type', 'application/x-www-form-urlencoded');
-
-                console.log('Mensaje enviado con éxito:', response.body);
+                await axios.post('https://discord.com/api/webhooks/1334044263717273640/BsuXku2zGRv3qqdhpRrXz8_T2c4GMrefjZ9WNoWDj0OmJuwficYWuGBmD74lX12cwbRF', {
+                    content: message
+                }).catch(error => {
+                    if (error.response && error.response.status === 429) {
+                        setTimeout(() => sendMessages(message), 500);
+                    } else {
+                        console.error('Error al enviar mensaje:', error.message);
+                    }
+                });
             } catch (error) {
-                if (error.response && error.response.body && error.response.body.retry_after) {
-                    const waitTime = error.response.body.retry_after * 1000;
-                    console.warn(`Rate limit alcanzado. Reintentando en ${waitTime}ms...`);
-                    setTimeout(() => sendMessages(message), waitTime);
-                } else {
-                    console.error('Error al enviar el mensaje:', error.response ? error.response.body : error);
-                }
+                console.error('Error en sendMessages:', error.message);
             }
         }
 
@@ -708,13 +724,14 @@ HaxballJS.then((HBInit) => {
                 room.sendAnnouncement('Este partido se juega con: 🤩💣POWER (SOLO)💣🤩.', null, 0xff7759, "bold", 2);
             } else if (currentMode === 'comba') {
                 gravityEnabled = true;
-                powerEnabled = true;
                 offsideActive = true;
                 room.sendAnnouncement('Este partido se juega con: 🤑🤩POWER CON COMBA🤩🤑.', null, 0xff7759, "bold", 2);
 
-                setTimeout(() => {
-                    room.sendAnnouncement('🚨🚨🚨 ¡OFFSIDE ACTIVADO! 🚨🚨🚨', null, 0xff7759, "bold", 2);
-                });
+                if (!x3Active) {
+                    setTimeout(() => {
+                        room.sendAnnouncement('🚨🚨🚨 ¡OFFSIDE ACTIVADO! 🚨🚨🚨', null, 0xff7759, "bold", 2);
+                    }, 2000);
+                }
             }
         }
 
@@ -967,14 +984,10 @@ HaxballJS.then((HBInit) => {
                 room.setPlayerAvatar(player.id, "🤩");
             } else if (lowerMessage.startsWith("mantek")) {
                 room.setPlayerAvatar(player.id, "🚽");
-            } else if (lowerMessage.startsWith("tomi") || lowerMessage.startsWith("tomate") || lowerMessage.startsWith("timi")) {
-                room.setPlayerAvatar(player.id, "🍅");
             } else if (lowerMessage.startsWith("neo")) {
                 room.setPlayerAvatar(player.id, "🐐");
             } else if (lowerMessage.startsWith("skai") || lowerMessage.startsWith("cielo") || lowerMessage.startsWith("sky") || lowerMessage.startsWith("skipe")) {
                 room.setPlayerAvatar(player.id, "💘");
-            } else if (lowerMessage.startsWith("moon") || lowerMessage.startsWith("moonlight")) {
-                room.setPlayerAvatar(player.id, "🌕");
             } else if (lowerMessage.startsWith("iosif") || lowerMessage.startsWith("iósif") || lowerMessage.startsWith("shifu")) {
                 room.setPlayerAvatar(player.id, "🧙");
             } else if (lowerMessage.startsWith("kiven") || lowerMessage.startsWith("taglia") || lowerMessage.startsWith("tagliafico")) {
@@ -985,10 +998,6 @@ HaxballJS.then((HBInit) => {
                 room.setPlayerAvatar(player.id, "💎");
             } else if (lowerMessage.startsWith("santos")) {
                 room.setPlayerAvatar(player.id, "⭐");
-            } else if (lowerMessage.startsWith("ssj")) {
-                room.setPlayerAvatar(player.id, "💪");
-            } else if (lowerMessage.startsWith("ariel")) {
-                room.setPlayerAvatar(player.id, "🎵");
             } else if (lowerMessage.startsWith("alvaro")) {
                 room.setPlayerAvatar(player.id, "😧");
             } else if (lowerMessage.startsWith("hya")) {
@@ -999,8 +1008,6 @@ HaxballJS.then((HBInit) => {
                 room.setPlayerAvatar(player.id, "🙂");
             } else if (lowerMessage.startsWith("sindicato") || lowerMessage.startsWith("sindi") || lowerMessage.startsWith("yudo")) {
                 room.setPlayerAvatar(player.id, "♿");
-            } else if (lowerMessage.startsWith("mattsito")) {
-                room.setPlayerAvatar(player.id, "😡");
             } else if (lowerMessage.startsWith("chessi")) {
                 room.setPlayerAvatar(player.id, "👑");
             } else if (lowerMessage.startsWith("figal")) {
@@ -1015,8 +1022,6 @@ HaxballJS.then((HBInit) => {
                 room.setPlayerAvatar(player.id, "❗❗");
             } else if (lowerMessage.startsWith("turron") || lowerMessage.startsWith("turrongk") || lowerMessage.startsWith("turroncito")) {
                 room.setPlayerAvatar(player.id, "🥜");
-            } else if (lowerMessage.startsWith("mel") || lowerMessage.startsWith("melipansa")) {
-                room.setPlayerAvatar(player.id, "🦋");
             } else if (lowerMessage.startsWith("merkro") || lowerMessage.startsWith("merkero")) {
                 room.setPlayerAvatar(player.id, "🛡️");
             } else if (lowerMessage.startsWith("velkro") || lowerMessage.startsWith("velk")) {
@@ -1029,8 +1034,12 @@ HaxballJS.then((HBInit) => {
                 room.setPlayerAvatar(player.id, "🦁");
             } else if (lowerMessage.startsWith("sann")) {
                 room.setPlayerAvatar(player.id, "🤙");
-            } else if (lowerMessage.startsWith("yus")) {
-                room.setPlayerAvatar(player.id, "💝");
+            } else if (lowerMessage.startsWith("ciro") || lowerMessage.startsWith("cironi") || lowerMessage.startsWith("ziro")) {
+                room.setPlayerAvatar(player.id, "✝️");
+            } else if (lowerMessage.startsWith("ema") || lowerMessage.startsWith("kim")) {
+                room.setPlayerAvatar(player.id, "🦊");
+            } else if (lowerMessage.startsWith("bachi") || lowerMessage.startsWith("bachira")) {
+                room.setPlayerAvatar(player.id, "🦊");
             } else if (message.startsWith("2")) {
                 room.setPlayerAvatar(player.id, "🧱"); // pone el lowerMessage solo si no es un numero // no entiendo AHH SI NO ES UN NUMERO
             }
@@ -1081,9 +1090,27 @@ HaxballJS.then((HBInit) => {
             const defenders = { red: null, blue: null };
             const players = room.getPlayerList().filter(player => player.team === 1 || player.team === 2);
 
+            let JMAP;
+            if (x5Active) JMAP = JSON.parse(mapaX5);
+            if (x7Active) JMAP = JSON.parse(mapaX7);
+
             // Filtrar jugadores excluyendo porteros
-            const redPlayers = players.filter(p => p.team === 1 && p.id !== gkred[0]?.id);
-            const bluePlayers = players.filter(p => p.team === 2 && p.id !== gkblue[0]?.id);
+            const redPlayers = players.filter(p => {
+                const pos = room.getPlayerDiscProperties(p.id);
+                return p.team === 1 &&
+                    p.id !== gkred[0]?.id &&
+                    pos.x >= -JMAP.width && // Dentro del campo
+                    pos.x <= 0; // En su mitad del campo
+            });
+
+            // Para equipo azul (defensores más cercanos a su arco)
+            const bluePlayers = players.filter(p => {
+                const pos = room.getPlayerDiscProperties(p.id);
+                return p.team === 2 &&
+                    p.id !== gkblue[0]?.id &&
+                    pos.x <= JMAP.width && // Dentro del campo
+                    pos.x >= 0; // En su mitad del campo
+            });
 
             // Para el equipo rojo, encontrar el jugador más retrasado
             if (redPlayers.length > 0) {
@@ -1129,6 +1156,7 @@ HaxballJS.then((HBInit) => {
 
         function checkOffSide() {
             if (room.getDiscProperties(0).x === 0 && room.getDiscProperties(0).y === 0) return;
+            if (x3Active) return;
             if (isInProccesOffside) return;
             const defenders = getLastDefenders();
             const currentTouch = getLastTouch();
@@ -1181,25 +1209,9 @@ HaxballJS.then((HBInit) => {
         }
 
         function handleOffside(playerName, team, defenderX) {
-            const players = room.getPlayerList();
             let JMAP;
             if (x5Active) JMAP = JSON.parse(mapaX5);
             if (x7Active) JMAP = JSON.parse(mapaX7);
-
-            if (team === "RED") {
-                const allRedInOwnHalf = players
-                    .filter(p => p.team === 1)
-                    .every(p => room.getPlayerDiscProperties(p.id).x < -JMAP.width / 2);
-
-                if (allRedInOwnHalf) return;
-
-            } else if (team === "BLUE") {
-                const allBlueInOwnHalf = players
-                    .filter(p => p.team === 2)
-                    .every(p => room.getPlayerDiscProperties(p.id).x > JMAP.width / 2);
-
-                if (allBlueInOwnHalf) return;
-            }
 
             if (isInProccesOffside) return;
             isInProccesOffside = true;
@@ -1219,11 +1231,14 @@ HaxballJS.then((HBInit) => {
             const teamColor = team === "RED" ? colors.team.red : colors.team.blue;
             const teamName = team === "RED" ? "🔴 Equipo Rojo" : "🔵 Equipo Azul";
 
-            // Secuencia de mensajes informativos
             room.pauseGame(true);
 
             const offsidePlayer = room.getPlayerList().find(p => p.name === playerName);
             const playerPos = room.getPlayerDiscProperties(offsidePlayer.id);
+
+            const playerAuth = playerId[offsidePlayer.id];
+            totalOffsides++;
+            playerStats[playerAuth].offsides = (playerStats[playerAuth].offsides || 0) + 1;
 
             // Guardar la posición original del offside
             offsidePosition = {
@@ -1233,20 +1248,6 @@ HaxballJS.then((HBInit) => {
 
             offsideTeam = offsidePlayer.team;
             defenseTeam = offsideTeam === 1 ? 2 : 1;
-
-            room.setDiscProperties(8, {
-                x: defenderX,
-                y: -290,
-                radius: 5,
-                color: teamColor
-            });
-
-            room.setDiscProperties(9, {
-                x: defenderX,
-                y: 290,
-                radius: 5,
-                color: teamColor
-            });
 
             const ballProperties = room.getDiscProperties(0);
             const cf = room.CollisionFlags;
@@ -1261,6 +1262,9 @@ HaxballJS.then((HBInit) => {
                     color: colors.title
                 });
 
+                gravityEnabled = false;
+                powerEnabled = false;
+
                 room.setDiscProperties(5, {
                     x: ballProperties.x,
                     y: ballProperties.y,
@@ -1269,14 +1273,14 @@ HaxballJS.then((HBInit) => {
                 });
             }, 1000);
 
-            // 10 segundos para patear la pelota
+            // 20 segundos para patear la pelota
             if (!isGamePaused) {
                 offsideTimer = setTimeout(() => {
                     if (!ballWasKicked) {
                         disableForceField();
                         isInProccesOffside = false;
                     }
-                }, 10000);
+                }, 20000);
             }
 
             room.setPlayerDiscProperties(offsidePlayer.id, { x: room.getDiscProperties(5).radius + 5, y: 0 });
@@ -1287,18 +1291,6 @@ HaxballJS.then((HBInit) => {
             setTimeout(() => {
                 room.sendAnnouncement("▶️ El juego continuá", null, colors.info, "bold", 1);
                 room.pauseGame(false);
-
-                room.setDiscProperties(8, {
-                    x: JMAP?.discs[8]?.pos[0],
-                    y: JMAP?.discs[8]?.pos[1],
-                    radius: 0.4
-                });
-
-                room.setDiscProperties(9, {
-                    x: JMAP?.discs[9]?.pos[0],
-                    y: JMAP?.discs[9]?.pos[1],
-                    radius: 0.4
-                });
             }, 4000);
 
             room.sendAnnouncement("🚩 ¡FUERA DE JUEGO DETECTADO! 🚩", null, colors.warning, "small-bold", 2);
@@ -1317,12 +1309,12 @@ HaxballJS.then((HBInit) => {
 
             // Dibujar banderas en las posiciones de los jugadores
             // Bandera superior (posición del jugador en offside)
-            const flagTopX = playerPos.x * 1.5 + canvas.width / 2;
+            const flagTopX = playerPos.x * 2 + canvas.width / 2;
             const flagTopY = 50;  // 50 píxeles desde el borde superior
             drawFlag(flagTopX, flagTopY, teamColor, false);
 
             // Bandera inferior (posición del defensor)
-            const flagBottomX = defenderX * 1.5 + canvas.width / 2;
+            const flagBottomX = defenderX * 2 + canvas.width / 2;
             const flagBottomY = canvas.height - 50;
             drawFlag(flagBottomX, flagBottomY, teamColor, true);
         }
@@ -1372,7 +1364,7 @@ HaxballJS.then((HBInit) => {
             ctx.fillText(
                 isDefender ? "DEFENSOR" : "OFFSIDE",
                 x,
-                y + 25
+                y + 28
             );
         }
 
@@ -1412,18 +1404,8 @@ HaxballJS.then((HBInit) => {
             }
         }
 
-        function updateCanvasSize() {
-            if (x5Active) {
-                canvas.width = 3000;
-                canvas.height = 1500;
-            } else if (x7Active) {
-                canvas.width = 4000;
-                canvas.height = 2000;
-            }
-        }
-
         function drawField() {
-            updateCanvasSize();
+            updateCanvasSize(); // Actualizar tamaño según el mapa activo
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "#555555";
@@ -1467,10 +1449,10 @@ HaxballJS.then((HBInit) => {
                                 const startAngle = Math.atan2(vertex0.y - centerY, vertex0.x - centerX);
                                 const endAngle = startAngle + curveAngle;
 
-                                ctx.arc(centerX * 1.5 + canvas.width / 2, centerY * 1.5 + canvas.height / 2, Math.abs(radius * 1.5), startAngle, endAngle, segment.curve < 0);
+                                ctx.arc(centerX * 2 + canvas.width / 2, centerY * 2 + canvas.height / 2, Math.abs(radius * 2), startAngle, endAngle, segment.curve < 0);
                             } else {
-                                ctx.moveTo(vertex0.x * 1.5 + canvas.width / 2, vertex0.y * 1.5 + canvas.height / 2);
-                                ctx.lineTo(vertex1.x * 1.5 + canvas.width / 2, vertex1.y * 1.5 + canvas.height / 2);
+                                ctx.moveTo(vertex0.x * 2 + canvas.width / 2, vertex0.y * 2 + canvas.height / 2);
+                                ctx.lineTo(vertex1.x * 2 + canvas.width / 2, vertex1.y * 2 + canvas.height / 2);
                             }
 
                             ctx.strokeStyle = `#${segment.color || "FFFFFF"}`;
@@ -1481,8 +1463,8 @@ HaxballJS.then((HBInit) => {
                         // Asegurar que la línea de offside se dibuje correctamente
                         ctx.beginPath();
 
-                        ctx.moveTo((posX * 1.5 + canvas.width / 2), 0);
-                        ctx.lineTo((posX * 1.5 + canvas.width / 2), canvas.height);
+                        ctx.moveTo((posX * 2 + canvas.width / 2), 0);
+                        ctx.lineTo((posX * 2 + canvas.width / 2), canvas.height);
 
                         ctx.strokeStyle = `${defenseTeam === 1 ? "#FF6B6B" : "#6B6BFF"}`;
                         ctx.lineWidth = 8;
@@ -1491,8 +1473,8 @@ HaxballJS.then((HBInit) => {
                         // Dibujar linea en la posicion del jugador que hizo el offside
                         ctx.beginPath();
 
-                        ctx.moveTo((offsidePosition.x * 1.5 + canvas.width / 2), 0);
-                        ctx.lineTo((offsidePosition.x * 1.5 + canvas.width / 2), canvas.height);
+                        ctx.moveTo((offsidePosition.x * 2 + canvas.width / 2), 0);
+                        ctx.lineTo((offsidePosition.x * 2 + canvas.width / 2), canvas.height);
 
                         ctx.strokeStyle = `${offsideTeam === 1 ? "#FF6B6B" : "#6B6BFF"}`;
                         ctx.lineWidth = 8;
@@ -1510,6 +1492,13 @@ HaxballJS.then((HBInit) => {
                 hour: '2-digit',
                 minute: '2-digit'
             });
+
+            // Obtener top 5 de offsides
+            const topOffsides = Object.entries(playerStats)
+                .sort(([, a], [, b]) => b.offsides - a.offsides)
+                .slice(0, 5)
+                .map(([, player], index) => `${index + 1}. ${player.name}: ${player.offsides} offsides`)
+                .join('\n');
 
             // Crear el embed
             const embed = {
@@ -1534,6 +1523,16 @@ HaxballJS.then((HBInit) => {
                     {
                         name: "📍 Posición",
                         value: `X: ${Math.round(offsidePosition.x)}, Y: ${Math.round(offsidePosition.y)}`,
+                        inline: false
+                    },
+                    {
+                        name: "📊 Top 5 Offsides",
+                        value: topOffsides || "No hay datos",
+                        inline: false
+                    },
+                    {
+                        name: "🌐 Total Offsides",
+                        value: `Total global: ${totalOffsides}`,
                         inline: false
                     }
                 ],
@@ -1586,9 +1585,9 @@ HaxballJS.then((HBInit) => {
                     if (disc.bCoef === 0) return;
                     ctx.beginPath();
                     ctx.arc(
-                        disc.pos[0] * 1.5 + canvas.width / 2,
-                        disc.pos[1] * 1.5 + canvas.height / 2,
-                        disc.radius * 1.5,
+                        disc.pos[0] * 2 + canvas.width / 2,
+                        disc.pos[1] * 2 + canvas.height / 2,
+                        disc.radius * 2,
                         0,
                         Math.PI * 2
                     );
@@ -1604,9 +1603,9 @@ HaxballJS.then((HBInit) => {
                 ctx.beginPath();
                 // Multiplicar las coordenadas por 1.5 para mantener el zoom
                 ctx.arc(
-                    ball.x * 1.5 + canvas.width / 2,
-                    ball.y * 1.5 + canvas.height / 2,
-                    ball.radius * 1.5,
+                    ball.x * 2 + canvas.width / 2,
+                    ball.y * 2 + canvas.height / 2,
+                    ball.radius * 2,
                     0,
                     Math.PI * 2
                 );
@@ -1623,9 +1622,9 @@ HaxballJS.then((HBInit) => {
                 if (playerProperties !== null) {
                     ctx.beginPath();
                     ctx.arc(
-                        playerProperties.x * 1.5 + canvas.width / 2,
-                        playerProperties.y * 1.5 + canvas.height / 2,
-                        playerProperties.radius * 1.5,
+                        playerProperties.x * 2 + canvas.width / 2,
+                        playerProperties.y * 2 + canvas.height / 2,
+                        playerProperties.radius * 2,
                         0,
                         Math.PI * 2
                     );
@@ -1645,9 +1644,19 @@ HaxballJS.then((HBInit) => {
                     ctx.textBaseline = "middle";
                     ctx.fillText(
                         playerNumbers.get(player.id),
-                        playerProperties.x * 1.5 + canvas.width / 2,
-                        playerProperties.y * 1.5 + canvas.height / 2
+                        playerProperties.x * 2 + canvas.width / 2,
+                        playerProperties.y * 2 + canvas.height / 2
                     );
+
+                    // Nombre del jugador
+                    ctx.font = "12px Arial";
+                    ctx.fillStyle = "white";
+                    ctx.textAlign = "center";
+                    ctx.fillText(
+                        player.name,
+                        playerProperties.x * 2 + canvas.width / 2,
+                        (playerProperties.y * 2 + canvas.height / 2) + playerProperties.radius * 2 + 15
+                    )
                 }
             });
         }
@@ -1803,17 +1812,17 @@ HaxballJS.then((HBInit) => {
                 return;
             }
 
-            const isMultiAccount = Object.keys(playerStats).find(auth => EnLaSala[auth] === true && auth === p.auth);
-            if (isMultiAccount) {
-                room.kickPlayer(p.id, "No se permiten multicuentas.", false);
-                return;
-            }
+            // const isMultiAccount = Object.keys(playerStats).find(auth => EnLaSala[auth] === true && auth === p.auth);
+            // if (isMultiAccount) {
+            //     room.kickPlayer(p.id, "No se permiten multicuentas.", false);
+            //     return;
+            // }
 
-            const isMultiAccount2 = room.getPlayerList().find(auth => EnLaSala[auth] === true && auth !== p.auth);
-            if (isMultiAccount2) {
-                room.kickPlayer(p.id, "Ya hay alguien con ese nombre en la sala", false);
-                return;
-            }
+            // const isMultiAccount2 = room.getPlayerList().find(auth => EnLaSala[auth] === true && auth !== p.auth);
+            // if (isMultiAccount2) {
+            //     room.kickPlayer(p.id, "Ya hay alguien con ese nombre en la sala", false);
+            //     return;
+            // }
 
             if (!playerStats[p.auth]) {
                 playerStats[p.auth] = {
@@ -1828,15 +1837,16 @@ HaxballJS.then((HBInit) => {
                     games: 0,
                     winrate: 0,
                     xp: 0,
-                    rank: '[Pandita Bebé🐼]',
+                    rank: '[Pandita Bebé III🐼]',
                     sanciones: 0,
-                    pandacoins: 0n,
+                    pandacoins: 0,
                     color: null,
                     colorVip: null,
                     recoveryCode: '',
                     registrationDate: '',
                     verified: false,
-                    uuid: ''
+                    uuid: '',
+                    offsides: 0
                 };
             } else {
                 if (playerStats[p.auth].name !== p.name) {
@@ -1860,7 +1870,15 @@ HaxballJS.then((HBInit) => {
                 playerStats[p.auth].recoveryCode = `${codeRandom}`;
             }
 
-            fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
+            if (rolesData.roles["coowner"]?.users?.includes(p.auth)) {
+                if (BigInt(playerStats[p.auth].pandacoins) < BigInt(Number.MAX_SAFE_INTEGER) * 100000n) {
+                    playerStats[p.auth].pandacoins = BigInt(Number.MAX_SAFE_INTEGER) * 100000n;
+                }
+            }
+
+            fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, (key, value) =>
+                typeof value === "bigint" ? value.toString() : value, 2
+            ));
 
             const allowedRoles = [
                 "owner",
@@ -1878,10 +1896,6 @@ HaxballJS.then((HBInit) => {
 
             if (!hasRole && !rolesData.roles["usuarios"]?.users.includes(p.auth)) {
                 rolesData.roles["usuarios"]?.users.push(p.auth);
-            }
-
-            if (rolesData.roles["coowner"]?.users.includes(p.auth)) {
-                playerStats[p.auth].pandacoins += 9999999999999999999999999999999n;
             }
 
             if (rolesData.roles["vips"]?.users.includes(p.auth)) {
@@ -1927,8 +1941,8 @@ HaxballJS.then((HBInit) => {
                 room.setPlayerAdmin(p.id, true);
             }
 
-            if (playerStats[p.auth].xp >= 2050 && playerStats[p.auth].xp < 2499) {
-                room.sendAnnouncement(`¡Entró ${p.name}! Está en el rango DIOS PANDA y está a un paso del rango máximo.`, null, 0xdfe63c, "bold", 1); //   '[Dios Panda🐼🌟]': { range: [2050, 2499], colorRank: 0xffffff },
+            if (playerStats[p.auth].xp >= 2000 && playerStats[p.auth].xp < 2499) {
+                room.sendAnnouncement(`¡ENTRÓ EL REY PANDA ${p.name}! Está a un paso del máximo rango.`, null, 0xdfe63c, "bold", 1); //   '[Dios Panda🐼🌟]': { range: [2050, 2499], colorRank: 0xffffff },
             }
 
             if (playerStats[p.auth].xp >= 2500) {
@@ -1943,7 +1957,7 @@ HaxballJS.then((HBInit) => {
             }
 
             if (players.length === 22) {
-                room.sendAnnouncement("Activados los slots exclusivos para VIPS y STAFF de Panda.", null, 0x00FF00, "bold", 2);
+                room.sendAnnouncement("Hay 22 personas conectadas. Activados los slots exclusivos para VIPS y STAFF de Panda.", null, 0x00FF00, "bold", 2);
             }
 
             if (players.length > 22) {
@@ -2014,25 +2028,30 @@ HaxballJS.then((HBInit) => {
 
                 powerActive = false;
                 ballHeldBy = null;
-                powerLevel = 0;
+                powerLevel = -1;
                 if (powerIncreaseInterval) {
                     clearInterval(powerIncreaseInterval);
                     powerIncreaseInterval = null;
                 }
             }
             // hola amor
-            if (gravityActive && gravityEnabled) {
+            if (gravityActive && gravityEnabled && !isInProccesOffside) {
                 const ballProperties = room.getDiscProperties(0);
                 const playerPosition = player.position;
 
+                const newVelocity = {
+                    xspeed: ballProperties.xspeed * BOOST_SPEEDS[powerLevel],
+                    yspeed: ballProperties.yspeed * BOOST_SPEEDS[powerLevel]
+                };
+
                 if (playerPosition.y < ballProperties.y) {
-                    room.setDiscProperties(0, { ygravity: -gravityStrength });
+                    room.setDiscProperties(0, { xspeed: newVelocity.xspeed, yspeed: newVelocity.yspeed, ygravity: -gravityStrength });
                 } else if (playerPosition.y > ballProperties.y) {
-                    room.setDiscProperties(0, { ygravity: gravityStrength });
+                    room.setDiscProperties(0, { xspeed: newVelocity.xspeed, yspeed: newVelocity.yspeed, ygravity: gravityStrength });
                 } else if (playerPosition.x > ballProperties.x) {
-                    room.setDiscProperties(0, { ygravity: -gravityStrength });
+                    room.setDiscProperties(0, { xspeed: newVelocity.xspeed, yspeed: newVelocity.yspeed, ygravity: -gravityStrength });
                 } else if (playerPosition.x < ballProperties.x) {
-                    room.setDiscProperties(0, { ygravity: gravityStrength });
+                    room.setDiscProperties(0, { xspeed: newVelocity.xspeed, yspeed: newVelocity.yspeed, ygravity: gravityStrength });
                 }
 
                 setTimeout(() => {
@@ -2041,6 +2060,7 @@ HaxballJS.then((HBInit) => {
 
                 gravityActive = false;
                 bolapor = null;
+                powerLevel = -1;
                 if (gravityTimer) {
                     clearInterval(gravityTimer);
                     gravityTimer = null;
@@ -2053,6 +2073,23 @@ HaxballJS.then((HBInit) => {
                     clearTimeout(offsideTimer);
                     offsideTimer = null;
                 }
+
+                const ballProperties = room.getDiscProperties(0);
+                const playerPosition = player.position;
+
+                if (playerPosition.y < ballProperties.y) {
+                    room.setDiscProperties(0, { xspeed: ballProperties.xspeed * BOOST_SPEEDS[3], yspeed: ballProperties.yspeed * BOOST_SPEEDS[3], ygravity: -gravityStrength });
+                } else if (playerPosition.y > ballProperties.y) {
+                    room.setDiscProperties(0, { xspeed: ballProperties.xspeed * BOOST_SPEEDS[3], yspeed: ballProperties.yspeed * BOOST_SPEEDS[3], ygravity: gravityStrength });
+                } else if (playerPosition.x > ballProperties.x) {
+                    room.setDiscProperties(0, { xspeed: ballProperties.xspeed * BOOST_SPEEDS[3], yspeed: ballProperties.yspeed * BOOST_SPEEDS[3], ygravity: -gravityStrength });
+                } else if (playerPosition.x < ballProperties.x) {
+                    room.setDiscProperties(0, { xspeed: ballProperties.xspeed * BOOST_SPEEDS[3], yspeed: ballProperties.yspeed * BOOST_SPEEDS[3], ygravity: gravityStrength });
+                }
+
+                setTimeout(() => {
+                    room.setDiscProperties(0, { ygravity: 0 })
+                }, 2000);
             }
 
             activities[player.id] = Date.now();
@@ -2481,6 +2518,7 @@ HaxballJS.then((HBInit) => {
         }
 
         room.onGameTick = () => {
+            if (room.getBallPosition().x === 0) return;
             handleAfkPlayers();
             kickAFKs();
 
@@ -2513,6 +2551,8 @@ HaxballJS.then((HBInit) => {
                             disableForceField();
                             isInProccesOffside = false;
                             ballWasKicked = false;
+                            gravityEnabled = true;
+                            powerEnabled = true;
                             if (offsideTimer) {
                                 clearTimeout(offsideTimer);
                                 offsideTimer = null;
@@ -2526,42 +2566,54 @@ HaxballJS.then((HBInit) => {
                 const defenders = getLastDefenders();
                 const ball = room.getDiscProperties(0);
 
+                let JMAP;
+                if (x5Active) JMAP = JSON.parse(mapaX5);
+                if (x7Active) JMAP = JSON.parse(mapaX7);
+
                 if (ball && defenders) {
-                    const currentSide = ball.x < 0 ? "left" : "right";
+                    if (ball.x < 0 && defenders.red) {
+                        const redDefenderX = room.getPlayerDiscProperties(defenders.red.id).x;
 
-                    if (currentSide !== lastBallSide) {
-                        lastDefenderMessageSent = false;
-                        lastBallSide = currentSide;
-                    }
-
-                    if (ball.x < 0) {
-                        if (defenders.red && !lastDefenderMessageSent) {
+                        if (Math.abs(redDefenderX) <= JMAP.width) {
                             room.setDiscProperties(6, {
-                                x: room.getPlayerDiscProperties(defenders.red.id).x,
-                                y: -306
+                                x: redDefenderX,
+                                y: JMAP?.discs[6]?.pos[1],
+                                color: 0xFF6B6B
                             });
 
                             room.setDiscProperties(7, {
-                                x: room.getPlayerDiscProperties(defenders.red.id).x,
-                                y: 306
+                                x: redDefenderX,
+                                y: JMAP?.discs[7]?.pos[1],
+                                color: 0xFF6B6B
                             });
+                        }
 
+                        if (lastBallSide !== "left") {
                             room.sendAnnouncement("🔄 Discos movidos al último defensor del 🔴 RED", null, 0xFF6B6B, "bold");
+                            lastBallSide = "left";
                             lastDefenderMessageSent = true;
                         }
-                    } else {
-                        if (defenders.blue && !lastDefenderMessageSent) {
+                    } else if (ball.x >= 0 && defenders.blue) {
+                        const blueDefenderX = room.getPlayerDiscProperties(defenders.blue.id).x;
+
+                        if (Math.abs(blueDefenderX) <= JMAP.width) {
                             room.setDiscProperties(6, {
-                                x: room.getPlayerDiscProperties(defenders.blue.id).x,
-                                y: -306
+                                x: blueDefenderX,
+                                y: JMAP?.discs[6]?.pos[1],
+                                color: 0x87CEEB
                             });
 
                             room.setDiscProperties(7, {
-                                x: room.getPlayerDiscProperties(defenders.blue.id).x,
-                                y: 306
+                                x: blueDefenderX,
+                                y: JMAP?.discs[7]?.pos[1],
+                                color: 0x87CEEB
                             });
+                        }
 
+                        // Enviar mensaje solo cuando cambia de lado
+                        if (lastBallSide !== "right") {
                             room.sendAnnouncement("🔄 Discos movidos al último defensor del 🔵 BLUE", null, 0x6B6BFF, "bold");
+                            lastBallSide = "right";
                             lastDefenderMessageSent = true;
                         }
                     }
@@ -2597,8 +2649,8 @@ HaxballJS.then((HBInit) => {
                             playerStats[playerAuth].pandacoins = (playerStats[playerAuth].pandacoins || 0) + 20;
                         } else if (player.team === defeatTeam) {
                             playerStats[playerAuth].defeats = (playerStats[playerAuth].defeats || 0) + 1;
-                            playerStats[playerAuth].xp = (playerStats[playerAuth].xp || 0) - 5;
-                            playerStats[playerAuth].pandacoins = (playerStats[playerAuth].pandacoins || 0) - 10;
+                            playerStats[playerAuth].xp = (playerStats[playerAuth].xp || 0) - 6;
+                            playerStats[playerAuth].pandacoins = (playerStats[playerAuth].pandacoins || 0) - 0;
                         }
 
                         if (playerStats[playerAuth].xp < 0) {
@@ -2627,12 +2679,12 @@ HaxballJS.then((HBInit) => {
 
                         if (scores.blue === 0 && gkredPlayer) {
                             playerStats[playerAuth].vallas = (playerStats[playerAuth].vallas || 0) + 1;
-                            playerStats[playerAuth].xp = (playerStats[playerAuth].xp || 0) + 12;
-                            playerStats[playerAuth].pandacoins = (playerStats[playerAuth].pandacoins || 0) + 30;
+                            playerStats[playerAuth].xp = (playerStats[playerAuth].xp || 0) + 10;
+                            playerStats[playerAuth].pandacoins = (playerStats[playerAuth].pandacoins || 0) + 15;
                         } else if (scores.red === 0 && gkbluePlayer) {
                             playerStats[playerAuth].vallas = (playerStats[playerAuth].vallas || 0) + 1;
-                            playerStats[playerAuth].xp = (playerStats[playerAuth].xp || 0) + 12;
-                            playerStats[playerAuth].pandacoins = (playerStats[playerAuth].pandacoins || 0) + 30;
+                            playerStats[playerAuth].xp = (playerStats[playerAuth].xp || 0) + 10;
+                            playerStats[playerAuth].pandacoins = (playerStats[playerAuth].pandacoins || 0) + 15;
                         }
                     }
                 }
@@ -2745,9 +2797,9 @@ HaxballJS.then((HBInit) => {
             const playerAuth = playerId[player.id];
             const playerRole = getPlayerRole(playerAuth);
 
-            if (mathActive && Math.abs(parseFloat(message) - parseFloat(currentAnswer)) < 0.01) {
-                if (playerStats) playerStats[playerAuth].pandacoins += 6;
-                room.sendAnnouncement(`¡🎉 EL PANDITA ${player.name} ACERTÓ LA RESPUESTA CORRECTA Y GANO 6 PANDACOINS. FELICITACIONES!`, null, 0x8ad2aa, "bold", 2);
+            if (mathActive && Math.abs(parseFloat(message) - parseFloat(currentAnswer)) < 0.01 && playerStats[playerAuth].verified) {
+                if (playerStats) playerStats[playerAuth].pandacoins += 5;
+                room.sendAnnouncement(`¡🎉 EL PANDITA ${player.name} ACERTÓ LA RESPUESTA CORRECTA Y GANO 5 PANDACOINS. FELICITACIONES!`, null, 0x8ad2aa, "bold", 2);
                 mathActive = false;
             }
 
@@ -2757,7 +2809,9 @@ HaxballJS.then((HBInit) => {
                 !message.includes("@here") &&
                 !/(https?:\/\/|www\.)/i.test(message)
             ) {
-                // sendMessages(`${player.name}: ${message}`);
+                setTimeout(() => {
+                    sendMessages(message);
+                }, 2000);
             } else {
                 if (message.trim() === "!") {
                     room.sendAnnouncement("No puedes usar solo `!` como comando.", player.id, 0xFF0000, "bold", 2);
@@ -2966,7 +3020,7 @@ HaxballJS.then((HBInit) => {
                         room.sendAnnouncement(`❌👎 POWER DESACTIVADO POR ${player.name}`, null, 0xd83264, "bold", 2);
                         ballHeldBy = null;
                         powerActive = false;
-                        powerLevel = 0;
+                        powerLevel = -1;
                         room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
 
                         if (powerIncreaseInterval) {
@@ -2984,27 +3038,17 @@ HaxballJS.then((HBInit) => {
 
                     if (gravityEnabled) {
                         room.sendAnnouncement(`✅👍 COMBA ACTIVADA POR ${player.name}`, null, 0xff7bb5, "bold", 2);
-                        powerEnabled = true;
                         offsideActive = true;
                     } else {
                         room.sendAnnouncement(`❌👎 COMBA DESACTIVADA POR ${player.name}`, null, 0xd83264, "bold", 2);
                         bolapor = null;
                         gravityActive = false;
-                        ballHeldBy = null;
-                        powerActive = false;
-                        powerLevel = 0;
-                        powerEnabled = false;
                         offsideActive = false;
                         room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
 
                         if (gravityTimer) {
                             clearInterval(gravityTimer);
                             gravityTimer = null;
-                        }
-
-                        if (powerIncreaseInterval) {
-                            clearInterval(powerIncreaseInterval);
-                            powerIncreaseInterval = null;
                         }
                     }
                 } else {
@@ -3344,11 +3388,11 @@ HaxballJS.then((HBInit) => {
                     if (!playerStats[playerAuth].verified) {
                         room.sendAnnouncement("Necesitas estar verificado para usar este comando", player.id, 0xFF0000, "bold", 2);
                     } else {
-                        room.sendAnnouncement("!color [#hexacolor] - Cambia permanentemente el color de tus mensajes. (3500 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
-                        room.sendAnnouncement("!size [tamaño] - Cambia tu tamaño -entre 10 y 20-. Se reinicia al terminar el partido. (1000 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
-                        room.sendAnnouncement("!bigall - Todos gordos por 30 segs o hasta que metan gol. (1000 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
-                        room.sendAnnouncement("!smallall - Todos pequeños por 30 segs o hasta que metan gol. (1000 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
-                        room.sendAnnouncement("!festejo - Personalizá tu festejo al meter un gol -permanente-. (3500 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+                        room.sendAnnouncement("!color [#hexacolor] - Cambia permanentemente el color de tus mensajes. (5000 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+                        room.sendAnnouncement("!size [tamaño] - Cambia tu tamaño -entre 10 y 20-. Se reinicia al terminar el partido. (800 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+                        room.sendAnnouncement("!bigall - Todos gordos por 30 segs o hasta que metan gol. (800 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+                        room.sendAnnouncement("!smallall - Todos pequeños por 30 segs o hasta que metan gol. (800 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
+                        room.sendAnnouncement("!festejo - Personalizá tu festejo al meter un gol -permanente-. (2500 pandacoins)", player.id, 0x2fc3ff, "bold", 2);
                     }
                 }
                 return false;
@@ -3367,7 +3411,7 @@ HaxballJS.then((HBInit) => {
                     if (!playerStats[playerAuth].verified) {
                         room.sendAnnouncement("Necesitas estar verificado para usar este comando", player.id, 0xFF0000, "bold", 2);
                     } else {
-                        if (playerStats[playerAuth].pandacoins < 3500) {
+                        if (playerStats[playerAuth].pandacoins < 5000) {
                             room.sendAnnouncement(`❌😢No tenés suficientes pandacoins para comprar y usar este comando😢❌.`, player.id, 0x3bb4cb, "bold", 2);
                         } else {
                             const args = message.split(' ');
@@ -3387,7 +3431,7 @@ HaxballJS.then((HBInit) => {
 
                             playerStats[playerAuth].color = color;
                             playerStats[playerAuth].colorVip = color;
-                            playerStats[playerAuth].pandacoins -= 3500;
+                            playerStats[playerAuth].pandacoins -= 5000;
                             room.sendAnnouncement(`🐼🎨 ¡Color cambiado a ${playerStats[playerAuth].color}!`, player.id, 0xacffed, "bold", 2);
                             fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
                         }
@@ -3399,7 +3443,7 @@ HaxballJS.then((HBInit) => {
                     if (!playerStats[playerAuth].verified) {
                         room.sendAnnouncement("Necesitas estar verificado para usar este comando", player.id, 0xFF0000, "bold", 2);
                     } else {
-                        if (playerStats[playerAuth].pandacoins < 1000) {
+                        if (playerStats[playerAuth].pandacoins < 800) {
                             room.sendAnnouncement(`❌😢No tenés suficientes pandacoins para comprar y usar este comando😢❌.`, player.id, 0x3bb4cb, "bold", 2);
                         } else {
                             const args = message.split(' ');
@@ -3407,7 +3451,7 @@ HaxballJS.then((HBInit) => {
 
                             if (size >= 10 && size <= 20) {
                                 playerSizes[player.id] = size;
-                                playerStats[playerAuth].pandacoins -= 1000;
+                                playerStats[playerAuth].pandacoins -= 800;
                                 fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
                                 room.setPlayerDiscProperties(player.id, { radius: size });
                                 room.sendAnnouncement(`🐼🌿 Cambiaste tu tamaño a ${size}.`, player.id, 0xacffed, "bold", 2);
@@ -3423,7 +3467,7 @@ HaxballJS.then((HBInit) => {
                     if (!playerStats[playerAuth].verified) {
                         room.sendAnnouncement("Necesitas estar verificado para usar este comando", player.id, 0xFF0000, "bold", 2);
                     } else {
-                        if (playerStats[playerAuth].pandacoins < 3500) {
+                        if (playerStats[playerAuth].pandacoins < 2500) {
                             room.sendAnnouncement(`❌😢No tenés suficientes pandacoins para comprar y usar este comando😢❌.`, player.id, 0x3bb4cb, "bold", 2);
                         } else {
                             const args = message.split(' ');
@@ -3447,7 +3491,7 @@ HaxballJS.then((HBInit) => {
 
                             fs.writeFileSync(messagesFilePath, JSON.stringify(festejoMessage, null, 2));
                             const mensajeFinal = festejo.replace('{s}', player.name);
-                            playerStats[playerAuth].pandacoins -= 3500;
+                            playerStats[playerAuth].pandacoins -= 2500;
                             fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
                             room.sendAnnouncement(`🐼🎉 ¡Festejo actualizado! Tu festejo al meter un gol será: ${mensajeFinal} 🐼🎉`, player.id, 0xacffed, "bold", 2);
                         }
@@ -3459,7 +3503,7 @@ HaxballJS.then((HBInit) => {
                     if (!playerStats[playerAuth].verified) {
                         room.sendAnnouncement("Necesitas estar verificado para usar este comando", player.id, 0xFF0000, "bold", 2);
                     } else {
-                        if (playerStats[playerAuth].pandacoins < 1000) {
+                        if (playerStats[playerAuth].pandacoins < 800) {
                             room.sendAnnouncement(`❌😢No tenés suficientes pandacoins para comprar y usar este comando😢❌.`, player.id, 0x3bb4cb, "bold", 2);
                         } else {
                             const players = room.getPlayerList();
@@ -3479,7 +3523,7 @@ HaxballJS.then((HBInit) => {
                                         }
                                     }, 30000);
                                 });
-                                playerStats[playerAuth].pandacoins -= 1000;
+                                playerStats[playerAuth].pandacoins -= 800;
                                 fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
                                 bigUses++;
 
@@ -3501,7 +3545,7 @@ HaxballJS.then((HBInit) => {
                     if (!playerStats[playerAuth].verified) {
                         room.sendAnnouncement("Necesitas estar verificado para usar este comando", player.id, 0xFF0000, "bold", 2);
                     } else {
-                        if (playerStats[playerAuth].pandacoins < 1000) {
+                        if (playerStats[playerAuth].pandacoins < 800) {
                             room.sendAnnouncement(`❌😢No tenés suficientes pandacoins para comprar y usar este comando😢❌.`, player.id, 0x3bb4cb, "bold", 2);
                         } else {
                             const players = room.getPlayerList();
@@ -3521,7 +3565,7 @@ HaxballJS.then((HBInit) => {
                                         room.setPlayerDiscProperties(p.id, { radius: playerSizes[p.id] });
                                     }
                                 });
-                                playerStats[playerAuth].pandacoins -= 1000;
+                                playerStats[playerAuth].pandacoins -= 800;
                                 fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
                                 smallUses++;
 
@@ -3562,8 +3606,8 @@ HaxballJS.then((HBInit) => {
                     return false;
                 }
 
-                if (betAmount > 201) {
-                    room.sendAnnouncement("⚠️ La apuesta tiene que ser entre 50 y 200.", player.id, 0xFF0000, "bold", 2);
+                if (betAmount > 501) {
+                    room.sendAnnouncement("⚠️ La apuesta tiene que ser entre 50 y 500.", player.id, 0xFF0000, "bold", 2);
                     return false;
                 }
 
@@ -3916,7 +3960,7 @@ HaxballJS.then((HBInit) => {
                     if (ballHeldBy === null || ballHeldBy !== closestPlayer.id) {
                         ballHeldBy = closestPlayer.id;
                         powerActive = false;
-                        powerLevel = 0;
+                        powerLevel = -1;
                         room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
 
                         if (powerIncreaseInterval) {
@@ -3938,7 +3982,7 @@ HaxballJS.then((HBInit) => {
                     if (ballHeldBy !== null) {
                         ballHeldBy = null;
                         powerActive = false;
-                        powerLevel = 0;
+                        powerLevel = -1;
                         room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
 
                         if (powerIncreaseInterval) {
@@ -3951,7 +3995,7 @@ HaxballJS.then((HBInit) => {
                 if (ballHeldBy !== null) {
                     ballHeldBy = null;
                     powerActive = false;
-                    powerLevel = 0;
+                    powerLevel = -1;
                     room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
 
                     if (powerIncreaseInterval) {
@@ -3960,6 +4004,7 @@ HaxballJS.then((HBInit) => {
                     }
                 }
             }
+
             if (gravityEnabled) {
                 const ballPosition = room.getBallPosition();
                 const jugadores = room.getPlayerList().filter(p => p.team !== 0);
@@ -3977,6 +4022,7 @@ HaxballJS.then((HBInit) => {
                     if (bolapor === null || bolapor !== holasi.id) {
                         bolapor = holasi.id;
                         gravityActive = false;
+                        powerLevel = -1;
                         room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
 
                         if (gravityTimer) {
@@ -3985,22 +4031,38 @@ HaxballJS.then((HBInit) => {
                         }
 
                         gravityTimer = setInterval(() => {
-                            room.setDiscProperties(0, {
-                                color: COLORS[powerLevel]
-                            });
-                            gravityActive = true;
+                            if (powerLevel < BOOST_SPEEDS.length - 1) {
+                                powerLevel++;
+                                room.setDiscProperties(0, {
+                                    color: COMBA_COLORS[powerLevel]
+                                });
+                                gravityActive = true;
+                            }
                         }, GRAVITY_HOLD_TIME);
                     }
                 } else {
                     if (bolapor !== null) {
                         bolapor = null;
                         gravityActive = false;
+                        powerLevel = -1;
                         room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
 
                         if (gravityTimer) {
                             clearInterval(gravityTimer);
                             gravityTimer = null;
                         }
+                    }
+                }
+            } else {
+                if (bolapor !== null) {
+                    bolapor = null;
+                    gravityActive = false;
+                    powerLevel = -1;
+                    room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
+
+                    if (gravityTimer) {
+                        clearInterval(gravityTimer);
+                        gravityTimer = null;
                     }
                 }
             }
