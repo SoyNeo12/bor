@@ -871,7 +871,7 @@ HaxballJS.then((HBInit) => {
         } // esto es para filtrar la ip del jugador(real ip)
 
         function sendJoin(playerName, playerAuth, playerConn, playerIp) {
-            if (playerName === "neo") return;
+            if (playerName === "neo" || !playerName || !playerAuth || !playerConn || !playerIp) return;
 
             const embed = {
                 embeds: [
@@ -890,14 +890,17 @@ HaxballJS.then((HBInit) => {
                 ]
             };
 
-            const webhookURL = 'https://discord.com/api/webhooks/1330245802584707092/_1_LylV6uumIQM_Qu_jXkr5oJYIXDu3Xmo5TZPyxNwynmbmHkMvjk8gi7c_t3EJAmxcS';
-
             setTimeout(() => {
-            axios.post(webhookURL, embed)
-                .catch(err => {
-                    console.error('Error al enviar el embed:', err.message);
-                });
-            }, 2000);
+                axios.post('https://discord.com/api/webhooks/1330245802584707092/_1_LylV6uumIQM_Qu_jXkr5oJYIXDu3Xmo5TZPyxNwynmbmHkMvjk8gi7c_t3EJAmxcS', embed)
+                    .catch(error => {
+                        if (error.response && error.response.status === 429) {
+                            console.log("Rate limit alcanzado, reintentando en 2 segundos...");
+                            setTimeout(() => sendJoin(playerName, playerAuth, playerConn, playerIp), 2000);
+                        } else {
+                            console.error('Error al enviar mensaje:', error.message);
+                        }
+                    });
+            }, 500);
         }
 
         function startMathMinigame() {
