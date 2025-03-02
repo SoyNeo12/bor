@@ -2807,7 +2807,7 @@ HaxballJS.then((HBInit) => {
                 !/(https?:\/\/|www\.)/i.test(message)
             ) {
                 setTimeout(() => {
-                    sendMessages(message);
+                    sendMessages(`${player.name}: ${message}`);
                 }, 2000);
             } else {
                 if (message.trim() === "!") {
