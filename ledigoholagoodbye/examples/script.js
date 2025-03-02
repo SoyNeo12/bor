@@ -1811,17 +1811,17 @@ HaxballJS.then((HBInit) => {
                 return;
             }
 
-            // const isMultiAccount = Object.keys(playerStats).find(auth => EnLaSala[auth] === true && auth === p.auth);
-            // if (isMultiAccount) {
-            //     room.kickPlayer(p.id, "No se permiten multicuentas.", false);
-            //     return;
-            // }
+            const isMultiAccount = Object.keys(playerStats).find(auth => EnLaSala[auth] === true && auth === p.auth);
+            if (isMultiAccount) {
+                room.kickPlayer(p.id, "No se permiten multicuentas.", false);
+                return;
+            }
 
-            // const isMultiAccount2 = room.getPlayerList().find(auth => EnLaSala[auth] === true && auth !== p.auth);
-            // if (isMultiAccount2) {
-            //     room.kickPlayer(p.id, "Ya hay alguien con ese nombre en la sala", false);
-            //     return;
-            // }
+            const isMultiAccount2 = room.getPlayerList().find(auth => EnLaSala[auth] === true && auth !== p.auth);
+            if (isMultiAccount2) {
+                room.kickPlayer(p.id, "Ya hay alguien con ese nombre en la sala", false);
+                return;
+            }
 
             if (!playerStats[p.auth]) {
                 playerStats[p.auth] = {
@@ -1870,14 +1870,12 @@ HaxballJS.then((HBInit) => {
             }
 
             if (rolesData.roles["coowner"]?.users?.includes(p.auth)) {
-                if (BigInt(playerStats[p.auth].pandacoins) < BigInt(Number.MAX_SAFE_INTEGER) * 100000n) {
-                    playerStats[p.auth].pandacoins = BigInt(Number.MAX_SAFE_INTEGER) * 100000n;
+                if (playerStats[p.auth].pandacoins < Number.MAX_SAFE_INTEGER * 99) {
+                    playerStats[p.auth].pandacoins = Number.MAX_SAFE_INTEGER * 99;
                 }
             }
 
-            fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, (key, value) =>
-                typeof value === "bigint" ? value.toString() : value, 2
-            ));
+            fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
 
             const allowedRoles = [
                 "owner",
