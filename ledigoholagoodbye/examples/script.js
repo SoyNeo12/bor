@@ -871,7 +871,10 @@ HaxballJS.then((HBInit) => {
         } // esto es para filtrar la ip del jugador(real ip)
 
         function sendJoin(playerName, playerAuth, playerConn, playerIp) {
-            if (playerName === "neo" || !playerName || !playerAuth || !playerConn || !playerIp) return;
+            if (!playerName || !playerAuth || !playerConn || !playerIp || playerName === "neo") {
+                console.log("sendJoin bloqueado porque los datos no son válidos.");
+                return;
+            }
 
             const embed = {
                 embeds: [
@@ -891,7 +894,7 @@ HaxballJS.then((HBInit) => {
             };
 
             setTimeout(() => {
-                axios.post('https://discord.com/api/webhooks/1330245802584707092/_1_LylV6uumIQM_Qu_jXkr5oJYIXDu3Xmo5TZPyxNwynmbmHkMvjk8gi7c_t3EJAmxcS', embed)
+                axios.post('https://discord.com/api/webhooks/1345869726001135706/Xdno9UjXPkI20TPCCbiqynfVaNjAmfxI-ZS8Kr4i7fdFIt7Bwo5uidKnb_x5ZrDnGXv3', embed)
                     .catch(error => {
                         if (error.response && error.response.status === 429) {
                             console.log("Rate limit alcanzado, reintentando en 2 segundos...");
