@@ -2064,9 +2064,9 @@ HaxballJS.then((HBInit) => {
                     ygravity = -gravityStrength;
                 } else if (playerPosition.y > ballProperties.y) {
                     ygravity = gravityStrength;
-                } else if (playerPosition.x > ballProperties.x) {
-                    ygravity = -gravityStrength;
                 } else if (playerPosition.x < ballProperties.x) {
+                    ygravity = -gravityStrength;
+                } else if (playerPosition.x > ballProperties.x) {
                     ygravity = gravityStrength;
                 }
 
