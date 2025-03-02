@@ -12,7 +12,6 @@
     "@roamhq/wrtc": "^0.8.0",
     "axios": "^1.8.1",
     "canvas": "^3.1.0",
-    "chroma-js": "^3.1.2",
     "discord.js": "^14.18.0",
     "express": "^4.21.2",
     "form-data": "^4.0.2",
@@ -20,7 +19,6 @@
     "https": "^1.0.0",
     "https-proxy-agent": "^7.0.6",
     "path": "^0.12.7",
-    "superagent": "^10.1.1",
     "uuid": "^11.1.0"
   }
 }
