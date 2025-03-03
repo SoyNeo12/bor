@@ -3083,6 +3083,7 @@ HaxballJS.then((HBInit) => {
                         bolapor = null;
                         gravityActive = false;
                         offsideActive = false;
+                        powerLevel = -1;
                         room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
 
                         if (gravityTimer) {
