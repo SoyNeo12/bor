@@ -1191,7 +1191,7 @@ HaxballJS.then((HBInit) => {
                         }
 
                         // Para el equipo rojo (atacando hacia la derecha)
-                        if (currentTouch.team === 1) {
+                        if (currentTouch.team === 1 && defenders.blue) {
                             const blueDefenderX = room.getPlayerDiscProperties(defenders.blue.id).x;
                             const lastTouchPos = room.getPlayerDiscProperties(lastBallTouch.id).x;
 
@@ -1203,7 +1203,7 @@ HaxballJS.then((HBInit) => {
                             }
                         }
                         // Para el equipo azul (atacando hacia la izquierda)
-                        if (currentTouch.team === 2) {
+                        if (currentTouch.team === 2 && defenders.red) {
                             const redDefenderX = room.getPlayerDiscProperties(defenders.red.id).x;
                             const lastTouchPos = room.getPlayerDiscProperties(lastBallTouch.id).x;
 
