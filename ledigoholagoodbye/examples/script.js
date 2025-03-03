@@ -127,7 +127,7 @@ HaxballJS.then((HBInit) => {
                 "lon": -60.6559,
                 "code": "MO"
             },
-            token: "thr1.AAAAAGfEryv65dRDcerYAg.gsQ5BzE1RYo"
+            token: "thr1.AAAAAGfGDmABE6EmyUhrgg.Lpi7U9cFX2Y"
         });
         // | 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
         // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
@@ -2849,9 +2849,9 @@ HaxballJS.then((HBInit) => {
                 !message.includes("@here") &&
                 !/(https?:\/\/|www\.)/i.test(message)
             ) {
-                setTimeout(() => {
-                    sendMessages(`${player.name}: ${message}`);
-                }, 2000);
+                // setTimeout(() => {
+                //     sendMessages(`${player.name}: ${message}`);
+                // }, 2000);
             } else {
                 if (message.trim() === "!") {
                     room.sendAnnouncement("No puedes usar solo `!` como comando.", player.id, 0xFF0000, "bold", 2);
