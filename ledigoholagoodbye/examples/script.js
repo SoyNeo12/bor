@@ -105,7 +105,7 @@ function updateCanvasSize() {
         width = JMAP.width * 4;
         height = JMAP.height * 2.2;
     } else if (x7Active) {
-        width = JMAP.width * 6;
+        width = JMAP.width * 4;
         height = JMAP.height * 4;
     }
 
@@ -212,8 +212,8 @@ HaxballJS.then((HBInit) => {
         const palabrasCensuradas = ['puto', 'horrendos', 'cojido', 'cogido', 'violin', 'payaso', 'puta', 'sida', 'cancer', 'cancerigeno', 'son un asco', 'son muy malos', 'mono', 'negro de mierda', 'argensimios', 'trolo', 'sidoso', 'sidosos', 'retrasado mental', 'putas', 'putos', 'coger', 'garchar', 'sexo', 'down', 'autismo', 'd0wn', 'travesti', 'mueranse', 'chupame la pija', 'la concha de tu madre', 'suicidate', 'matate', 'pegate un tiro', 'son una mierda', 'gay', 'traba', 'violar', 'pija', 'pelotudo', 'chupar', 'chupala', 'chupa', 'verga', 'autista', 'mongolico', 'mogolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos', 'chupas', 'nazi', 'nasi']; const POWER_HOLD_TIME = 1800;
         const MODES = ['power', 'comba'];
         const BOOST_SPEEDS = [1.2, 1.5, 1.7, 2];
-        const COLORS = [0xf24d4d, 0xe01c1c, 0xc60000, 0xff6400];
-        const COMBA_COLORS = [0x73d2ff, 0x1999d6, 0x005781, 0xff00e4];
+        const COLORS = [0xff0000, 0xa40000, 0x6a0a0a, 0xff6400];
+        const COMBA_COLORS = [0xbd00ff, 0x8500b4, 0x57136f, 0xff00ff];
         const operators = ['+', '-', '*', '/', 'sqrt', '^', 'ln'];
         const playerRadius = 15;
         const inactivityThreshold = 15000;
@@ -230,7 +230,6 @@ HaxballJS.then((HBInit) => {
         let defenseTeam = null;
         let offsidePosition = null;
         let lastBallSide = null;
-        let lastDefenderMessageSent = false;
         let ballWasKicked = false;
         let offsideTimer = null;
         let isInProccesOffside = false;
@@ -1096,15 +1095,11 @@ HaxballJS.then((HBInit) => {
             const defenders = { red: null, blue: null };
             const players = room.getPlayerList().filter(player => player.team === 1 || player.team === 2);
 
-            let JMAP;
-            if (x5Active) JMAP = JSON.parse(mapaX5);
-            if (x7Active) JMAP = JSON.parse(mapaX7);
-
             // Línea límite para equipo azul
-            const BLUE_LIMIT_X = 950;
+            const BLUE_LIMIT_X = x5Active ? 950 : x7Active ? 1200 : 0;
 
             // Línea límite para equipo rojo
-            const RED_LIMIT_X = -950;
+            const RED_LIMIT_X = x5Active ? 0 : x7Active ? -1200 : 0;
 
             // Filtrar jugadores excluyendo porteros
             const redPlayers = players.filter(p => {
@@ -1126,20 +1121,18 @@ HaxballJS.then((HBInit) => {
 
             // Para el equipo rojo, encontrar el jugador más retrasado
             if (redPlayers.length > 0) {
-                defenders.red = redPlayers.reduce((prev, curr) => {
-                    const prevX = room.getPlayerDiscProperties(prev.id).x;
-                    const currX = room.getPlayerDiscProperties(curr.id).x;
-                    return currX < prevX ? curr : prev;
-                });
+                defenders.red = redPlayers.reduce((last, player) => {
+                    const playerX = room.getPlayerDiscProperties(player.id).x;
+                    return playerX < last.x ? player : last;
+                }, { x: BLUE_LIMIT_X });
             }
 
             // Para el equipo azul, encontrar el jugador más adelantado
             if (bluePlayers.length > 0) {
-                defenders.blue = bluePlayers.reduce((prev, curr) => {
-                    const prevX = room.getPlayerDiscProperties(prev.id).x;
-                    const currX = room.getPlayerDiscProperties(curr.id).x;
-                    return currX > prevX ? curr : prev;
-                });
+                defenders.blue = bluePlayers.reduce((last, player) => {
+                    const playerX = room.getPlayerDiscProperties(player.id).x;
+                    return playerX > last.x ? player : last;
+                }, { x: RED_LIMIT_X });
             }
 
             return defenders;
@@ -1221,10 +1214,6 @@ HaxballJS.then((HBInit) => {
         }
 
         function handleOffside(playerName, team, defenderX) {
-            let JMAP;
-            if (x5Active) JMAP = JSON.parse(mapaX5);
-            if (x7Active) JMAP = JSON.parse(mapaX7);
-
             if (isInProccesOffside) return;
             isInProccesOffside = true;
 
@@ -1418,7 +1407,6 @@ HaxballJS.then((HBInit) => {
             // Limpiar variables
             ballWasKicked = false;
             offsidePosition = null;
-            lastDefenderMessageSent = false;
             if (offsideTimer) {
                 clearTimeout(offsideTimer);
                 offsideTimer = null;
@@ -1544,6 +1532,11 @@ HaxballJS.then((HBInit) => {
                     {
                         name: "📍 Posición",
                         value: `X: ${Math.round(offsidePosition.x)}, Y: ${Math.round(offsidePosition.y)}`,
+                        inline: false
+                    },
+                    {
+                        name: "🗺 Mapa",
+                        value: x5Active ? "5v5" : x7Active ? "7v7" : "3v3",
                         inline: false
                     },
                     {
@@ -1976,11 +1969,11 @@ HaxballJS.then((HBInit) => {
                 room.startGame();
             }
 
-            if (players.length === 22) {
+            if (players.length === 20) {
                 room.sendAnnouncement("Hay 22 personas conectadas. Activados los slots exclusivos para VIPS y STAFF de Panda.", null, 0x00FF00, "bold", 2);
             }
 
-            if (players.length > 22) {
+            if (players.length > 20) {
                 if (!hasRole) {
                     room.kickPlayer(p.id, "Slots reservados solo para VIPS y el STAFF DE PANDA.", false);
                     return;
@@ -2009,7 +2002,7 @@ HaxballJS.then((HBInit) => {
                 room.stopGame();
             }
 
-            if (players.length === 21) {
+            if (players.length === 19) {
                 room.sendAnnouncement("Slots desactivados.", null, 0x00FF00, "bold", 2);
             }
 
@@ -2608,23 +2601,19 @@ HaxballJS.then((HBInit) => {
                 const defenders = getLastDefenders();
                 const ball = room.getDiscProperties(0);
 
-                let JMAP;
-                if (x5Active) JMAP = JSON.parse(mapaX5);
-                if (x7Active) JMAP = JSON.parse(mapaX7);
-
                 if (ball && defenders) {
                     if (ball.x < 0 && defenders.red) {
                         const redDefenderX = room.getPlayerDiscProperties(defenders.red.id).x;
 
                         room.setDiscProperties(6, {
                             x: redDefenderX,
-                            y: -476,
+                            y: x5Active ? -476 : x7Active ? -616 : 0,
                             color: 0xFF6B6B
                         });
 
                         room.setDiscProperties(7, {
                             x: redDefenderX,
-                            y: 476,
+                            y: x5Active ? 476 : x7Active ? 616 : 0,
                             color: 0xFF6B6B
                         });
 
@@ -2632,20 +2621,19 @@ HaxballJS.then((HBInit) => {
                         if (lastBallSide !== "left") {
                             room.sendAnnouncement("🔄 Discos movidos al último defensor del 🔴 RED", null, 0xFF6B6B, "bold");
                             lastBallSide = "left";
-                            lastDefenderMessageSent = true;
                         }
                     } else if (ball.x >= 0 && defenders.blue) {
                         const blueDefenderX = room.getPlayerDiscProperties(defenders.blue.id).x;
 
                         room.setDiscProperties(6, {
                             x: blueDefenderX,
-                            y: -476,
+                            y: x5Active ? -476 : x7Active ? -616 : 0,
                             color: 0x87CEEB
                         });
 
                         room.setDiscProperties(7, {
                             x: blueDefenderX,
-                            y: 476,
+                            y: x5Active ? 476 : x7Active ? 616 : 0,
                             color: 0x87CEEB
                         });
 
@@ -2653,7 +2641,6 @@ HaxballJS.then((HBInit) => {
                         if (lastBallSide !== "right") {
                             room.sendAnnouncement("🔄 Discos movidos al último defensor del 🔵 BLUE", null, 0x6B6BFF, "bold");
                             lastBallSide = "right";
-                            lastDefenderMessageSent = true;
                         }
                     }
                 }
@@ -3055,6 +3042,11 @@ HaxballJS.then((HBInit) => {
                     if (powerEnabled) {
                         room.sendAnnouncement(`✅👍 POWER ACTIVADO POR ${player.name}`, null, 0xff7bb5, "bold", 2);
                         offsideActive = false;
+                        bolapor = null;
+                        gravityActive = false;
+                        offsideActive = false;
+                        powerLevel = -1;
+                        gravityEnabled = false;
                     } else {
                         room.sendAnnouncement(`❌👎 POWER DESACTIVADO POR ${player.name}`, null, 0xd83264, "bold", 2);
                         ballHeldBy = null;
@@ -3078,6 +3070,10 @@ HaxballJS.then((HBInit) => {
                     if (gravityEnabled) {
                         room.sendAnnouncement(`✅👍 COMBA ACTIVADA POR ${player.name}`, null, 0xff7bb5, "bold", 2);
                         offsideActive = true;
+                        ballHeldBy = null;
+                        powerActive = false;
+                        powerLevel = -1;
+                        powerEnabled = false;
                     } else {
                         room.sendAnnouncement(`❌👎 COMBA DESACTIVADA POR ${player.name}`, null, 0xd83264, "bold", 2);
                         bolapor = null;
