@@ -213,7 +213,7 @@ HaxballJS.then((HBInit) => {
         const MODES = ['power', 'comba'];
         const BOOST_SPEEDS = [1.2, 1.5, 1.7, 2];
         const COLORS = [0xf24d4d, 0xe01c1c, 0xc60000, 0xff6400];
-        const COMBA_COLORS = [0x60ccff, 0x2eaeeb, 0x0094da, 0xff00e4];
+        const COMBA_COLORS = [0x73d2ff, 0x1999d6, 0x005781, 0xff00e4];
         const operators = ['+', '-', '*', '/', 'sqrt', '^', 'ln'];
         const playerRadius = 15;
         const inactivityThreshold = 15000;
@@ -718,7 +718,6 @@ HaxballJS.then((HBInit) => {
 
             if (currentMode === 'power') {
                 powerEnabled = true;
-                gravityEnabled = false;
                 offsideActive = false;
                 room.sendAnnouncement('Este partido se juega con: 🤩💣POWER (SOLO)💣🤩.', null, 0xff7759, "bold", 2);
             } else if (currentMode === 'comba') {
