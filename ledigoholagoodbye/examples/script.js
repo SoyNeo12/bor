@@ -1095,10 +1095,8 @@ HaxballJS.then((HBInit) => {
             const defenders = { red: null, blue: null };
             const players = room.getPlayerList().filter(player => player.team === 1 || player.team === 2);
 
-            // Línea límite para equipo azul
+            // Límites de cada campo
             const BLUE_LIMIT_X = x5Active ? 950 : x7Active ? 1200 : 0;
-
-            // Línea límite para equipo rojo
             const RED_LIMIT_X = x5Active ? 0 : x7Active ? -1200 : 0;
 
             // Filtrar jugadores excluyendo porteros
@@ -1106,33 +1104,28 @@ HaxballJS.then((HBInit) => {
                 const pos = room.getPlayerDiscProperties(p.id);
                 return p.team === 1 &&
                     p.id !== gkred[0]?.id &&
-                    pos.x >= RED_LIMIT_X && // Dentro del campo
-                    pos.x <= 0; // En su mitad del campo
+                    pos.x >= RED_LIMIT_X && pos.x <= 0; // En su mitad del campo
             });
 
-            // Para equipo azul (defensores más cercanos a su arco)
             const bluePlayers = players.filter(p => {
                 const pos = room.getPlayerDiscProperties(p.id);
                 return p.team === 2 &&
                     p.id !== gkblue[0]?.id &&
-                    pos.x <= BLUE_LIMIT_X && // No considerar defensas más allá de x=950
-                    pos.x >= 0; // En su mitad del campo
+                    pos.x >= 0 && pos.x <= BLUE_LIMIT_X; // En su mitad del campo
             });
 
-            // Para el equipo rojo, encontrar el jugador más retrasado
+            // 🔴 Equipo rojo: encontrar el jugador más atrasado (menor X)
             if (redPlayers.length > 0) {
                 defenders.red = redPlayers.reduce((last, player) => {
-                    const playerX = room.getPlayerDiscProperties(player.id).x;
-                    return playerX < last.x ? player : last;
-                }, { x: BLUE_LIMIT_X });
+                    return room.getPlayerDiscProperties(player.id).x < room.getPlayerDiscProperties(last.id).x ? player : last;
+                }, redPlayers[0]); // Comenzamos con el primer jugador válido
             }
 
-            // Para el equipo azul, encontrar el jugador más adelantado
+            // 🔵 Equipo azul: encontrar el jugador más adelantado (mayor X)
             if (bluePlayers.length > 0) {
                 defenders.blue = bluePlayers.reduce((last, player) => {
-                    const playerX = room.getPlayerDiscProperties(player.id).x;
-                    return playerX > last.x ? player : last;
-                }, { x: RED_LIMIT_X });
+                    return room.getPlayerDiscProperties(player.id).x > room.getPlayerDiscProperties(last.id).x ? player : last;
+                }, bluePlayers[0]); // Comenzamos con el primer jugador válido
             }
 
             return defenders;
@@ -1163,18 +1156,19 @@ HaxballJS.then((HBInit) => {
             if (room.getDiscProperties(0).x === 0 && room.getDiscProperties(0).y === 0) return;
             if (x3Active) return;
             if (isInProccesOffside) return;
+
             const defenders = getLastDefenders();
             const currentTouch = getLastTouch();
 
             // Solo verificar si hay un nuevo toque del balón
             if (currentTouch && currentTouch !== lastBallTouch) {
-                // Solo verificar si el último toque fue diferente
+                // Solo verificar si el último toque fue diferente y el pase fue intencional
                 if (lastBallTouch && currentTouch.id !== lastBallTouch.id) {
                     // Si es pase entre el mismo equipo
                     if (currentTouch.team === lastBallTouch.team) {
                         const receiverProperties = room.getPlayerDiscProperties(currentTouch.id);
 
-                        // Ignorar si el receptor es portero o es el último defensor
+                        // Ignorar si el receptor es portero o el último defensor
                         if (currentTouch.id === gkred[0]?.id ||
                             currentTouch.id === gkblue[0]?.id ||
                             currentTouch.id === defenders.red?.id ||
@@ -1183,27 +1177,22 @@ HaxballJS.then((HBInit) => {
                             return;
                         }
 
-                        // Para el equipo rojo (atacando hacia la derecha)
+                        // Para el equipo rojo (atacando a la derecha)
                         if (currentTouch.team === 1 && defenders.blue) {
                             const blueDefenderX = room.getPlayerDiscProperties(defenders.blue.id).x;
-                            const lastTouchPos = room.getPlayerDiscProperties(lastBallTouch.id).x;
 
-                            // Verificar que el que dio el pase no sea el último defensor
-                            if (lastBallTouch.id !== defenders.blue.id &&
-                                receiverProperties.x > blueDefenderX &&
-                                receiverProperties.x > lastTouchPos) {
+                            // Verificar offside
+                            if (receiverProperties.x > blueDefenderX) {
                                 handleOffside(currentTouch.name, "RED", blueDefenderX);
                             }
                         }
-                        // Para el equipo azul (atacando hacia la izquierda)
+
+                        // Para el equipo azul (atacando a la izquierda)
                         if (currentTouch.team === 2 && defenders.red) {
                             const redDefenderX = room.getPlayerDiscProperties(defenders.red.id).x;
-                            const lastTouchPos = room.getPlayerDiscProperties(lastBallTouch.id).x;
 
-                            // Verificar que el que dio el pase no sea el último defensor
-                            if (lastBallTouch.id !== defenders.red.id &&
-                                receiverProperties.x < redDefenderX &&
-                                receiverProperties.x < lastTouchPos) {
+                            // Verificar offside
+                            if (receiverProperties.x < redDefenderX) {
                                 handleOffside(currentTouch.name, "BLUE", redDefenderX);
                             }
                         }
@@ -1264,7 +1253,6 @@ HaxballJS.then((HBInit) => {
                 });
 
                 gravityEnabled = false;
-                powerEnabled = false;
 
                 room.setDiscProperties(5, {
                     x: ballProperties.x,
@@ -2557,6 +2545,10 @@ HaxballJS.then((HBInit) => {
             handleAfkPlayers();
             kickAFKs();
 
+            let JMAP;
+            if (x5Active) JMAP = JSON.parse(mapaX5);
+            if (x7Active) JMAP = JSON.parse(mapaX7);
+
             if (!x3Active) {
                 if (offsideActive) {
                     if (isInProccesOffside && offsidePosition) {
@@ -2571,7 +2563,37 @@ HaxballJS.then((HBInit) => {
                             Math.pow(ball.y - forceField.y, 2)
                         );
 
-                        // Si la pelota sale del radio y NO fue pateada, devolverla
+                        // Obtener último jugador que cometió el offside
+                        const offsidePlayer = lastBallTouch;
+                        if (!offsidePlayer) return;
+
+                        // Determinar la línea de gol según el equipo y el tamaño del mapa
+                        let goalLine = 0;
+                        if (offsidePlayer.team === 1) {
+                            goalLine = x5Active ? 950 : x7Active ? 1200 : 0; // Arco derecho
+                        } else if (offsidePlayer.team === 2) {
+                            goalLine = x5Active ? -950 : x7Active ? -1200 : 0; // Arco izquierdo
+                        }
+
+                        const margen = 10;
+
+                        // Si la pelota entra en el arco tras un offside, anular gol
+                        if (Math.abs(ball.x - goalLine) < margen) {
+                            room.sendAnnouncement("⚠️ Gol anulado por offside", null, 0xFF0000, "bold");
+
+                            room.setDiscProperties(0, {
+                                x: offsidePosition.x,
+                                y: offsidePosition.y,
+                                xspeed: 0,
+                                yspeed: 0,
+                                color: 0xFFA07A
+                            });
+
+                            isInProccesOffside = false;
+                            ballWasKicked = false;
+                        }
+
+                        // Si la pelota sale del radio del forceField y NO fue pateada, devolverla
                         if (distance > forceField.radius && !ballWasKicked) {
                             room.setDiscProperties(0, {
                                 x: offsidePosition.x,
@@ -2581,13 +2603,12 @@ HaxballJS.then((HBInit) => {
                                 color: 0xFFA07A
                             });
                         }
-                        // Si la pelota sale del radio y fue pateada, resetear
+                        // Si la pelota sale del radio del forceField y fue pateada, resetear estado
                         else if (distance > forceField.radius && ballWasKicked) {
                             disableForceField();
                             isInProccesOffside = false;
                             ballWasKicked = false;
                             gravityEnabled = true;
-                            powerEnabled = true;
                             if (offsideTimer) {
                                 clearTimeout(offsideTimer);
                                 offsideTimer = null;
@@ -2602,7 +2623,7 @@ HaxballJS.then((HBInit) => {
                 const ball = room.getDiscProperties(0);
 
                 if (ball && defenders) {
-                    if (ball.x < 0 && defenders.red) {
+                    if (ball.x < -5 && defenders.red) {  // Se agregó margen para evitar errores en x=0
                         const redDefenderX = room.getPlayerDiscProperties(defenders.red.id).x;
 
                         room.setDiscProperties(6, {
@@ -2617,12 +2638,12 @@ HaxballJS.then((HBInit) => {
                             color: 0xFF6B6B
                         });
 
-
                         if (lastBallSide !== "left") {
                             room.sendAnnouncement("🔄 Discos movidos al último defensor del 🔴 RED", null, 0xFF6B6B, "bold");
                             lastBallSide = "left";
                         }
-                    } else if (ball.x >= 0 && defenders.blue) {
+                    }
+                    else if (ball.x > 5 && defenders.blue) { // Se agregó margen para evitar errores en x=0
                         const blueDefenderX = room.getPlayerDiscProperties(defenders.blue.id).x;
 
                         room.setDiscProperties(6, {
@@ -2637,7 +2658,6 @@ HaxballJS.then((HBInit) => {
                             color: 0x87CEEB
                         });
 
-                        // Enviar mensaje solo cuando cambia de lado
                         if (lastBallSide !== "right") {
                             room.sendAnnouncement("🔄 Discos movidos al último defensor del 🔵 BLUE", null, 0x6B6BFF, "bold");
                             lastBallSide = "right";
