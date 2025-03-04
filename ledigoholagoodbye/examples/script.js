@@ -2623,7 +2623,7 @@ HaxballJS.then((HBInit) => {
                 const ball = room.getDiscProperties(0);
 
                 if (ball && defenders) {
-                    if (ball.x < -5 && defenders.red) {  // Se agregó margen para evitar errores en x=0
+                    if (ball.x < 0 && defenders.red) {  // Se agregó margen para evitar errores en x=0
                         const redDefenderX = room.getPlayerDiscProperties(defenders.red.id).x;
 
                         room.setDiscProperties(6, {
@@ -2639,11 +2639,11 @@ HaxballJS.then((HBInit) => {
                         });
 
                         if (lastBallSide !== "left") {
-                            room.sendAnnouncement("🔄 Discos movidos al último defensor del 🔴 RED", null, 0xFF6B6B, "bold");
+                            room.sendAnnouncement(`🔄 Discos movidos al último defensor del 🔴 RED (${defenders.red.name})`, null, 0xFF6B6B, "bold");
                             lastBallSide = "left";
                         }
                     }
-                    else if (ball.x > 5 && defenders.blue) { // Se agregó margen para evitar errores en x=0
+                    else if (ball.x > 0 && defenders.blue) {
                         const blueDefenderX = room.getPlayerDiscProperties(defenders.blue.id).x;
 
                         room.setDiscProperties(6, {
@@ -2659,7 +2659,7 @@ HaxballJS.then((HBInit) => {
                         });
 
                         if (lastBallSide !== "right") {
-                            room.sendAnnouncement("🔄 Discos movidos al último defensor del 🔵 BLUE", null, 0x6B6BFF, "bold");
+                            room.sendAnnouncement(`🔄 Discos movidos al último defensor del 🔵 BLUE (${defenders.blue.name})`, null, 0x6B6BFF, "bold");
                             lastBallSide = "right";
                         }
                     }
