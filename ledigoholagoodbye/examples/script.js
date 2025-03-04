@@ -103,7 +103,7 @@ function updateCanvasSize() {
 
     if (x5Active) {
         width = JMAP.width * 4;
-        height = JMAP.height * 2.2;
+        height = JMAP.height * 3.2;
     } else if (x7Active) {
         width = JMAP.width * 4;
         height = JMAP.height * 4;
@@ -2061,7 +2061,8 @@ HaxballJS.then((HBInit) => {
                 room.setDiscProperties(0, {
                     xspeed: newVelocity.xspeed,
                     yspeed: newVelocity.yspeed,
-                    ygravity: ygravity
+                    ygravity: ygravity,
+                    color: NORMAL_BALL_COLOR
                 });
 
                 setTimeout(() => {
@@ -2088,7 +2089,7 @@ HaxballJS.then((HBInit) => {
                 const ballProperties = room.getDiscProperties(0);
                 const playerPosition = player.position;
 
-                const kickPower = 3;
+                const kickPower = 2.3;
 
                 let xspeed = ballProperties.xspeed * kickPower;
                 let yspeed = ballProperties.yspeed * kickPower;
@@ -2107,12 +2108,22 @@ HaxballJS.then((HBInit) => {
                 room.setDiscProperties(0, {
                     xspeed: xspeed,
                     yspeed: yspeed,
-                    ygravity: ygravity
+                    ygravity: ygravity,
+                    color: NORMAL_BALL_COLOR
                 });
 
                 setTimeout(() => {
                     room.setDiscProperties(0, { ygravity: 0 });
                 }, 2000);
+
+                isInProccesOffside = false;
+                gravityActive = false;
+                bolapor = null;
+                powerLevel = -1;
+                if (gravityTimer) {
+                    clearInterval(gravityTimer);
+                    gravityTimer = null;
+                }
             }
 
             activities[player.id] = Date.now();
@@ -2606,7 +2617,6 @@ HaxballJS.then((HBInit) => {
                         // Si la pelota sale del radio del forceField y fue pateada, resetear estado
                         else if (distance > forceField.radius && ballWasKicked) {
                             disableForceField();
-                            isInProccesOffside = false;
                             ballWasKicked = false;
                             gravityEnabled = true;
                             if (offsideTimer) {
