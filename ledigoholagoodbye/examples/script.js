@@ -6,11 +6,13 @@ const FormData = require('form-data');
 const { v4: uuidv4 } = require('uuid');
 const { createCanvas } = require('canvas');
 
+require("dotenv").config();
+
 const mapaX3 = fs.readFileSync('./examples/maps/mapaX3.hbs', 'utf-8');
 const mapaX5 = fs.readFileSync('./examples/maps/mapaX5.hbs', 'utf-8');
 const mapaX7 = fs.readFileSync('./examples/maps/mapaX7.hbs', 'utf-8');
 
-const mensajesJSON = require("./mensajes.json");
+const mensajesJSON = require("../mensajes.json");
 const playersDir = './players';
 const playersFilePath = `${playersDir}/players.json`;
 const rolesFilePath = path.join(__dirname, 'roles.json');
@@ -80,7 +82,7 @@ if (fs.existsSync(messagesFilePath)) {
     fs.writeFileSync(messagesFilePath, JSON.stringify({}));
 }
 
-const despedidasJSON = require('./despedidas.json');
+const despedidasJSON = require('../despedidas.json');
 
 let roomLink = '';
 let x3Active = false;
@@ -101,25 +103,20 @@ function updateCanvasSize() {
     if (x5Active) JMAP = JSON.parse(mapaX5);
     if (x7Active) JMAP = JSON.parse(mapaX7);
 
-    let scale = 0;
     let width, height;
 
     if (x5Active) {
         width = JMAP.width * 4;
         height = JMAP.height * 4;
-        scale = 4;
     } else if (x7Active) {
         width = JMAP.width * 4;
         height = JMAP.height * 4;
-        scale = 4;
     }
 
     // Crear nuevo canvas con las dimensiones actualizadas
     const { canvas: newCanvas, ctx: newCtx } = initCanvas(width, height);
     canvas = newCanvas;
     ctx = newCtx;
-
-    return { scale };
 }
 
 HaxballJS.then((HBInit) => {
@@ -134,7 +131,7 @@ HaxballJS.then((HBInit) => {
                 "lon": -60.6559,
                 "code": "MO"
             },
-            token: "thr1.AAAAAGfHtctuobf1jrgzFg.G5uyNZxLcYk"
+            token: "thr1.AAAAAGfKMva8XJx5xVef9w.SPDjrPqD-jo"
         });
         // | 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
         // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
@@ -1398,31 +1395,36 @@ HaxballJS.then((HBInit) => {
                 }
             }
 
-            let goalPosts;
-
-            if (x5Active) {
-                goalPosts = [
-                    { x: 950, y: 90, color: "2226a7" },
-                    { x: 950, y: -90, color: "2226a7" },
-                    { x: -950, y: 90, color: "aa2424" },
-                    { x: -950, y: -90, color: "aa2424" }
-                ];
-            } else if (x7Active) {
-                goalPosts = [
-                    { x: 1200, y: 90, color: "2226a7" },
-                    { x: 1200, y: -90, color: "2226a7" },
-                    { x: -1200, y: 90, color: "aa2424" },
-                    { x: -1200, y: -90, color: "aa2424" }
-                ];
-            }
-
-            goalPosts.forEach((post, index) => {
-                room.setDiscProperties(index + 1, {
-                    x: post.x,
-                    y: post.y,
-                    color: post.color
+            if (JMAP.discs[1] && JMAP.discs[2] && JMAP.discs[3] && JMAP.discs[4]) {
+                // Restaurar discos 1, 2, 3 y 4 a su estado original
+                room.setDiscProperties(1, {
+                    x: JMAP.discs[1].pos[0],
+                    y: JMAP.discs[1].pos[1],
+                    radius: JMAP.discs[1].radius,
+                    color: JMAP.discs[1].color
                 });
-            });
+
+                room.setDiscProperties(2, {
+                    x: JMAP.discs[2].pos[0],
+                    y: JMAP.discs[2].pos[1],
+                    radius: JMAP.discs[2].radius,
+                    color: JMAP.discs[2].color
+                });
+
+                room.setDiscProperties(3, {
+                    x: JMAP.discs[3].pos[0],
+                    y: JMAP.discs[3].pos[1],
+                    radius: JMAP.discs[3].radius,
+                    color: JMAP.discs[3].color
+                });
+
+                room.setDiscProperties(4, {
+                    x: JMAP.discs[4].pos[0],
+                    y: JMAP.discs[4].pos[1],
+                    radius: JMAP.discs[4].radius,
+                    color: JMAP.discs[4].color
+                });
+            }
 
             // Limpiar variables
             ballWasKicked = false;
@@ -1437,7 +1439,9 @@ HaxballJS.then((HBInit) => {
         }
 
         function drawField() {
-            const { scale } = updateCanvasSize(); // Actualizar tamaño según el mapa activo
+            const scale = 2;
+
+            updateCanvasSize();
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = "#555555";
@@ -1617,7 +1621,7 @@ HaxballJS.then((HBInit) => {
             if (x5Active) JMAP = JSON.parse(mapaX5);
             if (x7Active) JMAP = JSON.parse(mapaX7);
 
-            const scale = 4; // Ajustar la escala a 4
+            const scale = 2; // Ajustar la escala a 4
 
             // Dibujar los discos del mapa primero
             if (JMAP.discs) {
@@ -2156,7 +2160,6 @@ HaxballJS.then((HBInit) => {
                     room.setDiscProperties(0, { ygravity: 0 });
                 }, 2000);
 
-                isInProccesOffside = false;
                 gravityActive = false;
                 bolapor = null;
                 powerLevel = -1;
@@ -2592,6 +2595,7 @@ HaxballJS.then((HBInit) => {
 
         room.onGameTick = () => {
             if (room.getBallPosition().x === 0) return;
+
             handleAfkPlayers();
             kickAFKs();
 
@@ -2648,31 +2652,19 @@ HaxballJS.then((HBInit) => {
                                 cMask: offsidePlayer.team === 1 ? cf.red : cf.blue
                             });
 
-                            let goalPosts;
-
-                            if (x5Active) {
-                                goalPosts = [
-                                    { x: 950, y: 90, color: "2226a7" },
-                                    { x: 950, y: -90, color: "2226a7" },
-                                    { x: -950, y: 90, color: "aa2424" },
-                                    { x: -950, y: -90, color: "aa2424" }
-                                ];
-                            } else if (x7Active) {
-                                goalPosts = [
-                                    { x: 1200, y: 90, color: "2226a7" },
-                                    { x: 1200, y: -90, color: "2226a7" },
-                                    { x: -1200, y: 90, color: "aa2424" },
-                                    { x: -1200, y: -90, color: "aa2424" }
-                                ];
+                            if (JMAP && JMAP.discs) {
+                                // Restaurar discos 1, 2, 3 y 4 a su estado original
+                                for (let i = 1; i <= 4; i++) {
+                                    if (JMAP.discs[i]) {
+                                        room.setDiscProperties(i, {
+                                            x: JMAP.discs[i].pos[0],
+                                            y: JMAP.discs[i].pos[1],
+                                            radius: JMAP.discs[i].radius,
+                                            color: JMAP.discs[i].color
+                                        });
+                                    }
+                                }
                             }
-
-                            goalPosts.forEach((post, index) => {
-                                room.setDiscProperties(index + 1, {
-                                    x: post.x,
-                                    y: post.y,
-                                    color: post.color
-                                });
-                            });
 
                             isInProccesOffside = false;
                             ballWasKicked = false;
@@ -2692,32 +2684,21 @@ HaxballJS.then((HBInit) => {
                                 color: 0xFFA07A
                             });
 
-                            let goalPosts;
-
-                            if (x5Active) {
-                                goalPosts = [
-                                    { x: 950, y: 90, color: "2226a7" },
-                                    { x: 950, y: -90, color: "2226a7" },
-                                    { x: -950, y: 90, color: "aa2424" },
-                                    { x: -950, y: -90, color: "aa2424" }
-                                ];
-                            } else if (x7Active) {
-                                goalPosts = [
-                                    { x: 1200, y: 90, color: "2226a7" },
-                                    { x: 1200, y: -90, color: "2226a7" },
-                                    { x: -1200, y: 90, color: "aa2424" },
-                                    { x: -1200, y: -90, color: "aa2424" }
-                                ];
+                            if (JMAP && JMAP.discs) {
+                                // Restaurar discos 1, 2, 3 y 4 a su estado original
+                                for (let i = 1; i <= 4; i++) {
+                                    if (JMAP.discs[i]) {
+                                        room.setDiscProperties(i, {
+                                            x: JMAP.discs[i].pos[0],
+                                            y: JMAP.discs[i].pos[1],
+                                            radius: JMAP.discs[i].radius,
+                                            color: JMAP.discs[i].color
+                                        });
+                                    }
+                                }
                             }
-
-                            goalPosts.forEach((post, index) => {
-                                room.setDiscProperties(index + 1, {
-                                    x: post.x,
-                                    y: post.y,
-                                    color: post.color
-                                });
-                            });
                         }
+
                         // Si la pelota sale del radio del forceField y fue pateada, resetear estado
                         else if (distance > forceField.radius && ballWasKicked) {
                             disableForceField();
@@ -2756,8 +2737,7 @@ HaxballJS.then((HBInit) => {
                             room.sendAnnouncement(`🔄 Discos movidos al último defensor del 🔴 RED (${defenders.red.name})`, null, 0xFF6B6B, "bold");
                             lastBallSide = "left";
                         }
-                    }
-                    else if (ball.x > 0 && defenders.blue) {
+                    } else if (ball.x > 0 && defenders.blue) {
                         const blueDefenderX = room.getPlayerDiscProperties(defenders.blue.id).x;
 
                         room.setDiscProperties(6, {
