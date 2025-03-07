@@ -80,7 +80,7 @@ if (fs.existsSync(messagesFilePath)) {
     fs.writeFileSync(messagesFilePath, JSON.stringify({}));
 }
 
-const despedidasJSON = require('../despedidas.json');
+const despedidasJSON = require('./despedidas.json');
 
 let roomLink = '';
 let x3Active = false;
