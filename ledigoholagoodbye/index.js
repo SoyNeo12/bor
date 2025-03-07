@@ -1,25 +1,36 @@
-require('./examples/script');
-require('./examples/discord/iniciar');
-
 const { exec } = require("child_process");
-const packageName = "haxball.js";
+const packageJson = require("./package.json");
 
 function checkForUpdates() {
-    exec(`npm show ${packageName} version`, (error, latestVersion) => {
-        if (error) {
-            console.error("❌ Error al verificar la versión:", error);
-            return;
-        }
+    const dependencies = packageJson.dependencies;
+    let allUpToDate = true;
 
-        latestVersion = latestVersion.trim();
-        const installedVersion = require("./examples/node_modules/haxball.js/package.json").version;
+    Object.keys(dependencies).forEach(packageName => {
+        exec(`npm show ${packageName} version`, (error, latestVersion) => {
+            if (error) {
+                console.error(`❌ Error al verificar la versión de ${packageName}:`, error);
+                return;
+            }
 
-        if (installedVersion !== latestVersion) {
-            console.log(`🚀 Nueva versión disponible: ${latestVersion} (actualmente tienes ${installedVersion})`);
-            console.log("Para actualizar, ejecuta: npm update haxball.js");
-        } else {
-            console.log("✅ Estás usando la última versión de haxball.js");
-        }
+            latestVersion = latestVersion.trim();
+            const installedVersion = dependencies[packageName].replace("^", "");
+
+            if (installedVersion !== latestVersion) {
+                console.log(`Nueva versión disponible de ${packageName}: ${latestVersion} (actualmente tienes ${installedVersion})`);
+                console.log(`Para actualizar ${packageName}, ejecuta: npm update ${packageName}`);
+                allUpToDate = false;
+            }
+
+            if (Object.keys(dependencies).indexOf(packageName) === Object.keys(dependencies).length - 1) {
+                if (allUpToDate) {
+                    console.log("✅ Todos los paquetes están actualizados");
+                    setTimeout(() => {
+                        require('./examples/script');
+                        require('./examples/discord/iniciar');
+                    }, 2000);
+                }
+            }
+        });
     });
 }
 
