@@ -6,8 +6,6 @@ const FormData = require('form-data');
 const { v4: uuidv4 } = require('uuid');
 const { createCanvas } = require('canvas');
 
-require("dotenv").config();
-
 const mapaX3 = fs.readFileSync('./examples/maps/mapaX3.hbs', 'utf-8');
 const mapaX5 = fs.readFileSync('./examples/maps/mapaX5.hbs', 'utf-8');
 const mapaX7 = fs.readFileSync('./examples/maps/mapaX7.hbs', 'utf-8');
@@ -1160,6 +1158,7 @@ HaxballJS.then((HBInit) => {
             if (room.getDiscProperties(0).x === 0 && room.getDiscProperties(0).y === 0) return;
             if (x3Active) return;
             if (isInProccesOffside) return;
+            if (!offsideActive) return;
 
             const defenders = getLastDefenders();
             const currentTouch = getLastTouch();
@@ -1395,35 +1394,17 @@ HaxballJS.then((HBInit) => {
                 }
             }
 
-            if (JMAP.discs[1] && JMAP.discs[2] && JMAP.discs[3] && JMAP.discs[4]) {
-                // Restaurar discos 1, 2, 3 y 4 a su estado original
-                room.setDiscProperties(1, {
-                    x: JMAP.discs[1].pos[0],
-                    y: JMAP.discs[1].pos[1],
-                    radius: JMAP.discs[1].radius,
-                    color: JMAP.discs[1].color
-                });
-
-                room.setDiscProperties(2, {
-                    x: JMAP.discs[2].pos[0],
-                    y: JMAP.discs[2].pos[1],
-                    radius: JMAP.discs[2].radius,
-                    color: JMAP.discs[2].color
-                });
-
-                room.setDiscProperties(3, {
-                    x: JMAP.discs[3].pos[0],
-                    y: JMAP.discs[3].pos[1],
-                    radius: JMAP.discs[3].radius,
-                    color: JMAP.discs[3].color
-                });
-
-                room.setDiscProperties(4, {
-                    x: JMAP.discs[4].pos[0],
-                    y: JMAP.discs[4].pos[1],
-                    radius: JMAP.discs[4].radius,
-                    color: JMAP.discs[4].color
-                });
+            if (JMAP && JMAP.discs) {
+                for (let i = 1; i <= 4; i++) {
+                    if (JMAP.discs[i]) {
+                        room.setDiscProperties(i, {
+                            x: JMAP.discs[i].pos[0],
+                            y: JMAP.discs[i].pos[1],
+                            radius: JMAP.discs[i].radius,
+                            color: JMAP.discs[i].color
+                        });
+                    }
+                }
             }
 
             // Limpiar variables
@@ -1434,7 +1415,7 @@ HaxballJS.then((HBInit) => {
                 offsideTimer = null;
             }
 
-            gravityEnabled = true;
+            if (!powerEnabled) gravityEnabled = true;
             if (isInProccesOffside) isInProccesOffside = false;
         }
 
@@ -2133,7 +2114,7 @@ HaxballJS.then((HBInit) => {
                 const ballProperties = room.getDiscProperties(0);
                 const playerPosition = player.position;
 
-                const kickPower = 2.3;
+                const kickPower = 2.4;
 
                 let xspeed = ballProperties.xspeed * kickPower;
                 let yspeed = ballProperties.yspeed * kickPower;
@@ -2167,6 +2148,8 @@ HaxballJS.then((HBInit) => {
                     clearInterval(gravityTimer);
                     gravityTimer = null;
                 }
+
+                disableForceField();
             }
 
             activities[player.id] = Date.now();
@@ -2629,12 +2612,12 @@ HaxballJS.then((HBInit) => {
                             goalLine = x5Active ? -950 : x7Active ? -1200 : 0; // Arco izquierdo
                         }
 
-                        const margen = 10;
+                        const margen = 5;
 
                         const cf = room.CollisionFlags;
 
                         // Si la pelota entra en el arco tras un offside, anular gol
-                        if (Math.abs(ball.x - goalLine) < margen) {
+                        if (Math.abs(ball.x - goalLine) < margen && ballWasKicked) {
                             room.sendAnnouncement("⚠️ Gol anulado por offside", null, 0xFF0000, "bold");
 
                             room.setDiscProperties(0, {
@@ -2666,7 +2649,7 @@ HaxballJS.then((HBInit) => {
                                 }
                             }
 
-                            isInProccesOffside = false;
+                            isInProccesOffside = true;
                             ballWasKicked = false;
                             if (offsideTimer) {
                                 clearTimeout(offsideTimer);
@@ -2697,64 +2680,52 @@ HaxballJS.then((HBInit) => {
                                     }
                                 }
                             }
+                            checkOffSide();
                         }
 
-                        // Si la pelota sale del radio del forceField y fue pateada, resetear estado
-                        else if (distance > forceField.radius && ballWasKicked) {
-                            disableForceField();
-                            ballWasKicked = false;
-                            gravityEnabled = true;
-                            if (offsideTimer) {
-                                clearTimeout(offsideTimer);
-                                offsideTimer = null;
+                        // Obtener los últimos defensores
+                        const defenders = getLastDefenders();
+
+                        if (ball && defenders) {
+                            if (ball.x < 0 && defenders.red) {
+                                const redDefenderX = room.getPlayerDiscProperties(defenders.red.id).x;
+
+                                room.setDiscProperties(6, {
+                                    x: redDefenderX,
+                                    y: x5Active ? -476 : x7Active ? -616 : 0,
+                                    color: 0xFF6B6B
+                                });
+
+                                room.setDiscProperties(7, {
+                                    x: redDefenderX,
+                                    y: x5Active ? 476 : x7Active ? 616 : 0,
+                                    color: 0xFF6B6B
+                                });
+
+                                if (lastBallSide !== "left") {
+                                    room.sendAnnouncement(`🔄 Discos movidos al último defensor del 🔴 RED (${defenders.red.name})`, null, 0xFF6B6B, "bold");
+                                    lastBallSide = "left";
+                                }
+                            } else if (ball.x > 0 && defenders.blue) {
+                                const blueDefenderX = room.getPlayerDiscProperties(defenders.blue.id).x;
+
+                                room.setDiscProperties(6, {
+                                    x: blueDefenderX,
+                                    y: x5Active ? -476 : x7Active ? -616 : 0,
+                                    color: 0x87CEEB
+                                });
+
+                                room.setDiscProperties(7, {
+                                    x: blueDefenderX,
+                                    y: x5Active ? 476 : x7Active ? 616 : 0,
+                                    color: 0x87CEEB
+                                });
+
+                                if (lastBallSide !== "right") {
+                                    room.sendAnnouncement(`🔄 Discos movidos al último defensor del 🔵 BLUE (${defenders.blue.name})`, null, 0x6B6BFF, "bold");
+                                    lastBallSide = "right";
+                                }
                             }
-                        }
-                    }
-                    checkOffSide();
-                }
-
-                // Obtener los últimos defensores
-                const defenders = getLastDefenders();
-                const ball = room.getDiscProperties(0);
-
-                if (ball && defenders) {
-                    if (ball.x < 0 && defenders.red) {
-                        const redDefenderX = room.getPlayerDiscProperties(defenders.red.id).x;
-
-                        room.setDiscProperties(6, {
-                            x: redDefenderX,
-                            y: x5Active ? -476 : x7Active ? -616 : 0,
-                            color: 0xFF6B6B
-                        });
-
-                        room.setDiscProperties(7, {
-                            x: redDefenderX,
-                            y: x5Active ? 476 : x7Active ? 616 : 0,
-                            color: 0xFF6B6B
-                        });
-
-                        if (lastBallSide !== "left") {
-                            room.sendAnnouncement(`🔄 Discos movidos al último defensor del 🔴 RED (${defenders.red.name})`, null, 0xFF6B6B, "bold");
-                            lastBallSide = "left";
-                        }
-                    } else if (ball.x > 0 && defenders.blue) {
-                        const blueDefenderX = room.getPlayerDiscProperties(defenders.blue.id).x;
-
-                        room.setDiscProperties(6, {
-                            x: blueDefenderX,
-                            y: x5Active ? -476 : x7Active ? -616 : 0,
-                            color: 0x87CEEB
-                        });
-
-                        room.setDiscProperties(7, {
-                            x: blueDefenderX,
-                            y: x5Active ? 476 : x7Active ? 616 : 0,
-                            color: 0x87CEEB
-                        });
-
-                        if (lastBallSide !== "right") {
-                            room.sendAnnouncement(`🔄 Discos movidos al último defensor del 🔵 BLUE (${defenders.blue.name})`, null, 0x6B6BFF, "bold");
-                            lastBallSide = "right";
                         }
                     }
                 }
