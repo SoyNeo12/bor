@@ -10,7 +10,7 @@ const mapaX3 = fs.readFileSync('./examples/maps/mapaX3.hbs', 'utf-8');
 const mapaX5 = fs.readFileSync('./examples/maps/mapaX5.hbs', 'utf-8');
 const mapaX7 = fs.readFileSync('./examples/maps/mapaX7.hbs', 'utf-8');
 
-const mensajesJSON = require("../mensajes.json");
+const mensajesJSON = require("./mensajes.json");
 const playersDir = './players';
 const playersFilePath = `${playersDir}/players.json`;
 const rolesFilePath = path.join(__dirname, 'roles.json');
