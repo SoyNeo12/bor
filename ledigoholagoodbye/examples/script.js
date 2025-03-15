@@ -1758,17 +1758,17 @@ HaxballJS().then((HBInit) => {
                     return;
                 }
 
-                // const isMultiAccount = Object.keys(playerStats).find(auth => EnLaSala[auth] === true && auth === p.auth);
-                // if (isMultiAccount) {
-                //     room.kickPlayer(p.id, "No se permiten multicuentas.", false);
-                //     return;
-                // }
+                const isMultiAccount = Object.keys(playerStats).find(auth => EnLaSala[auth] === true && auth === p.auth);
+                if (isMultiAccount) {
+                    room.kickPlayer(p.id, "No se permiten multicuentas.", false);
+                    return;
+                }
 
-                // const isMultiAccount2 = room.getPlayerList().find(auth => EnLaSala[auth] === true && auth !== p.auth);
-                // if (isMultiAccount2) {
-                //     room.kickPlayer(p.id, "Ya hay alguien con ese nombre en la sala", false);
-                //     return;
-                // }
+                const isMultiAccount2 = room.getPlayerList().find(auth => EnLaSala[auth] === true && auth !== p.auth);
+                if (isMultiAccount2) {
+                    room.kickPlayer(p.id, "Ya hay alguien con ese nombre en la sala", false);
+                    return;
+                }
 
                 if (!playerStats[p.auth]) {
                     playerStats[p.auth] = {
