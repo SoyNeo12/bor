@@ -2532,7 +2532,7 @@ HaxballJS().then((HBInit) => {
                     const goalLine = (offsidePlayer.team === 1) ? (x5Active ? 950 : x7Active ? 1200 : 0) :
                         (offsidePlayer.team === 2) ? (x5Active ? -950 : x7Active ? -1200 : 0) : 0;
 
-                    const margen = 30;
+                    const margen = 8;
                     const margenForceField = 20;
                     const cf = room.CollisionFlags;
 
