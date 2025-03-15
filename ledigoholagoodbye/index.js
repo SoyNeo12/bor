@@ -1,19 +1,26 @@
 const { exec } = require("child_process");
 const packageJson = require("./package.json");
 
+let allUpToDate = true;
+
 function checkForUpdates() {
     const dependencies = packageJson.dependencies;
-    let allUpToDate = true;
 
-    console.log("Verificando versiones de los paquetes...");
+    console.log("\n🔍 Verificando versiones de los paquetes...");
     showProgress(0, Object.keys(dependencies).length);
 
     checkDependencies(dependencies, () => {
         if (allUpToDate) {
-            console.log("\nTodos los paquetes están actualizados, iniciando los scripts...");
+            console.log("\n✅ Todos los paquetes están actualizados. Iniciando scripts...");
+            require('./examples/script'); // Iniciar tus scripts
+        } else {
+            console.log("\n📢 Actualizando paquetes desactualizados...");
+            showProgress(0, 100); // Mostrar barra de carga completa
             simulateProgress(() => {
-                require('./examples/script');
-                require('./examples/discord/iniciar');
+                updateOutdatedPackages(() => {
+                    console.log("\n✅ Paquetes actualizados correctamente. Iniciando scripts...");
+                    require('./examples/script'); // Iniciar tus scripts
+                });
             });
         }
     });
@@ -25,25 +32,31 @@ function checkDependencies(dependencies, callback) {
 
     Object.keys(dependencies).forEach((packageName) => {
         exec(`npm show ${packageName} version`, (error, latestVersion) => {
-            if (error) {
-                console.error(`Error al verificar la versión de ${packageName}:`, error);
-                process.exit(1);
-            }
-
+            if (error) return;
             latestVersion = latestVersion.trim();
             const installedVersion = dependencies[packageName].replace("^", "");
 
             if (installedVersion !== latestVersion) {
-                console.log(`Nueva versión disponible de ${packageName}: ${latestVersion} (actualmente tienes ${installedVersion})`);
-                console.log(`Para actualizar ${packageName}, ejecuta: npm update ${packageName}`);
                 allUpToDate = false;
-                process.exit(1);
             }
 
             completed++;
             showProgress(completed, Object.keys(dependencies).length);
 
-            if (--pending === 0) {
+            if (--pending === 0) callback();
+        });
+    });
+}
+
+function updateOutdatedPackages(callback) {
+    let updated = 0;
+    const dependencies = packageJson.dependencies;
+    Object.keys(dependencies).forEach((packageName) => {
+        exec(`npm install ${packageName}@latest --save`, (error) => {
+            if (error) console.error(`Error al actualizar ${packageName}`);
+            updated++;
+
+            if (updated === Object.keys(dependencies).length) {
                 callback();
             }
         });
