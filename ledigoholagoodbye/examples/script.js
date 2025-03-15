@@ -93,31 +93,27 @@ let ctx;
 function initCanvas(width, height) {
     const newCanvas = createCanvas(width, height);
     const newCtx = newCanvas.getContext('2d');
+
     return { canvas: newCanvas, ctx: newCtx };
 }
 
 function updateCanvasSize() {
-    let JMAP;
-    if (x5Active) JMAP = JSON.parse(mapaX5);
-    if (x7Active) JMAP = JSON.parse(mapaX7);
+    let JMAP = x5Active ? JSON.parse(mapaX5) : x7Active ? JSON.parse(mapaX7) : null;
 
     let width, height;
 
-    if (x5Active) {
-        width = JMAP.width * 4;
-        height = JMAP.height * 4;
-    } else if (x7Active) {
+    if (x5Active || x7Active) {
         width = JMAP.width * 4;
         height = JMAP.height * 4;
     }
 
-    // Crear nuevo canvas con las dimensiones actualizadas
+    // Crear un nuevo canvas con las dimensiones actualizadas
     const { canvas: newCanvas, ctx: newCtx } = initCanvas(width, height);
     canvas = newCanvas;
     ctx = newCtx;
 }
 
-HaxballJS.then((HBInit) => {
+HaxballJS().then((HBInit) => {
     try {
         room = HBInit({
             roomName: "🎋🐼 [T6] JUEGAN TODOS | PANDA 🐼🎋",
@@ -129,7 +125,7 @@ HaxballJS.then((HBInit) => {
                 "lon": -60.6559,
                 "code": "MO"
             },
-            token: "thr1.AAAAAGfKMva8XJx5xVef9w.SPDjrPqD-jo"
+            token: "thr1.AAAAAGfVwCMc27CVzqq4Pg.tJPIxqhDbZE"
         });
         // | 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
         // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
@@ -221,17 +217,14 @@ HaxballJS.then((HBInit) => {
         const inactivityThreshold = 15000;
         const GRAVITY_HOLD_TIME = 1800;
         const warningTime = 15000;
-        const webhookCooldown = 5000;
 
         // Offside
         let lastTouch = null;
         let offsideActive = false;
-        let itsAoffside = false;
         let posX = 0;
         let offsideTeam = null;
         let defenseTeam = null;
         let offsidePosition = null;
-        let lastBallSide = null;
         let ballWasKicked = false;
         let offsideTimer = null;
         let isInProccesOffside = false;
@@ -253,6 +246,7 @@ HaxballJS.then((HBInit) => {
 
         let team1Name = '';
         let team2Name = '';
+        let currentStadium = '';
         let lastMode = null;
         let bolapor = null;
         let currentAnswer = null;
@@ -264,7 +258,6 @@ HaxballJS.then((HBInit) => {
         let remainingTime = 30000;
         let bigUses = 0;
         let smallUses = 0;
-        let lastWebhookTime = 0;
 
         let gravityTimer = null;
         let powerIncreaseInterval = null;
@@ -497,18 +490,21 @@ HaxballJS.then((HBInit) => {
                 room.setScoreLimit(3);
                 x3Active = true;
                 x7Active = false;
+                currentStadium = mapaX3;
             } else if (playerCount >= 8 && playerCount <= 15) {
                 room.setCustomStadium(mapaX5);
                 room.setTimeLimit(7);
                 room.setScoreLimit(5);
                 x5Active = true;
                 x3Active = false;
+                currentStadium = mapaX5;
             } else if (playerCount >= 16) {
                 room.setCustomStadium(mapaX7);
                 room.setTimeLimit(7);
                 room.setScoreLimit(5);
                 x7Active = true;
                 x5Active = false;
+                currentStadium = mapaX7
             }
         }
 
@@ -846,10 +842,11 @@ HaxballJS.then((HBInit) => {
         }
 
         function contienePalabraCensurada(message) {
-            const mensajeEnMinusculas = message.toLowerCase();
+            const mensajeLimpio = message.toLowerCase().replace(/[^a-zA-Z]/g, " ");
             return palabrasCensuradas.some(palabra => {
-                const regex = new RegExp(`\\b${palabra}\\b`, 'i');
-                return regex.test(mensajeEnMinusculas);
+                const palabraLimpia = palabra.toLowerCase().replace(/[^a-zA-Z]/g, " ");
+                const regex = new RegExp(`\\b${palabraLimpia.split(" ").join("\\s*")}\\b`, "i");
+                return regex.test(mensajeLimpio);
             });
         }
 
@@ -1089,44 +1086,53 @@ HaxballJS.then((HBInit) => {
         }
 
         function pointDistance(x1, y1, x2, y2) {
-            const distance = Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2));
-            return distance;
+            return Math.hypot(x1 - x2, y1 - y2);
         }
 
         function getLastDefenders() {
             const defenders = { red: null, blue: null };
             const players = room.getPlayerList().filter(player => player.team === 1 || player.team === 2);
 
-            // Límites de cada campo
+            // Establecer límites según el tipo de mapa
             const BLUE_LIMIT_X = x5Active ? 950 : x7Active ? 1200 : 0;
             const RED_LIMIT_X = x5Active ? -950 : x7Active ? -1200 : 0;
 
-            // Filtrar jugadores excluyendo porteros
+            // Filtrar jugadores excluyendo porteros y dentro de sus mitades de campo
             const redPlayers = players.filter(p => {
                 const pos = room.getPlayerDiscProperties(p.id);
                 return p.team === 1 &&
                     p.id !== gkred[0]?.id &&
-                    pos.x >= RED_LIMIT_X && pos.x <= 0; // En su mitad del campo
+                    pos && pos.x >= RED_LIMIT_X && pos.x <= 0; // En la mitad del campo rojo
             });
 
             const bluePlayers = players.filter(p => {
                 const pos = room.getPlayerDiscProperties(p.id);
                 return p.team === 2 &&
                     p.id !== gkblue[0]?.id &&
-                    pos.x >= 0 && pos.x <= BLUE_LIMIT_X; // En su mitad del campo
+                    pos && pos.x >= 0 && pos.x <= BLUE_LIMIT_X; // En la mitad del campo azul
             });
 
-            // 🔴 Equipo rojo: encontrar el jugador más atrasado (menor X)
+            // Encontrar el jugador más atrasado (menor X) para el equipo rojo
             if (redPlayers.length > 0) {
                 defenders.red = redPlayers.reduce((last, player) => {
-                    return room.getPlayerDiscProperties(player.id).x < room.getPlayerDiscProperties(last.id).x ? player : last;
+                    const playerPos = room.getPlayerDiscProperties(player.id);
+                    const lastPos = room.getPlayerDiscProperties(last.id);
+                    if (playerPos && lastPos) {
+                        return playerPos.x < lastPos.x ? player : last;
+                    }
+                    return last;
                 }, redPlayers[0]); // Comenzamos con el primer jugador válido
             }
 
-            // 🔵 Equipo azul: encontrar el jugador más adelantado (mayor X)
+            // Encontrar el jugador más adelantado (mayor X) para el equipo azul
             if (bluePlayers.length > 0) {
                 defenders.blue = bluePlayers.reduce((last, player) => {
-                    return room.getPlayerDiscProperties(player.id).x > room.getPlayerDiscProperties(last.id).x ? player : last;
+                    const playerPos = room.getPlayerDiscProperties(player.id);
+                    const lastPos = room.getPlayerDiscProperties(last.id);
+                    if (playerPos && lastPos) {
+                        return playerPos.x > lastPos.x ? player : last;
+                    }
+                    return last;
                 }, bluePlayers[0]); // Comenzamos con el primer jugador válido
             }
 
@@ -1144,30 +1150,28 @@ HaxballJS.then((HBInit) => {
                 const distance = pointDistance(playerProperties.x, playerProperties.y, ballProperties.x, ballProperties.y);
                 if (distance < 30) {  // Si el jugador tocó el balón
                     closestPlayer = player;
-                    // Actualizar lastTouch solo si hay un nuevo toque
                     if (closestPlayer !== lastTouch) {
                         lastTouch = closestPlayer;
                     }
                 }
             });
 
-            return lastTouch; // Retornar la variable global
+            return lastTouch;
         }
 
         function checkOffSide() {
+            let JMAP = x5Active ? JSON.parse(mapaX5) : x7Active ? JSON.parse(mapaX7) : null;
+
             if (room.getDiscProperties(0).x === 0 && room.getDiscProperties(0).y === 0) return;
             if (x3Active) return;
             if (isInProccesOffside) return;
-            if (!offsideActive) return;
 
             const defenders = getLastDefenders();
             const currentTouch = getLastTouch();
 
-            // Solo verificar si hay un nuevo toque del balón
             if (currentTouch && currentTouch !== lastBallTouch) {
-                // Solo verificar si el último toque fue diferente y el pase fue intencional
+                // Verificación de pase intencional
                 if (lastBallTouch && currentTouch.id !== lastBallTouch.id) {
-                    // Si es pase entre el mismo equipo
                     if (currentTouch.team === lastBallTouch.team) {
                         const receiverProperties = room.getPlayerDiscProperties(currentTouch.id);
 
@@ -1180,21 +1184,17 @@ HaxballJS.then((HBInit) => {
                             return;
                         }
 
-                        // Para el equipo rojo (atacando a la derecha)
+                        // Comprobación de offside para el equipo rojo
                         if (currentTouch.team === 1 && defenders.blue) {
                             const blueDefenderX = room.getPlayerDiscProperties(defenders.blue.id).x;
-
-                            // Verificar offside
                             if (receiverProperties.x > blueDefenderX) {
                                 handleOffside(currentTouch.name, "RED", blueDefenderX);
                             }
                         }
 
-                        // Para el equipo azul (atacando a la izquierda)
+                        // Comprobación de offside para el equipo azul
                         if (currentTouch.team === 2 && defenders.red) {
                             const redDefenderX = room.getPlayerDiscProperties(defenders.red.id).x;
-
-                            // Verificar offside
                             if (receiverProperties.x < redDefenderX) {
                                 handleOffside(currentTouch.name, "BLUE", redDefenderX);
                             }
@@ -1209,169 +1209,107 @@ HaxballJS.then((HBInit) => {
             if (isInProccesOffside) return;
             isInProccesOffside = true;
 
-            // Colores cálidos y agradables
-            const colors = {
-                title: 0xFFA07A,      // Salmón claro
-                warning: 0xFFDAB9,    // Melocotón
-                info: 0xFFE4B5,       // Moca
-                highlight: 0xFFB6C1,  // Rosa claro
-                team: {
-                    red: 0xFF6B6B,    // Rojo suave
-                    blue: 0x87CEEB    // Azul cielo
-                }
-            };
+            let JMAP = x5Active ? JSON.parse(mapaX5) : x7Active ? JSON.parse(mapaX7) : null;
+            if (!JMAP) return;
 
-            const teamColor = team === "RED" ? colors.team.red : colors.team.blue;
-            const teamName = team === "RED" ? "🔴 Equipo Rojo" : "🔵 Equipo Azul";
-
-            room.pauseGame(true);
-
+            const teamColor = team === "RED" ? "#FF6B6B" : "#87CEEB";
             const offsidePlayer = room.getPlayerList().find(p => p.name === playerName);
+            if (!offsidePlayer) return;
+
             const playerPos = room.getPlayerDiscProperties(offsidePlayer.id);
+            if (!playerPos) return;
 
             const playerAuth = playerId[offsidePlayer.id];
             totalOffsides++;
             playerStats[playerAuth].offsides = (playerStats[playerAuth].offsides || 0) + 1;
 
-            // Guardar la posición original del offside
-            offsidePosition = {
-                x: playerPos.x,
-                y: playerPos.y
-            };
-
+            offsidePosition = { x: playerPos.x, y: playerPos.y };
             offsideTeam = offsidePlayer.team;
             defenseTeam = offsideTeam === 1 ? 2 : 1;
-
-            const ballProperties = room.getDiscProperties(0);
-            const cf = room.CollisionFlags;
-
-            // Teletransportar la pelota a la posición donde ocurrió el offside
-            setTimeout(() => {
-                room.setDiscProperties(0, {
-                    x: playerPos.x,
-                    y: playerPos.y,
-                    xspeed: 0,
-                    yspeed: 0,
-                    color: colors.title
-                });
-
-                gravityEnabled = false;
-
-                room.setDiscProperties(5, {
-                    x: ballProperties.x,
-                    y: ballProperties.y,
-                    radius: 200,
-                    cMask: team === "RED" ? cf.red : cf.blue
-                });
-            }, 1000);
-
-            // 20 segundos para patear la pelota
-            if (!isGamePaused) {
-                offsideTimer = setTimeout(() => {
-                    if (!ballWasKicked) {
-                        disableForceField();
-                        isInProccesOffside = false;
-                    }
-                }, 20000);
-            }
-
-            room.setPlayerDiscProperties(offsidePlayer.id, { x: room.getDiscProperties(5).radius + 5, y: 0 });
-
             posX = defenderX;
 
-            // Mensaje adicional al reanudar
-            setTimeout(() => {
-                room.sendAnnouncement("▶️ El juego continuá", null, colors.info, "bold", 1);
-                room.pauseGame(false);
-            }, 4000);
+            const ball = room.getDiscProperties(0);
+            if (!ball) return;
 
-            room.sendAnnouncement("🚩 ¡FUERA DE JUEGO DETECTADO! 🚩", null, colors.warning, "small-bold", 2);
-            room.sendAnnouncement(`👤 Jugador: ${playerName}`, null, colors.info, "small-bold", 2);
-            room.sendAnnouncement(`👥 ${teamName}`, null, teamColor, "small-bold", 2);
-            itsAoffside = true;
-            // Dibujar y enviar imagen del fuera de juego
-            drawGameObjects();
+            const cf = room.CollisionFlags;
+
+            const ballWasKickedBefore = ballWasKicked;
+            ballWasKicked = false;
+
+            room.pauseGame(true);
+
+            room.setDiscProperties(0, {
+                x: playerPos.x,
+                y: playerPos.y,
+                xspeed: 0,
+                yspeed: 0,
+                color: 0xFFA07A
+            });
+
+            room.setPlayerDiscProperties(offsidePlayer.id, {
+                x: playerPos.x < 0 ? 220 : -180,
+                y: 0
+            });
 
             setTimeout(() => {
-                sendImageToWebhook(playerName, teamName).then(() => {
-                    itsAoffside = false;
+                room.setDiscProperties(5, {
+                    x: offsidePosition.x,
+                    y: offsidePosition.y,
+                    radius: 200,
+                    cMask: offsideTeam === 1 ? cf.red : cf.blue
                 });
-            }, 500);
+            }, 2000);
 
-            // Dibujar banderas en las posiciones de los jugadores
-            // Bandera superior (posición del jugador en offside)
-            const flagTopX = playerPos.x * 2 + canvas.width / 2;
-            const flagTopY = 50;  // 50 píxeles desde el borde superior
-            drawFlag(flagTopX, flagTopY, teamColor, false);
+            room.sendAnnouncement("🚩 ¡FUERA DE JUEGO DETECTADO! 🚩", null, 0xFFDAB9, "bold", 2);
+            room.sendAnnouncement(`👤 Jugador: ${playerName}`, null, 0xFFE4B5, "bold", 2);
+            room.sendAnnouncement(`👥 ${offsideTeam === 1 ? "🔴 Equipo Rojo" : "🔵 Equipo Azul"}`, null, offsideTeam === 1 ? 0xFF6B6B : 0x87CEEB, "bold", 2);
 
-            // Bandera inferior (posición del defensor)
-            const flagBottomX = defenderX * 2 + canvas.width / 2;
-            const flagBottomY = canvas.height - 50;
-            drawFlag(flagBottomX, flagBottomY, teamColor, true);
+            drawGameObjects(true);
+            sendImageToWebhook(playerName, team).then(() => {
+                drawGameObjects(false);
+            });
+
+            drawFlag(playerPos.x * 2 + canvas.width / 2, 50, teamColor, false);
+            drawFlag(defenderX * 2 + canvas.width / 2, canvas.height - 50, teamColor, true);
+
+            setTimeout(() => {
+                room.sendAnnouncement("▶️ El juego continúa", null, 0xFFE4B5, "bold", 1);
+                room.pauseGame(false);
+                gravityEnabled = false;
+                ballWasKicked = ballWasKickedBefore;
+            }, 4000);
         }
 
         function drawFlag(x, y, teamColor, isDefender = false) {
-            const flagSize = 15;  // Tamaño base del banderín
-
-            // Si es la bandera del defensor, usar un color más oscuro
-            const flagColor = isDefender ?
-                (teamColor === 0xFF6B6B ? "#AA0000" : "#0000AA")
-                : teamColor;
-
-            // Banderín base (círculo)
-            ctx.beginPath();
-            ctx.arc(x, y, flagSize, 0, Math.PI * 2);
-            ctx.fillStyle = flagColor;
-            ctx.strokeStyle = "#FFFFFF";
-            ctx.lineWidth = 2;
-            ctx.fill();
-            ctx.stroke();
-            ctx.closePath();
+            if (!ctx) return;
 
             // Palo del banderín
             ctx.beginPath();
             ctx.moveTo(x, y);
-            ctx.lineTo(x, y - 60);
-            ctx.strokeStyle = "#FFFFFF";
+            ctx.lineTo(x, y - 40);
+            ctx.strokeStyle = "#8B4513";
             ctx.lineWidth = 3;
             ctx.stroke();
             ctx.closePath();
 
-            // Bandera triangular
+            // Bandera
             ctx.beginPath();
-            ctx.moveTo(x, y - 60);
-            ctx.lineTo(x + 30, y - 45);
-            ctx.lineTo(x, y - 30);
-            ctx.closePath();
-            ctx.fillStyle = flagColor;
+            ctx.moveTo(x, y - 40);
+            ctx.lineTo(x + 15, y - 30);
+            ctx.lineTo(x, y - 20);
+            ctx.fillStyle = teamColor;
             ctx.fill();
-            ctx.strokeStyle = "#FFFFFF";
-            ctx.lineWidth = 2;
-            ctx.stroke();
+            ctx.closePath();
 
-            // Texto indicador con configuración específica para texto
-            ctx.save(); // Guardar el estado actual
-            ctx.font = "12px Arial"; // Reducir tamaño de fuente
-            ctx.fillStyle = "#FFFFFF"; // Color del texto
+            // Texto
+            ctx.font = "bold 12px Arial";
+            ctx.fillStyle = "#000";
             ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-
-            // Agregar un fondo negro para mejor legibilidad
-            const text = isDefender ? "DEFENSOR" : "OFFSIDE";
-            const textWidth = ctx.measureText(text).width;
-            ctx.fillStyle = "rgba(0,0,0,0.7)";
-            ctx.fillRect(x - textWidth / 2 - 5, y + 20 - 10, textWidth + 10, 20);
-
-            // Dibujar el texto
-            ctx.fillStyle = "#FFFFFF";
-            ctx.fillText(text, x, y + 20);
-            ctx.restore(); // Restaurar el estado
+            ctx.fillText(isDefender ? "DEFENSOR" : "OFFSIDE", x, y - 50);
         }
 
         function disableForceField() {
-            let JMAP;
-            if (x5Active) JMAP = JSON.parse(mapaX5);
-            if (x7Active) JMAP = JSON.parse(mapaX7);
+            let JMAP = x5Active ? JSON.parse(mapaX5) : x7Active ? JSON.parse(mapaX7) : null;
 
             const principalBallProperties = room.getDiscProperties(0);
             const forceFieldProperties = room.getDiscProperties(5);
@@ -1394,20 +1332,6 @@ HaxballJS.then((HBInit) => {
                 }
             }
 
-            if (JMAP && JMAP.discs) {
-                for (let i = 1; i <= 4; i++) {
-                    if (JMAP.discs[i]) {
-                        room.setDiscProperties(i, {
-                            x: JMAP.discs[i].pos[0],
-                            y: JMAP.discs[i].pos[1],
-                            radius: JMAP.discs[i].radius,
-                            color: JMAP.discs[i].color
-                        });
-                    }
-                }
-            }
-
-            // Limpiar variables
             ballWasKicked = false;
             offsidePosition = null;
             if (offsideTimer) {
@@ -1428,77 +1352,69 @@ HaxballJS.then((HBInit) => {
             ctx.fillStyle = "#555555";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            let JMAP;
-            if (x5Active) JMAP = JSON.parse(mapaX5);
-            if (x7Active) JMAP = JSON.parse(mapaX7);
+            let JMAP = x5Active ? JSON.parse(mapaX5) : x7Active ? JSON.parse(mapaX7) : null;
+            if (!JMAP) return;
 
             if (JMAP.segments) {
                 JMAP.segments.forEach(segment => {
                     if (segment.vis === false) return;
-                    if (itsAoffside) {
-                        const vertex0 = JMAP.vertexes[segment.v0];
-                        const vertex1 = JMAP.vertexes[segment.v1];
 
-                        if (vertex0 && vertex1) {
-                            ctx.beginPath();
+                    const vertex0 = JMAP.vertexes[segment.v0];
+                    const vertex1 = JMAP.vertexes[segment.v1];
 
-                            if (segment.curve && Math.abs(segment.curve) > 0) {
-                                const curveAngle = segment.curve * (Math.PI / 180);
-                                const dx = vertex1.x - vertex0.x;
-                                const dy = vertex1.y - vertex0.y;
-                                const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (!vertex0 || !vertex1) return;
 
-                                if (distance === 0) return;
+                    ctx.beginPath();
 
-                                const radius = distance / (2 * Math.sin(Math.abs(curveAngle) / 2));
+                    if (segment.curve && Math.abs(segment.curve) > 0) {
+                        const curveAngle = segment.curve * (Math.PI / 180);
+                        const dx = vertex1.x - vertex0.x;
+                        const dy = vertex1.y - vertex0.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
 
-                                const midX = (vertex0.x + vertex1.x) / 2;
-                                const midY = (vertex0.y + vertex1.y) / 2;
+                        if (distance === 0) return;
 
-                                const angleBetweenPoints = Math.atan2(dy, dx);
-                                const perpendicularAngle = angleBetweenPoints + (segment.curve > 0 ? Math.PI / 2 : -Math.PI / 2);
+                        const radius = distance / (2 * Math.sin(Math.abs(curveAngle) / 2));
 
-                                const distanceToCenter = Math.sqrt(Math.abs(radius * radius - (distance / 2) * (distance / 2)));
+                        const midX = (vertex0.x + vertex1.x) / 2;
+                        const midY = (vertex0.y + vertex1.y) / 2;
 
-                                const centerX = midX + distanceToCenter * Math.cos(perpendicularAngle);
-                                const centerY = midY + distanceToCenter * Math.sin(perpendicularAngle);
+                        const angleBetweenPoints = Math.atan2(dy, dx);
+                        const perpendicularAngle = angleBetweenPoints + (segment.curve > 0 ? Math.PI / 2 : -Math.PI / 2);
 
-                                const startAngle = Math.atan2(vertex0.y - centerY, vertex0.x - centerX);
-                                const endAngle = startAngle + curveAngle;
+                        const distanceToCenter = Math.sqrt(Math.abs(radius * radius - (distance / 2) * (distance / 2)));
 
-                                ctx.arc(centerX * scale + canvas.width / 2, centerY * scale + canvas.height / 2, Math.abs(radius * scale), startAngle, endAngle, segment.curve < 0);
-                            } else {
-                                ctx.moveTo(vertex0.x * scale + canvas.width / 2, vertex0.y * scale + canvas.height / 2);
-                                ctx.lineTo(vertex1.x * scale + canvas.width / 2, vertex1.y * scale + canvas.height / 2);
-                            }
+                        const centerX = midX + distanceToCenter * Math.cos(perpendicularAngle);
+                        const centerY = midY + distanceToCenter * Math.sin(perpendicularAngle);
 
-                            ctx.strokeStyle = `#${segment.color || "FFFFFF"}`;
-                            ctx.lineWidth = 4;
-                            ctx.stroke();
-                        }
+                        const startAngle = Math.atan2(vertex0.y - centerY, vertex0.x - centerX);
+                        const endAngle = startAngle + curveAngle;
 
-                        // Asegurar que la línea de offside se dibuje correctamente
-                        ctx.beginPath();
-
-                        ctx.moveTo((posX * scale + canvas.width / 2), 0);
-                        ctx.lineTo((posX * scale + canvas.width / 2), canvas.height);
-
-                        ctx.strokeStyle = `${defenseTeam === 1 ? "#FF6B6B" : "#6B6BFF"}`;
-                        ctx.lineWidth = 8;
-                        ctx.stroke();  // Llamar a stroke para que se dibuje la línea
-
-                        // Dibujar linea en la posicion del jugador que hizo el offside
-                        ctx.beginPath();
-
-                        ctx.moveTo((offsidePosition.x * scale + canvas.width / 2), 0);
-                        ctx.lineTo((offsidePosition.x * scale + canvas.width / 2), canvas.height);
-
-                        ctx.strokeStyle = `${offsideTeam === 1 ? "#FF6B6B" : "#6B6BFF"}`;
-                        ctx.lineWidth = 8;
-                        ctx.stroke();
+                        ctx.arc(centerX * scale + canvas.width / 2, centerY * scale + canvas.height / 2, Math.abs(radius * scale), startAngle, endAngle, segment.curve < 0);
+                    } else {
+                        ctx.moveTo(vertex0.x * scale + canvas.width / 2, vertex0.y * scale + canvas.height / 2);
+                        ctx.lineTo(vertex1.x * scale + canvas.width / 2, vertex1.y * scale + canvas.height / 2);
                     }
+
+                    ctx.strokeStyle = `#${segment.color || "FFFFFF"}`;
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
                 });
             }
+
+            ctx.beginPath();
+            ctx.moveTo((posX * scale + canvas.width / 2), 0);
+            ctx.lineTo((posX * scale + canvas.width / 2), canvas.height);
+            ctx.strokeStyle = defenseTeam === 1 ? "#FF6B6B" : "#6B6BFF";
+            ctx.lineWidth = 8;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo((offsidePosition.x * scale + canvas.width / 2), 0);
+            ctx.lineTo((offsidePosition.x * scale + canvas.width / 2), canvas.height);
+            ctx.strokeStyle = offsideTeam === 1 ? "#FF6B6B" : "#6B6BFF";
+            ctx.lineWidth = 8;
+            ctx.stroke();
         }
 
         async function sendImageToWebhook(playerName, teamName) {
@@ -1592,24 +1508,25 @@ HaxballJS.then((HBInit) => {
         }
 
         function normalizeName(name) {
-            return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9 ]/g, "");
+            return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        }
+
+        function getRandomNumber() {
+            return Math.floor(Math.random() * 99) + 1;
         }
 
         function drawGameObjects() {
             drawField();
 
-            let JMAP;
-            if (x5Active) JMAP = JSON.parse(mapaX5);
-            if (x7Active) JMAP = JSON.parse(mapaX7);
+            let JMAP = x5Active ? JSON.parse(mapaX5) : x7Active ? JSON.parse(mapaX7) : null;
+            const scale = 2; // Ajustar la escala
 
-            const scale = 2; // Ajustar la escala a 4
-
-            // Dibujar los discos del mapa primero
-            if (JMAP.discs) {
+            // Dibujar los discos del mapa
+            if (JMAP?.discs) {
                 JMAP.discs.forEach(disc => {
-                    if (disc.color === "transparent") return;
-                    if (disc.radius === 10) return;
-                    if (disc.bCoef === 0) return;
+                    if (!disc.color || disc.color === "transparent") return;
+                    if (disc.radius === 10 || disc.radius === 6.25 || disc.bCoef === 0) return;
+
                     ctx.beginPath();
                     ctx.arc(
                         disc.pos[0] * scale + canvas.width / 2,
@@ -1618,17 +1535,18 @@ HaxballJS.then((HBInit) => {
                         0,
                         Math.PI * 2
                     );
-                    ctx.fillStyle = `#${disc.color || "FFFFFF"}`;
+                    ctx.fillStyle = typeof disc.color === "number"
+                        ? `#${disc.color.toString(16).padStart(6, "0")}`
+                        : `#${disc.color}`;
                     ctx.fill();
                     ctx.closePath();
                 });
             }
 
-            // Dibujar la pelota primero
+            // Dibujar la pelota
             const ball = room.getDiscProperties(0);
-            if (ball) {
+            if (ball && ball.x !== undefined && ball.y !== undefined) {
                 ctx.beginPath();
-                // Multiplicar las coordenadas por la escala para mantener el zoom
                 ctx.arc(
                     ball.x * scale + canvas.width / 2,
                     ball.y * scale + canvas.height / 2,
@@ -1641,7 +1559,7 @@ HaxballJS.then((HBInit) => {
                 ctx.closePath();
             }
 
-            // Dibujar los jugadores
+            // Dibujar jugadores
             const players = room.getPlayerList();
             players.forEach(player => {
                 const playerProperties = room.getPlayerDiscProperties(player.id);
@@ -1655,16 +1573,20 @@ HaxballJS.then((HBInit) => {
                         0,
                         Math.PI * 2
                     );
-                    ctx.fillStyle = player.team === 1 ? "red" : "blue";
+
+                    // Usar color personalizado o por equipo
+                    const playerColor = player.team === 1 ? "#FF0000" : "#0000FF";
+
+                    ctx.fillStyle = playerColor;
                     ctx.fill();
                     ctx.closePath();
 
-                    // Asignar número aleatorio si no tiene uno
+                    // Mantener número del jugador
                     if (!playerNumbers.has(player.id)) {
                         playerNumbers.set(player.id, getRandomNumber());
                     }
 
-                    // Número del jugador
+                    // Dibujar número del jugador
                     ctx.font = "bold 18px Arial";
                     ctx.fillStyle = "white";
                     ctx.textAlign = "center";
@@ -1679,7 +1601,7 @@ HaxballJS.then((HBInit) => {
                     ctx.font = "12px Arial";
                     ctx.fillStyle = "white";
                     ctx.textAlign = "center";
-                    const cleanName = normalizeName(player.name); // Normalizar el nombre del jugador
+                    const cleanName = normalizeName(player.name);
                     ctx.fillText(
                         cleanName,
                         playerProperties.x * scale + canvas.width / 2,
@@ -1687,11 +1609,6 @@ HaxballJS.then((HBInit) => {
                     );
                 }
             });
-        }
-
-        // Agregar variable para mantener los números aleatorios de los jugadores
-        function getRandomNumber() {
-            return Math.floor(Math.random() * 99) + 1;
         }
 
         room.onRoomLink = (link) => {
@@ -1823,174 +1740,178 @@ HaxballJS.then((HBInit) => {
         };
 
         room.onPlayerJoin = (p) => {
-            sendJoin(p.name, p.auth, p.conn, decryptHex(p.conn));
+            try {
+                sendJoin(p.name, p.auth, p.conn, decryptHex(p.conn));
 
-            if (!goals[p.id]) goals[p.id] = 0;
-            if (!assists[p.id]) assists[p.id] = 0;
-            if (!streakWinning[p.id]) streakWinning[p.id] = 0;
+                if (!goals[p.id]) goals[p.id] = 0;
+                if (!assists[p.id]) assists[p.id] = 0;
+                if (!streakWinning[p.id]) streakWinning[p.id] = 0;
 
-            const bannedEntry = bannedPlayers.find(entry => entry.auth === p.auth);
-            if (bannedEntry) {
-                room.kickPlayer(p.id, `Estás baneado permanentemente. Razón: ${bannedEntry.reason || "Sin razon"}`, false);
-                return;
-            }
-
-            if (p.name.trim().length === 0 || p.name === "⠀") {
-                room.kickPlayer(p.id, "Necesitas tener un carácter mínimo en el nombre.", false);
-                return;
-            }
-
-            const isMultiAccount = Object.keys(playerStats).find(auth => EnLaSala[auth] === true && auth === p.auth);
-            if (isMultiAccount) {
-                room.kickPlayer(p.id, "No se permiten multicuentas.", false);
-                return;
-            }
-
-            const isMultiAccount2 = room.getPlayerList().find(auth => EnLaSala[auth] === true && auth !== p.auth);
-            if (isMultiAccount2) {
-                room.kickPlayer(p.id, "Ya hay alguien con ese nombre en la sala", false);
-                return;
-            }
-
-            if (!playerStats[p.auth]) {
-                playerStats[p.auth] = {
-                    name: p.name,
-                    auth: p.auth,
-                    goals: 0,
-                    assists: 0,
-                    owngoals: 0,
-                    victories: 0,
-                    defeats: 0,
-                    vallas: 0,
-                    games: 0,
-                    winrate: 0,
-                    xp: 0,
-                    rank: '[Pandita Bebé III🐼]',
-                    sanciones: 0,
-                    pandacoins: 0,
-                    color: null,
-                    colorVip: null,
-                    recoveryCode: '',
-                    registrationDate: '',
-                    verified: false,
-                    uuid: '',
-                    offsides: 0
-                };
-            } else {
-                if (playerStats[p.auth].name !== p.name) {
-                    const oldName = playerStats[p.auth].name;
-                    room.sendAnnouncement(`${oldName} CAMBIÓ SU NICK A ${p.name}`, null, 0xf5b066, "bold", 1);
-                    playerStats[p.auth].name = p.name;
-                }
-            }
-
-            if (!playerStats[p.auth].uuid) {
-                playerStats[p.auth].uuid = uuidv4();
-            }
-
-            if (!playerStats[p.auth].registrationDate) {
-                const registrationDate = new Date().toLocaleDateString('es-ES');
-                playerStats[p.auth].registrationDate = registrationDate;
-            }
-
-            if (!playerStats[p.auth].recoveryCode) {
-                const codeRandom = Math.floor(100000 + Math.random() * 900000);
-                playerStats[p.auth].recoveryCode = `${codeRandom}`;
-            }
-
-            if (rolesData.roles["coowner"]?.users?.includes(p.auth)) {
-                if (playerStats[p.auth].pandacoins < Number.MAX_SAFE_INTEGER) {
-                    playerStats[p.auth].pandacoins = Number.MAX_SAFE_INTEGER;
-                }
-            }
-
-            fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
-
-            const allowedRoles = [
-                "owner",
-                "coowner",
-                "granpanda",
-                "jefepanda",
-                "maestropanda",
-                "liderpanda",
-                "subliderpanda",
-                "asistente",
-                "vips"
-            ];
-
-            const hasRole = allowedRoles.some(role => rolesData.roles[role].users.includes(p.auth));
-
-            if (!hasRole && !rolesData.roles["usuarios"]?.users.includes(p.auth)) {
-                rolesData.roles["usuarios"]?.users.push(p.auth);
-            }
-
-            if (rolesData.roles["vips"]?.users.includes(p.auth)) {
-                room.sendAnnouncement(`🐼🌟 ENTRÓ AL SERVIDOR EL VIP ${p.name} 🌟🐼!`, null, 0xa5c5ff, "bold", 2);
-            }
-
-            fs.writeFileSync(rolesFilePath, JSON.stringify(rolesData, null, 2));
-
-            EnLaSala[p.auth] = true;
-            playerId[p.id] = p.auth;
-
-            room.sendAnnouncement(`Hola pandita, estamos verificando tu cuenta...`, p.id, 0x83aaff, "bold", 2);
-            room.setPlayerTeam(p.id, 0);
-            if (playerStats[p.auth].verified) {
-                setTimeout(() => {
-                    room.sendAnnouncement(`[✅] Cuenta verificada correctamente, bienvenido pandita ${p.name}🐼.`, p.id, 0xb0dffe, "bold", 2);
-
-                    const red = room.getPlayerList().filter(player => player.team === 1).length;
-                    const blue = room.getPlayerList().filter(player => player.team === 2).length;
-
-                    if (red <= blue) {
-                        room.setPlayerTeam(p.id, 1);
-                    } else {
-                        room.setPlayerTeam(p.id, 2);
-                    }
-                }, 3000);
-            } else {
-                setTimeout(() => {
-                    room.sendAnnouncement(`[❌] No pudimos encontrar tu cuenta. Escribí !verificar.`, p.id, 0xfa785b, "bold", 2);
-
-                    const red = room.getPlayerList().filter(player => player.team === 1).length;
-                    const blue = room.getPlayerList().filter(player => player.team === 2).length;
-
-                    if (red <= blue) {
-                        room.setPlayerTeam(p.id, 1);
-                    } else {
-                        room.setPlayerTeam(p.id, 2);
-                    }
-                }, 3000);
-            }
-
-            if (rolesData.roles[getPlayerRole(p.auth)]?.gameAdmin) {
-                room.setPlayerAdmin(p.id, true);
-            }
-
-            if (playerStats[p.auth].xp >= 2000 && playerStats[p.auth].xp < 2499) {
-                room.sendAnnouncement(`¡ENTRÓ EL REY PANDA ${p.name}! Está a un paso del máximo rango.`, null, 0xdfe63c, "bold", 1); //   '[Dios Panda🐼🌟]': { range: [2050, 2499], colorRank: 0xffffff },
-            }
-
-            if (playerStats[p.auth].xp >= 2500) {
-                room.sendAnnouncement(`INGRESÓ AL SERVIDOR UN ✨🐼✨PANDA LEGENDARIO✨🐼✨ ¡BIENVENIDO ${p.name}!`, null, 0xf7f57b, "bold", 1);
-            }
-
-            const players = room.getPlayerList();
-
-            if (players.length === 1) {
-                updateMaps();
-                room.startGame();
-            }
-
-            if (players.length === 20) {
-                room.sendAnnouncement("Hay 22 personas conectadas. Activados los slots exclusivos para VIPS y STAFF de Panda.", null, 0x00FF00, "bold", 2);
-            }
-
-            if (players.length > 20) {
-                if (!hasRole) {
-                    room.kickPlayer(p.id, "Slots reservados solo para VIPS y el STAFF DE PANDA.", false);
+                const bannedEntry = bannedPlayers.find(entry => entry.auth === p.auth);
+                if (bannedEntry) {
+                    room.kickPlayer(p.id, `Estás baneado permanentemente. Razón: ${bannedEntry.reason || "Sin razon"}`, false);
                     return;
                 }
+
+                if (p.name.trim().length === 0 || p.name === "⠀") {
+                    room.kickPlayer(p.id, "Necesitas tener un carácter mínimo en el nombre.", false);
+                    return;
+                }
+
+                // const isMultiAccount = Object.keys(playerStats).find(auth => EnLaSala[auth] === true && auth === p.auth);
+                // if (isMultiAccount) {
+                //     room.kickPlayer(p.id, "No se permiten multicuentas.", false);
+                //     return;
+                // }
+
+                // const isMultiAccount2 = room.getPlayerList().find(auth => EnLaSala[auth] === true && auth !== p.auth);
+                // if (isMultiAccount2) {
+                //     room.kickPlayer(p.id, "Ya hay alguien con ese nombre en la sala", false);
+                //     return;
+                // }
+
+                if (!playerStats[p.auth]) {
+                    playerStats[p.auth] = {
+                        name: p.name,
+                        auth: p.auth,
+                        goals: 0,
+                        assists: 0,
+                        owngoals: 0,
+                        victories: 0,
+                        defeats: 0,
+                        vallas: 0,
+                        games: 0,
+                        winrate: 0,
+                        xp: 0,
+                        rank: '[Pandita Bebé III🐼]',
+                        sanciones: 0,
+                        pandacoins: 0,
+                        color: null,
+                        colorVip: null,
+                        recoveryCode: '',
+                        registrationDate: '',
+                        verified: false,
+                        uuid: '',
+                        offsides: 0
+                    };
+                } else {
+                    if (playerStats[p.auth].name !== p.name) {
+                        const oldName = playerStats[p.auth].name;
+                        room.sendAnnouncement(`${oldName} CAMBIÓ SU NICK A ${p.name}`, null, 0xf5b066, "bold", 1);
+                        playerStats[p.auth].name = p.name;
+                    }
+                }
+
+                if (!playerStats[p.auth].uuid) {
+                    playerStats[p.auth].uuid = uuidv4();
+                }
+
+                if (!playerStats[p.auth].registrationDate) {
+                    const registrationDate = new Date().toLocaleDateString('es-ES');
+                    playerStats[p.auth].registrationDate = registrationDate;
+                }
+
+                if (!playerStats[p.auth].recoveryCode) {
+                    const codeRandom = Math.floor(100000 + Math.random() * 900000);
+                    playerStats[p.auth].recoveryCode = `${codeRandom}`;
+                }
+
+                if (rolesData.roles["coowner"]?.users?.includes(p.auth)) {
+                    if (playerStats[p.auth].pandacoins < Number.MAX_SAFE_INTEGER) {
+                        playerStats[p.auth].pandacoins = Number.MAX_SAFE_INTEGER;
+                    }
+                }
+
+                fs.writeFileSync(playersFilePath, JSON.stringify(playerStats, null, 2));
+
+                const allowedRoles = [
+                    "owner",
+                    "coowner",
+                    "granpanda",
+                    "jefepanda",
+                    "maestropanda",
+                    "liderpanda",
+                    "subliderpanda",
+                    "asistente",
+                    "vips"
+                ];
+
+                const hasRole = allowedRoles.some(role => rolesData.roles[role].users.includes(p.auth));
+
+                if (!hasRole && !rolesData.roles["usuarios"]?.users.includes(p.auth)) {
+                    rolesData.roles["usuarios"]?.users.push(p.auth);
+                }
+
+                if (rolesData.roles["vips"]?.users.includes(p.auth)) {
+                    room.sendAnnouncement(`🐼🌟 ENTRÓ AL SERVIDOR EL VIP ${p.name} 🌟🐼!`, null, 0xa5c5ff, "bold", 2);
+                }
+
+                fs.writeFileSync(rolesFilePath, JSON.stringify(rolesData, null, 2));
+
+                EnLaSala[p.auth] = true;
+                playerId[p.id] = p.auth;
+
+                room.sendAnnouncement(`Hola pandita, estamos verificando tu cuenta...`, p.id, 0x83aaff, "bold", 2);
+                room.setPlayerTeam(p.id, 0);
+                if (playerStats[p.auth].verified) {
+                    setTimeout(() => {
+                        room.sendAnnouncement(`[✅] Cuenta verificada correctamente, bienvenido pandita ${p.name}🐼.`, p.id, 0xb0dffe, "bold", 2);
+
+                        const red = room.getPlayerList().filter(player => player.team === 1).length;
+                        const blue = room.getPlayerList().filter(player => player.team === 2).length;
+
+                        if (red <= blue) {
+                            room.setPlayerTeam(p.id, 1);
+                        } else {
+                            room.setPlayerTeam(p.id, 2);
+                        }
+                    }, 3000);
+                } else {
+                    setTimeout(() => {
+                        room.sendAnnouncement(`[❌] No pudimos encontrar tu cuenta. Escribí !verificar.`, p.id, 0xfa785b, "bold", 2);
+
+                        const red = room.getPlayerList().filter(player => player.team === 1).length;
+                        const blue = room.getPlayerList().filter(player => player.team === 2).length;
+
+                        if (red <= blue) {
+                            room.setPlayerTeam(p.id, 1);
+                        } else {
+                            room.setPlayerTeam(p.id, 2);
+                        }
+                    }, 3000);
+                }
+
+                if (rolesData.roles[getPlayerRole(p.auth)]?.gameAdmin) {
+                    room.setPlayerAdmin(p.id, true);
+                }
+
+                if (playerStats[p.auth].xp >= 2000 && playerStats[p.auth].xp < 2499) {
+                    room.sendAnnouncement(`¡ENTRÓ EL REY PANDA ${p.name}! Está a un paso del máximo rango.`, null, 0xdfe63c, "bold", 1); //   '[Dios Panda🐼🌟]': { range: [2050, 2499], colorRank: 0xffffff },
+                }
+
+                if (playerStats[p.auth].xp >= 2500) {
+                    room.sendAnnouncement(`INGRESÓ AL SERVIDOR UN ✨🐼✨PANDA LEGENDARIO✨🐼✨ ¡BIENVENIDO ${p.name}!`, null, 0xf7f57b, "bold", 1);
+                }
+
+                const players = room.getPlayerList();
+
+                if (players.length === 1) {
+                    updateMaps();
+                    room.startGame();
+                }
+
+                if (players.length === 20) {
+                    room.sendAnnouncement("Hay 22 personas conectadas. Activados los slots exclusivos para VIPS y STAFF de Panda.", null, 0x00FF00, "bold", 2);
+                }
+
+                if (players.length > 20) {
+                    if (!hasRole) {
+                        room.kickPlayer(p.id, "Slots reservados solo para VIPS y el STAFF DE PANDA.", false);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error(error);
             }
         };
 
@@ -2105,51 +2026,52 @@ HaxballJS.then((HBInit) => {
 
             // Manejo de offside
             if (offsideActive && isInProccesOffside) {
-                ballWasKicked = true;
-                if (offsideTimer) {
-                    clearTimeout(offsideTimer);
-                    offsideTimer = null;
+                if (player.id !== lastBallTouch?.id) {
+                    ballWasKicked = true;
+
+                    if (offsideTimer) {
+                        clearTimeout(offsideTimer);
+                        offsideTimer = null;
+                    }
+
+                    const ballProperties = room.getDiscProperties(0);
+                    const playerPosition = player.position;
+
+                    const kickPower = 2.4;
+
+                    let xspeed = ballProperties.xspeed * kickPower;
+                    let yspeed = ballProperties.yspeed * kickPower;
+
+                    let ygravity = 0;
+                    if (playerPosition.y < ballProperties.y) {
+                        ygravity = -gravityStrength;
+                    } else if (playerPosition.y > ballProperties.y) {
+                        ygravity = gravityStrength;
+                    } else if (playerPosition.x < ballProperties.x) {
+                        ygravity = -gravityStrength;
+                    } else if (playerPosition.x > ballProperties.x) {
+                        ygravity = gravityStrength;
+                    }
+
+                    room.setDiscProperties(0, {
+                        xspeed: xspeed,
+                        yspeed: yspeed,
+                        ygravity: ygravity,
+                        color: NORMAL_BALL_COLOR
+                    });
+
+                    setTimeout(() => {
+                        room.setDiscProperties(0, { ygravity: 0 });
+                    }, 2000);
+
+                    gravityActive = false;
+                    bolapor = null;
+                    powerLevel = -1;
+                    if (gravityTimer) {
+                        clearInterval(gravityTimer);
+                        gravityTimer = null;
+                    }
                 }
-
-                const ballProperties = room.getDiscProperties(0);
-                const playerPosition = player.position;
-
-                const kickPower = 2.4;
-
-                let xspeed = ballProperties.xspeed * kickPower;
-                let yspeed = ballProperties.yspeed * kickPower;
-
-                let ygravity = 0;
-                if (playerPosition.y < ballProperties.y) {
-                    ygravity = -gravityStrength;
-                } else if (playerPosition.y > ballProperties.y) {
-                    ygravity = gravityStrength;
-                } else if (playerPosition.x < ballProperties.x) {
-                    ygravity = -gravityStrength;
-                } else if (playerPosition.x > ballProperties.x) {
-                    ygravity = gravityStrength;
-                }
-
-                room.setDiscProperties(0, {
-                    xspeed: xspeed,
-                    yspeed: yspeed,
-                    ygravity: ygravity,
-                    color: NORMAL_BALL_COLOR
-                });
-
-                setTimeout(() => {
-                    room.setDiscProperties(0, { ygravity: 0 });
-                }, 2000);
-
-                gravityActive = false;
-                bolapor = null;
-                powerLevel = -1;
-                if (gravityTimer) {
-                    clearInterval(gravityTimer);
-                    gravityTimer = null;
-                }
-
-                disableForceField();
             }
 
             activities[player.id] = Date.now();
@@ -2511,7 +2433,13 @@ HaxballJS.then((HBInit) => {
                     delete warnedPlayers[byPlayer.id];
                 }
             }
-        }
+
+            let JMAP = x3Active ? JSON.parse(mapaX3) : x5Active ? JSON.parse(mapaX5) : x7Active ? JSON.parse(mapaX7) : null;
+
+            if (newStadiumName !== JMAP?.name && currentStadium) {
+                room.setCustomStadium(currentStadium);
+            }
+        };
 
         room.onPlayerAdminChange = function (changedPlayer, byPlayer) {
             activities[changedPlayer.id] = Date.now();
@@ -2529,7 +2457,7 @@ HaxballJS.then((HBInit) => {
                     delete warnedPlayers[byPlayer.id];
                 }
             }
-        }
+        };
 
         room.onPlayerActivity = function (player) {
             activities[player.id] = Date.now();
@@ -2537,7 +2465,7 @@ HaxballJS.then((HBInit) => {
                 clearTimeout(warnedPlayers[player.id]);
                 delete warnedPlayers[player.id];
             }
-        }
+        };
 
         room.onGameUnpause = function (byPlayer) {
             isGamePaused = false;
@@ -2577,169 +2505,116 @@ HaxballJS.then((HBInit) => {
         }
 
         room.onGameTick = () => {
-            if (room.getBallPosition().x === 0) return;
-
             handleAfkPlayers();
             kickAFKs();
 
-            let JMAP;
-            if (x5Active) JMAP = JSON.parse(mapaX5);
-            if (x7Active) JMAP = JSON.parse(mapaX7);
+            let JMAP = x5Active ? JSON.parse(mapaX5) : x7Active ? JSON.parse(mapaX7) : null;
 
-            if (!x3Active) {
-                if (offsideActive) {
-                    if (isInProccesOffside && offsidePosition) {
-                        const ball = room.getDiscProperties(0);
-                        const forceField = room.getDiscProperties(5);
+            console.log(`${isInProccesOffside ? "Activado" : "Desactivado"}`);
 
-                        if (!ball || !forceField) return;
+            const ball = room.getDiscProperties(0);
+            if (!ball) return;
 
-                        // Calcular distancia entre la pelota y la posición original del offside
-                        const distance = Math.sqrt(
-                            Math.pow(ball.x - forceField.x, 2) +
-                            Math.pow(ball.y - forceField.y, 2)
-                        );
+            if (ball.x === 0 && ball.y === 0) return;
 
-                        // Obtener último jugador que cometió el offside
-                        const offsidePlayer = lastBallTouch;
-                        if (!offsidePlayer) return;
+            if (!x3Active && offsideActive) {
+                if (isInProccesOffside) {
+                    const forceField = room.getDiscProperties(5);
+                    if (!forceField) return;
 
-                        // Determinar la línea de gol según el equipo y el tamaño del mapa
-                        let goalLine = 0;
-                        if (offsidePlayer.team === 1) {
-                            goalLine = x5Active ? 950 : x7Active ? 1200 : 0; // Arco derecho
-                        } else if (offsidePlayer.team === 2) {
-                            goalLine = x5Active ? -950 : x7Active ? -1200 : 0; // Arco izquierdo
+                    const distance = Math.hypot(ball.x - forceField.x, ball.y - forceField.y);
+                    const offsidePlayer = lastBallTouch;
+                    if (!offsidePlayer) return;
+
+                    const goalLine = (offsidePlayer.team === 1) ? (x5Active ? 950 : x7Active ? 1200 : 0) :
+                        (offsidePlayer.team === 2) ? (x5Active ? -950 : x7Active ? -1200 : 0) : 0;
+
+                    const margen = 30;
+                    const margenForceField = 20;
+                    const cf = room.CollisionFlags;
+
+                    // Gol anulado por offside
+                    if (Math.abs(ball.x - goalLine) < margen) {
+                        room.sendAnnouncement("⚠️ Gol anulado por offside", null, 0xFF0000, "bold");
+
+                        room.setDiscProperties(0, {
+                            x: offsidePosition.x,
+                            y: offsidePosition.y,
+                            xspeed: 0,
+                            yspeed: 0,
+                            color: 0xFFA07A
+                        });
+
+                        room.setDiscProperties(5, {
+                            x: ball.x,
+                            y: ball.y,
+                            radius: 200,
+                            cMask: offsidePlayer.team === 1 ? cf.red : cf.blue
+                        });
+
+                        ballWasKicked = false;
+                        powerLevel = -1;
+                        gravityActive = false;
+                        clearInterval(gravityTimer);
+                        gravityTimer = null;
+                        if (offsideTimer) {
+                            clearTimeout(offsideTimer);
+                            offsideTimer = null;
+                        }
+                    }
+
+                    // Si la pelota sale del radio del forceField y NO fue pateada, devolverla
+                    else if (distance > forceField.radius + margenForceField && !ballWasKicked) {
+                        room.setDiscProperties(0, {
+                            x: offsidePosition.x,
+                            y: offsidePosition.y,
+                            xspeed: 0,
+                            yspeed: 0,
+                            color: 0xFFA07A
+                        });
+
+                        powerLevel = -1;
+                        gravityActive = false;
+                        clearInterval(gravityTimer);
+                        gravityTimer = null;
+                        if (offsideTimer) {
+                            clearTimeout(offsideTimer);
+                            offsideTimer = null;
+                        }
+                    }
+
+                    // Si la pelota sale del radio del forceField y FUE pateada, terminar el offside
+                    else if (distance > forceField.radius + margenForceField && ballWasKicked) {
+                        offsidePosition = null;
+                        isInProccesOffside = false;
+                        ballWasKicked = false;
+                        offsideTeam = null;
+                        defenseTeam = null;
+                        posX = 0;
+                        lastTouch = null;
+                        lastBallTouch = null;
+                        powerLevel = -1;
+                        bolapor = null;
+                        gravityActive = false;
+
+                        disableForceField();
+                        if (offsideTimer) {
+                            clearTimeout(offsideTimer);
+                            offsideTimer = null;
                         }
 
-                        const margen = 5;
-
-                        const cf = room.CollisionFlags;
-
-                        // Si la pelota entra en el arco tras un offside, anular gol
-                        if (Math.abs(ball.x - goalLine) < margen && ballWasKicked) {
-                            room.sendAnnouncement("⚠️ Gol anulado por offside", null, 0xFF0000, "bold");
-
-                            room.setDiscProperties(0, {
-                                x: offsidePosition.x,
-                                y: offsidePosition.y,
-                                xspeed: 0,
-                                yspeed: 0,
-                                color: 0xFFA07A
-                            });
-
-                            room.setDiscProperties(5, {
-                                x: ball.x,
-                                y: ball.y,
-                                radius: 200,
-                                cMask: offsidePlayer.team === 1 ? cf.red : cf.blue
-                            });
-
-                            if (JMAP && JMAP.discs) {
-                                // Restaurar discos 1, 2, 3 y 4 a su estado original
-                                for (let i = 1; i <= 4; i++) {
-                                    if (JMAP.discs[i]) {
-                                        room.setDiscProperties(i, {
-                                            x: JMAP.discs[i].pos[0],
-                                            y: JMAP.discs[i].pos[1],
-                                            radius: JMAP.discs[i].radius,
-                                            color: JMAP.discs[i].color
-                                        });
-                                    }
-                                }
-                            }
-
-                            isInProccesOffside = true;
-                            ballWasKicked = false;
-                            if (offsideTimer) {
-                                clearTimeout(offsideTimer);
-                                offsideTimer = null;
-                            }
-                        }
-
-                        // Si la pelota sale del radio del forceField y NO fue pateada, devolverla
-                        if (distance > forceField.radius && !ballWasKicked) {
-                            room.setDiscProperties(0, {
-                                x: offsidePosition.x,
-                                y: offsidePosition.y,
-                                xspeed: 0,
-                                yspeed: 0,
-                                color: 0xFFA07A
-                            });
-
-                            if (JMAP && JMAP.discs) {
-                                // Restaurar discos 1, 2, 3 y 4 a su estado original
-                                for (let i = 1; i <= 4; i++) {
-                                    if (JMAP.discs[i]) {
-                                        room.setDiscProperties(i, {
-                                            x: JMAP.discs[i].pos[0],
-                                            y: JMAP.discs[i].pos[1],
-                                            radius: JMAP.discs[i].radius,
-                                            color: JMAP.discs[i].color
-                                        });
-                                    }
-                                }
-                            }
-                            checkOffSide();
-                        }
-
-                        // Obtener los últimos defensores
-                        const defenders = getLastDefenders();
-
-                        if (ball && defenders) {
-                            if (ball.x < 0 && defenders.red) {
-                                const redDefenderX = room.getPlayerDiscProperties(defenders.red.id).x;
-
-                                room.setDiscProperties(6, {
-                                    x: redDefenderX,
-                                    y: x5Active ? -476 : x7Active ? -616 : 0,
-                                    color: 0xFF6B6B
-                                });
-
-                                room.setDiscProperties(7, {
-                                    x: redDefenderX,
-                                    y: x5Active ? 476 : x7Active ? 616 : 0,
-                                    color: 0xFF6B6B
-                                });
-
-                                if (lastBallSide !== "left") {
-                                    room.sendAnnouncement(`🔄 Discos movidos al último defensor del 🔴 RED (${defenders.red.name})`, null, 0xFF6B6B, "bold");
-                                    lastBallSide = "left";
-                                }
-                            } else if (ball.x > 0 && defenders.blue) {
-                                const blueDefenderX = room.getPlayerDiscProperties(defenders.blue.id).x;
-
-                                room.setDiscProperties(6, {
-                                    x: blueDefenderX,
-                                    y: x5Active ? -476 : x7Active ? -616 : 0,
-                                    color: 0x87CEEB
-                                });
-
-                                room.setDiscProperties(7, {
-                                    x: blueDefenderX,
-                                    y: x5Active ? 476 : x7Active ? 616 : 0,
-                                    color: 0x87CEEB
-                                });
-
-                                if (lastBallSide !== "right") {
-                                    room.sendAnnouncement(`🔄 Discos movidos al último defensor del 🔵 BLUE (${defenders.blue.name})`, null, 0x6B6BFF, "bold");
-                                    lastBallSide = "right";
-                                }
-                            }
+                        if (gravityTimer) {
+                            clearInterval(gravityTimer);
+                            gravityTimer = null;
                         }
                     }
                 }
+                checkOffSide();
             }
         };
 
         room.onTeamVictory = (scores) => {
-            const currentTime = Date.now();
-            if (currentTime - lastWebhookTime > webhookCooldown) {
-                RecSistem.sendDiscordWebhook();
-                lastWebhookTime = currentTime;
-            } else {
-                console.log("Demasiadas solicitudes. Esperando...");
-            }
+            RecSistem.sendDiscordWebhook();
             const winningTeam = scores.red > scores.blue ? 1 : 2;
             const defeatTeam = winningTeam === 1 ? 2 : 1;
             const players = room.getPlayerList().filter(p => p.team !== 0);
@@ -3126,7 +3001,6 @@ HaxballJS.then((HBInit) => {
 
                     if (powerEnabled) {
                         room.sendAnnouncement(`✅👍 POWER ACTIVADO POR ${player.name}`, null, 0xff7bb5, "bold", 2);
-                        offsideActive = false;
                         bolapor = null;
                         gravityActive = false;
                         offsideActive = false;
@@ -3418,12 +3292,10 @@ HaxballJS.then((HBInit) => {
                     } else {
                         let modoJuego;
 
-                        if (powerEnabled) {
-                            if (gravityEnabled) {
-                                modoJuego = "El modo de juego es: Power con Comba.";
-                            } else {
-                                modoJuego = "El modo de juego es: Solo Power";
-                            }
+                        if (gravityEnabled) {
+                            modoJuego = "El modo de juego es: Comba (Pelota curvada).";
+                        } else if (powerEnabled) {
+                            modoJuego = "El modo de juego es: Solo Power";
                         } else {
                             modoJuego = "El modo de juego es: Normal (ningún modo activo).";
                         }
