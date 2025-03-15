@@ -125,7 +125,7 @@ HaxballJS().then((HBInit) => {
                 "lon": -60.6559,
                 "code": "MO"
             },
-            token: "thr1.AAAAAGfVwCMc27CVzqq4Pg.tJPIxqhDbZE"
+            token: "thr1.AAAAAGfWDqhYJht292vAgg.zA7tuV7MWks"
         });
         // | 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
         // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
@@ -246,7 +246,6 @@ HaxballJS().then((HBInit) => {
 
         let team1Name = '';
         let team2Name = '';
-        let currentStadium = '';
         let lastMode = null;
         let bolapor = null;
         let currentAnswer = null;
@@ -719,10 +718,10 @@ HaxballJS().then((HBInit) => {
                 room.sendAnnouncement('Este partido se juega con: 🤩💣POWER (SOLO)💣🤩.', null, 0xff7759, "bold", 2);
             } else if (currentMode === 'comba') {
                 gravityEnabled = true;
-                offsideActive = true;
                 room.sendAnnouncement('Este partido se juega con: 🤑🤩POWER CON COMBA🤩🤑.', null, 0xff7759, "bold", 2);
 
                 if (!x3Active) {
+                    offsideActive = true;
                     setTimeout(() => {
                         room.sendAnnouncement('🚨🚨🚨 ¡OFFSIDE ACTIVADO! 🚨🚨🚨', null, 0xff7759, "bold", 2);
                     }, 2000);
@@ -2037,7 +2036,7 @@ HaxballJS().then((HBInit) => {
                     const ballProperties = room.getDiscProperties(0);
                     const playerPosition = player.position;
 
-                    const kickPower = 2.4;
+                    const kickPower = 2.6;
 
                     let xspeed = ballProperties.xspeed * kickPower;
                     let yspeed = ballProperties.yspeed * kickPower;
@@ -2281,6 +2280,7 @@ HaxballJS().then((HBInit) => {
             gravityEnabled = false;
             betCooldownActive = false;
             chaosModeActive = true;
+            offsideActive = false;
             bolapor = null;
             powerEnabled = false;
             gkred = [], gkblue = [];
@@ -2434,10 +2434,17 @@ HaxballJS().then((HBInit) => {
                 }
             }
 
-            let JMAP = x3Active ? JSON.parse(mapaX3) : x5Active ? JSON.parse(mapaX5) : x7Active ? JSON.parse(mapaX7) : null;
+            const maps = {
+                "Panda x3 v2 by sanTos": mapaX3,
+                "Panda x5 v2 by sanTos": mapaX5,
+                "Panda x7 v2 by sanTos": mapaX7
+            };
 
-            if (newStadiumName !== JMAP?.name && currentStadium) {
-                room.setCustomStadium(currentStadium);
+            if (!maps[newStadiumName]) {
+                const selectedMap = x3Active ? mapaX3 : x5Active ? mapaX5 : x7Active ? mapaX7 : null;
+                if (selectedMap) {
+                    room.setCustomStadium(selectedMap);
+                }
             }
         };
 
@@ -2507,10 +2514,6 @@ HaxballJS().then((HBInit) => {
         room.onGameTick = () => {
             handleAfkPlayers();
             kickAFKs();
-
-            let JMAP = x5Active ? JSON.parse(mapaX5) : x7Active ? JSON.parse(mapaX7) : null;
-
-            console.log(`${isInProccesOffside ? "Activado" : "Desactivado"}`);
 
             const ball = room.getDiscProperties(0);
             if (!ball) return;
@@ -3006,6 +3009,11 @@ HaxballJS().then((HBInit) => {
                         offsideActive = false;
                         powerLevel = -1;
                         gravityEnabled = false;
+                        room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
+                        if (gravityTimer) {
+                            clearInterval(gravityTimer);
+                            gravityTimer = null;
+                        }
                     } else {
                         room.sendAnnouncement(`❌👎 POWER DESACTIVADO POR ${player.name}`, null, 0xd83264, "bold", 2);
                         ballHeldBy = null;
@@ -3033,6 +3041,11 @@ HaxballJS().then((HBInit) => {
                         powerActive = false;
                         powerLevel = -1;
                         powerEnabled = false;
+                        room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
+                        if (powerIncreaseInterval) {
+                            clearInterval(powerIncreaseInterval);
+                            powerIncreaseInterval = null;
+                        }
                     } else {
                         room.sendAnnouncement(`❌👎 COMBA DESACTIVADA POR ${player.name}`, null, 0xd83264, "bold", 2);
                         bolapor = null;
