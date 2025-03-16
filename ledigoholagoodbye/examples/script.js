@@ -1161,6 +1161,10 @@ HaxballJS().then((HBInit) => {
         function checkOffSide() {
             let JMAP = x5Active ? JSON.parse(mapaX5) : x7Active ? JSON.parse(mapaX7) : null;
 
+            if (JMAP?.discs) {
+                JMAP.discs = JMAP.discs.filter(disc => disc.trait !== "goalPost");
+            }
+
             if (room.getDiscProperties(0).x === 0 && room.getDiscProperties(0).y === 0) return;
             if (x3Active) return;
             if (isInProccesOffside) return;
@@ -1232,7 +1236,6 @@ HaxballJS().then((HBInit) => {
 
             const cf = room.CollisionFlags;
 
-            const ballWasKickedBefore = ballWasKicked;
             ballWasKicked = false;
 
             room.pauseGame(true);
@@ -1246,18 +1249,16 @@ HaxballJS().then((HBInit) => {
             });
 
             room.setPlayerDiscProperties(offsidePlayer.id, {
-                x: playerPos.x < 0 ? 220 : -180,
+                x: playerPos.x < 0 ? 50 : -50,
                 y: 0
             });
 
-            setTimeout(() => {
-                room.setDiscProperties(5, {
-                    x: offsidePosition.x,
-                    y: offsidePosition.y,
-                    radius: 200,
-                    cMask: offsideTeam === 1 ? cf.red : cf.blue
-                });
-            }, 2000);
+            room.setDiscProperties(5, {
+                x: playerPos.x,
+                y: playerPos.y,
+                radius: 200,
+                cMask: offsideTeam === 1 ? cf.red : cf.blue
+            });
 
             room.sendAnnouncement("🚩 ¡FUERA DE JUEGO DETECTADO! 🚩", null, 0xFFDAB9, "bold", 2);
             room.sendAnnouncement(`👤 Jugador: ${playerName}`, null, 0xFFE4B5, "bold", 2);
@@ -1271,12 +1272,37 @@ HaxballJS().then((HBInit) => {
             drawFlag(playerPos.x * 2 + canvas.width / 2, 50, teamColor, false);
             drawFlag(defenderX * 2 + canvas.width / 2, canvas.height - 50, teamColor, true);
 
+            if (!isGamePaused) {
+                offsideTimer = setTimeout(() => {
+                    if (!ballWasKicked) {
+                        disableForceField();
+                        offsidePosition = null;
+                        isInProccesOffside = false;
+                        ballWasKicked = false;
+                        offsideTeam = null;
+                        defenseTeam = null;
+                        posX = 0;
+                        lastTouch = null;
+                        lastBallTouch = null;
+                        powerLevel = -1;
+                        bolapor = null;
+                        gravityActive = false;
+                        gravityEnabled = true;
+                        room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
+
+                        if (gravityTimer) {
+                            clearInterval(gravityTimer);
+                            gravityTimer = null;
+                        }
+                    }
+                }, 12000);
+            }
             setTimeout(() => {
                 room.sendAnnouncement("▶️ El juego continúa", null, 0xFFE4B5, "bold", 1);
                 room.pauseGame(false);
                 gravityEnabled = false;
-                ballWasKicked = ballWasKickedBefore;
-            }, 4000);
+                ballWasKicked = false;
+            }, 2000);
         }
 
         function drawFlag(x, y, teamColor, isDefender = false) {
@@ -1285,7 +1311,7 @@ HaxballJS().then((HBInit) => {
             // Palo del banderín
             ctx.beginPath();
             ctx.moveTo(x, y);
-            ctx.lineTo(x, y - 40);
+            ctx.lineTo(x, y);
             ctx.strokeStyle = "#8B4513";
             ctx.lineWidth = 3;
             ctx.stroke();
@@ -1293,9 +1319,9 @@ HaxballJS().then((HBInit) => {
 
             // Bandera
             ctx.beginPath();
-            ctx.moveTo(x, y - 40);
-            ctx.lineTo(x + 15, y - 30);
-            ctx.lineTo(x, y - 20);
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y);
+            ctx.lineTo(x, y);
             ctx.fillStyle = teamColor;
             ctx.fill();
             ctx.closePath();
@@ -1338,7 +1364,6 @@ HaxballJS().then((HBInit) => {
                 offsideTimer = null;
             }
 
-            if (!powerEnabled) gravityEnabled = true;
             if (isInProccesOffside) isInProccesOffside = false;
         }
 
@@ -2024,7 +2049,7 @@ HaxballJS().then((HBInit) => {
             }
 
             // Manejo de offside
-            if (offsideActive && isInProccesOffside) {
+            if (offsideActive && isInProccesOffside && room.getDiscProperties(5).radius === 200) {
                 if (player.id !== lastBallTouch?.id) {
                     ballWasKicked = true;
 
@@ -2036,7 +2061,7 @@ HaxballJS().then((HBInit) => {
                     const ballProperties = room.getDiscProperties(0);
                     const playerPosition = player.position;
 
-                    const kickPower = 2.6;
+                    const kickPower = 2.4;
 
                     let xspeed = ballProperties.xspeed * kickPower;
                     let yspeed = ballProperties.yspeed * kickPower;
@@ -2518,6 +2543,12 @@ HaxballJS().then((HBInit) => {
             const ball = room.getDiscProperties(0);
             if (!ball) return;
 
+            let JMAP = x5Active ? JSON.parse(mapaX5) : x7Active ? JSON.parse(mapaX7) : null;
+
+            if (JMAP?.discs) {
+                JMAP.discs = JMAP.discs.filter(disc => disc.trait !== "goalPost");
+            }
+
             if (ball.x === 0 && ball.y === 0) return;
 
             if (!x3Active && offsideActive) {
@@ -2529,45 +2560,8 @@ HaxballJS().then((HBInit) => {
                     const offsidePlayer = lastBallTouch;
                     if (!offsidePlayer) return;
 
-                    const goalLine = (offsidePlayer.team === 1) ? (x5Active ? 950 : x7Active ? 1200 : 0) :
-                        (offsidePlayer.team === 2) ? (x5Active ? -950 : x7Active ? -1200 : 0) : 0;
-
-                    const margen = 8;
-                    const margenForceField = 20;
-                    const cf = room.CollisionFlags;
-
-                    // Gol anulado por offside
-                    if (Math.abs(ball.x - goalLine) < margen) {
-                        room.sendAnnouncement("⚠️ Gol anulado por offside", null, 0xFF0000, "bold");
-
-                        room.setDiscProperties(0, {
-                            x: offsidePosition.x,
-                            y: offsidePosition.y,
-                            xspeed: 0,
-                            yspeed: 0,
-                            color: 0xFFA07A
-                        });
-
-                        room.setDiscProperties(5, {
-                            x: ball.x,
-                            y: ball.y,
-                            radius: 200,
-                            cMask: offsidePlayer.team === 1 ? cf.red : cf.blue
-                        });
-
-                        ballWasKicked = false;
-                        powerLevel = -1;
-                        gravityActive = false;
-                        clearInterval(gravityTimer);
-                        gravityTimer = null;
-                        if (offsideTimer) {
-                            clearTimeout(offsideTimer);
-                            offsideTimer = null;
-                        }
-                    }
-
                     // Si la pelota sale del radio del forceField y NO fue pateada, devolverla
-                    else if (distance > forceField.radius + margenForceField && !ballWasKicked) {
+                    if (distance > forceField.radius && !ballWasKicked) {
                         room.setDiscProperties(0, {
                             x: offsidePosition.x,
                             y: offsidePosition.y,
@@ -2578,6 +2572,7 @@ HaxballJS().then((HBInit) => {
 
                         powerLevel = -1;
                         gravityActive = false;
+                        ballWasKicked = false;
                         clearInterval(gravityTimer);
                         gravityTimer = null;
                         if (offsideTimer) {
@@ -2587,7 +2582,7 @@ HaxballJS().then((HBInit) => {
                     }
 
                     // Si la pelota sale del radio del forceField y FUE pateada, terminar el offside
-                    else if (distance > forceField.radius + margenForceField && ballWasKicked) {
+                    else if (distance > forceField.radius && ballWasKicked) {
                         offsidePosition = null;
                         isInProccesOffside = false;
                         ballWasKicked = false;
@@ -2599,6 +2594,8 @@ HaxballJS().then((HBInit) => {
                         powerLevel = -1;
                         bolapor = null;
                         gravityActive = false;
+                        gravityEnabled = true;
+                        room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
 
                         disableForceField();
                         if (offsideTimer) {
