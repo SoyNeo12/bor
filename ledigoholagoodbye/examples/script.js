@@ -231,6 +231,7 @@ HaxballJS().then((HBInit) => {
         let lastBallTouch = null;
         let isGamePaused = false;
         let totalOffsides = 0;
+        let forceFieldActive = false;
 
         const playerNumbers = new Map();
 
@@ -1235,30 +1236,76 @@ HaxballJS().then((HBInit) => {
             if (!ball) return;
 
             const cf = room.CollisionFlags;
-
             ballWasKicked = false;
-
             room.pauseGame(true);
-
-            room.setDiscProperties(0, {
-                x: playerPos.x,
-                y: playerPos.y,
-                xspeed: 0,
-                yspeed: 0,
-                color: 0xFFA07A
-            });
 
             room.setPlayerDiscProperties(offsidePlayer.id, {
                 x: playerPos.x < 0 ? 50 : -50,
                 y: 0
             });
 
-            room.setDiscProperties(5, {
-                x: playerPos.x,
-                y: playerPos.y,
-                radius: 200,
-                cMask: offsideTeam === 1 ? cf.red : cf.blue
-            });
+            const segmentYLine = x5Active ? 313 : x7Active ? 370 : 0;
+            const goalLine = x5Active ? 950 : x7Active ? 1200 : 0;
+            const segmentXLine = x5Active ? 683 : x7Active ? 907 : 0;
+
+            if (ball.y > -segmentYLine && ball.y < segmentYLine) {
+                if (team === "RED") {
+                    if (ball.x < -segmentXLine && ball.x > -goalLine) {
+                        room.setDiscProperties(5, {
+                            x: x5Active ? -800 : x7Active ? -1050 : 0,
+                            y: 0,
+                            radius: 80,
+                            cMask: cf.red
+                        });
+
+                        room.setDiscProperties(0, {
+                            x: x5Active ? -800 : x7Active ? -1050 : 0,
+                            y: 0,
+                            xspeed: 0,
+                            yspeed: 0,
+                            color: 0xFFA07A
+                        });
+
+                        room.setPlayerDiscProperties(gkred[0]?.id, { x: x5Active ? -920 : x7Active ? -1170 : 0, y: 0 });
+                    }
+                } else if (team === "BLUE") {
+                    if (ball.x > segmentXLine && ball.x < goalLine) {
+                        room.setDiscProperties(5, {
+                            x: x5Active ? 800 : x7Active ? 1050 : 0,
+                            y: 0,
+                            radius: 80,
+                            cMask: cf.blue
+                        });
+
+                        room.setDiscProperties(0, {
+                            x: x5Active ? 800 : x7Active ? 1050 : 0,
+                            y: 0,
+                            xspeed: 0,
+                            yspeed: 0,
+                            color: 0xFFA07A
+                        });
+
+                        room.setPlayerDiscProperties(gkblue[0]?.id, { x: x5Active ? 920 : x7Active ? 1170 : 0, y: 0 });
+                    }
+                }
+            } else {
+                room.setDiscProperties(5, {
+                    x: playerPos.x,
+                    y: playerPos.y,
+                    radius: 200,
+                    cMask: offsideTeam === 1 ? cf.red : cf.blue
+                });
+
+                room.setDiscProperties(0, {
+                    x: playerPos.x,
+                    y: playerPos.y,
+                    xspeed: 0,
+                    yspeed: 0,
+                    color: 0xFFA07A
+                });
+            }
+
+            forceFieldActive = true;
 
             room.sendAnnouncement("🚩 ¡FUERA DE JUEGO DETECTADO! 🚩", null, 0xFFDAB9, "bold", 2);
             room.sendAnnouncement(`👤 Jugador: ${playerName}`, null, 0xFFE4B5, "bold", 2);
@@ -1276,27 +1323,11 @@ HaxballJS().then((HBInit) => {
                 offsideTimer = setTimeout(() => {
                     if (!ballWasKicked) {
                         disableForceField();
-                        offsidePosition = null;
-                        isInProccesOffside = false;
-                        ballWasKicked = false;
-                        offsideTeam = null;
-                        defenseTeam = null;
-                        posX = 0;
-                        lastTouch = null;
-                        lastBallTouch = null;
-                        powerLevel = -1;
-                        bolapor = null;
-                        gravityActive = false;
-                        gravityEnabled = true;
-                        room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
-
-                        if (gravityTimer) {
-                            clearInterval(gravityTimer);
-                            gravityTimer = null;
-                        }
+                        resetOffsideVariables();
                     }
                 }, 12000);
             }
+
             setTimeout(() => {
                 room.sendAnnouncement("▶️ El juego continúa", null, 0xFFE4B5, "bold", 1);
                 room.pauseGame(false);
@@ -1336,29 +1367,25 @@ HaxballJS().then((HBInit) => {
         function disableForceField() {
             let JMAP = x5Active ? JSON.parse(mapaX5) : x7Active ? JSON.parse(mapaX7) : null;
 
-            const principalBallProperties = room.getDiscProperties(0);
-            const forceFieldProperties = room.getDiscProperties(5);
+            // Comprobar si el campo de fuerza está activo
+            if (forceFieldActive) {
+                // Restaurar disco 5 a su estado original
+                room.setDiscProperties(5, {
+                    x: JMAP?.discs[5]?.pos[0],
+                    y: JMAP?.discs[5]?.pos[1],
+                    radius: 0.001,
+                    cMask: 0
+                });
 
-            if (principalBallProperties && forceFieldProperties) {
-                // Comprobar si el campo de fuerza está activo
-                if (forceFieldProperties.radius === 200) {
-                    // Restaurar disco 5 a su estado original
-                    room.setDiscProperties(5, {
-                        x: JMAP?.discs[5]?.pos[0],
-                        y: JMAP?.discs[5]?.pos[1],
-                        radius: 0.001,
-                        cMask: 0
-                    });
-
-                    // Restaurar color de la pelota
-                    room.setDiscProperties(0, {
-                        color: 0xFFCC00
-                    });
-                }
+                // Restaurar color de la pelota
+                room.setDiscProperties(0, {
+                    color: NORMAL_BALL_COLOR
+                });
             }
 
             ballWasKicked = false;
             offsidePosition = null;
+            if (forceFieldActive) forceFieldActive = false;
             if (offsideTimer) {
                 clearTimeout(offsideTimer);
                 offsideTimer = null;
@@ -1620,19 +1647,36 @@ HaxballJS().then((HBInit) => {
                         playerProperties.x * scale + canvas.width / 2,
                         playerProperties.y * scale + canvas.height / 2
                     );
-
-                    // Dibujar nombre del jugador
-                    ctx.font = "12px Arial";
-                    ctx.fillStyle = "white";
-                    ctx.textAlign = "center";
-                    const cleanName = normalizeName(player.name);
-                    ctx.fillText(
-                        cleanName,
-                        playerProperties.x * scale + canvas.width / 2,
-                        (playerProperties.y * scale + canvas.height / 2) + playerProperties.radius * scale + 15
-                    );
                 }
             });
+        }
+
+        function resetOffsideVariables() {
+            offsidePosition = null;
+            isInProccesOffside = false;
+            ballWasKicked = false;
+            offsideTeam = null;
+            defenseTeam = null;
+            posX = 0;
+            lastTouch = null;
+            lastBallTouch = null;
+            powerLevel = -1;
+            bolapor = null;
+            gravityActive = false;
+            gravityEnabled = true;
+            forceFieldActive = false;
+            room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
+
+            disableForceField();
+            if (offsideTimer) {
+                clearTimeout(offsideTimer);
+                offsideTimer = null;
+            }
+
+            if (gravityTimer) {
+                clearInterval(gravityTimer);
+                gravityTimer = null;
+            }
         }
 
         room.onRoomLink = (link) => {
@@ -2049,7 +2093,7 @@ HaxballJS().then((HBInit) => {
             }
 
             // Manejo de offside
-            if (offsideActive && isInProccesOffside && room.getDiscProperties(5).radius === 200) {
+            if (offsideActive && isInProccesOffside && forceFieldActive) {
                 if (player.id !== lastBallTouch?.id) {
                     ballWasKicked = true;
 
@@ -2582,31 +2626,8 @@ HaxballJS().then((HBInit) => {
                     }
 
                     // Si la pelota sale del radio del forceField y FUE pateada, terminar el offside
-                    else if (distance > forceField.radius && ballWasKicked) {
-                        offsidePosition = null;
-                        isInProccesOffside = false;
-                        ballWasKicked = false;
-                        offsideTeam = null;
-                        defenseTeam = null;
-                        posX = 0;
-                        lastTouch = null;
-                        lastBallTouch = null;
-                        powerLevel = -1;
-                        bolapor = null;
-                        gravityActive = false;
-                        gravityEnabled = true;
-                        room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
-
-                        disableForceField();
-                        if (offsideTimer) {
-                            clearTimeout(offsideTimer);
-                            offsideTimer = null;
-                        }
-
-                        if (gravityTimer) {
-                            clearInterval(gravityTimer);
-                            gravityTimer = null;
-                        }
+                    else if (distance > forceField.radius && ballWasKicked && forceFieldActive) {
+                        resetOffsideVariables();
                     }
                 }
                 checkOffSide();
