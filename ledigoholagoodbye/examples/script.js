@@ -1266,7 +1266,7 @@ HaxballJS().then((HBInit) => {
                             color: 0xFFA07A
                         });
 
-                        room.setPlayerDiscProperties(gkred[0]?.id, { x: x5Active ? -920 : x7Active ? -1170 : 0, y: 0 });
+                        if (gkred.length > 0) room.setPlayerDiscProperties(gkred[0]?.id, { x: x5Active ? -920 : x7Active ? -1170 : 0, y: 0 });
                     }
                 } else if (team === "BLUE") {
                     if (ball.x > segmentXLine && ball.x < goalLine) {
@@ -1285,7 +1285,7 @@ HaxballJS().then((HBInit) => {
                             color: 0xFFA07A
                         });
 
-                        room.setPlayerDiscProperties(gkblue[0]?.id, { x: x5Active ? 920 : x7Active ? 1170 : 0, y: 0 });
+                        if (gkblue.length > 0) room.setPlayerDiscProperties(gkblue[0]?.id, { x: x5Active ? 920 : x7Active ? 1170 : 0, y: 0 });
                     }
                 }
             } else {
