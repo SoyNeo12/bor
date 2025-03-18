@@ -1253,10 +1253,12 @@ HaxballJS().then((HBInit) => {
                 forceFieldX = -segmentLine + forceFieldRadius;
             }
 
+            forceFieldRadius = 200;
+
             room.setDiscProperties(5, {
                 x: forceFieldX,
                 y: playerPos.y,
-                radius: 200,
+                radius: forceFieldRadius,
                 cMask: offsideTeam === 1 ? cf.red : cf.blue
             });
 
@@ -2558,7 +2560,7 @@ HaxballJS().then((HBInit) => {
                     if (!offsidePlayer) return;
 
                     // Si la pelota sale del radio del forceField y NO fue pateada, devolverla
-                    if (distance > forceField.radius && !ballWasKicked && forceField.radiuss >= 60) {
+                    if (distance > forceField.radius && !ballWasKicked && forceField.radius >= 60) {
                         room.setDiscProperties(0, {
                             x: offsidePosition.x,
                             y: offsidePosition.y,
