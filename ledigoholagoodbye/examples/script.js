@@ -1249,9 +1249,9 @@ HaxballJS().then((HBInit) => {
             const segmentLine = x5Active ? 950 : x7Active ? 1200 : 0;
 
             if (forceFieldX + forceFieldRadius >= segmentLine) {
-                forceFieldX -= 100;
+                forceFieldX = segmentLine - forceFieldRadius;
             } else if (forceFieldX - forceFieldRadius <= -segmentLine) {
-                forceFieldX += 100;
+                forceFieldX = -segmentLine + forceFieldRadius;
             }
 
             room.setDiscProperties(5, {
