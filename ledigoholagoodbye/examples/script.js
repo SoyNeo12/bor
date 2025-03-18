@@ -1245,7 +1245,7 @@ HaxballJS().then((HBInit) => {
             });
 
             let forceFieldX = playerPos.x;
-            const forceFieldRadius = 60;
+            let forceFieldRadius = 60;
             const segmentLine = x5Active ? 950 : x7Active ? 1200 : 0;
 
             if (forceFieldX + forceFieldRadius >= segmentLine) {
@@ -1257,7 +1257,7 @@ HaxballJS().then((HBInit) => {
             room.setDiscProperties(5, {
                 x: forceFieldX,
                 y: playerPos.y,
-                radius: forceFieldRadius,
+                radius: 200,
                 cMask: offsideTeam === 1 ? cf.red : cf.blue
             });
 
@@ -1342,13 +1342,13 @@ HaxballJS().then((HBInit) => {
                     radius: 0.001,
                     cMask: 0
                 });
-
-                room.setDiscProperties(0, {
-                    color: NORMAL_BALL_COLOR
-                });
-
-                resetOffsideVariables();
             }
+
+            room.setDiscProperties(0, {
+                color: NORMAL_BALL_COLOR
+            });
+
+            resetOffsideVariables();
         }
 
         function drawField() {
@@ -2047,7 +2047,7 @@ HaxballJS().then((HBInit) => {
             }
 
             // Manejo de offside
-            if (offsideActive && isInProccesOffside && forceFieldActive) {
+            if (offsideActive && isInProccesOffside) {
                 if (player.id !== lastBallTouch?.id) {
                     ballWasKicked = true;
 
