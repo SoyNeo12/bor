@@ -125,7 +125,7 @@ HaxballJS().then((HBInit) => {
                 "lon": -60.6559,
                 "code": "MO"
             },
-            token: "thr1.AAAAAGfWDqhYJht292vAgg.zA7tuV7MWks"
+            token: "thr1.AAAAAGfZ6jiMGWXhAhaMJQ.eFH-yQuFUN0"
         });
         // | 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
         // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
