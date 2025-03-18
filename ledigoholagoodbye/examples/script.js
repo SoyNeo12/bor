@@ -231,7 +231,6 @@ HaxballJS().then((HBInit) => {
         let lastBallTouch = null;
         let isGamePaused = false;
         let totalOffsides = 0;
-        let forceFieldActive = false;
 
         const playerNumbers = new Map();
 
@@ -2559,7 +2558,7 @@ HaxballJS().then((HBInit) => {
                     if (!offsidePlayer) return;
 
                     // Si la pelota sale del radio del forceField y NO fue pateada, devolverla
-                    if (distance > forceField.radius && !ballWasKicked) {
+                    if (distance > forceField.radius && !ballWasKicked && forceField.radiuss >= 60) {
                         room.setDiscProperties(0, {
                             x: offsidePosition.x,
                             y: offsidePosition.y,
