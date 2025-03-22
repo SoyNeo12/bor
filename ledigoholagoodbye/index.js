@@ -11,17 +11,15 @@ function checkForUpdates() {
 
     checkDependencies(dependencies, () => {
         if (allUpToDate) {
-            console.log("\n✅ Todos los paquetes están actualizados. Iniciando scripts...");
+            console.log("\nTodos los paquetes están actualizados. Iniciando scripts...");
             require('./examples/script');
-            require('./examples/discord/iniciar.js');
         } else {
-            console.log("\n📢 Actualizando paquetes desactualizados...");
-            showProgress(0, 100); 
+            console.log("\nActualizando paquetes desactualizados...");
+            showProgress(0, 100);
             simulateProgress(() => {
                 updateOutdatedPackages(() => {
-                    console.log("\n✅ Paquetes actualizados correctamente. Iniciando scripts...");
+                    console.log("\nPaquetes actualizados correctamente. Iniciando scripts...");
                     require('./examples/script');
-                    require('./examples/discord/iniciar.js');
                 });
             });
         }
