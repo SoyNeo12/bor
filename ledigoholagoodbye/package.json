@@ -1,6 +1,6 @@
 {
   "name": "panda-haxball",
-  "version": "6.1.1",
+  "version": "6.1.2",
   "description": "Bot Pandita",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "@roamhq/wrtc": "^0.8.0",
-    "axios": "^1.1.2",
+    "axios": "^1.8.4",
     "canvas": "^3.1.0",
     "child_process": "^1.0.2",
     "discord.js": "^14.18.0",
