@@ -535,7 +535,7 @@ HaxballJS().then((HBInit) => {
                 if (!chaosModeActive) return;
                 let mode;
                 do {
-                    mode = Math.floor(Math.random() * 5) + 1;
+                    mode = Math.floor(Math.random() * 4) + 1;
                 } while (mode === lastMode);
                 lastMode = mode;
 
@@ -571,13 +571,6 @@ HaxballJS().then((HBInit) => {
                     room.setDiscProperties(0, {
                         bCoeff: 1.5
                     });
-                } else if (mode === 5) {
-                    room.sendAnnouncement("🐼¡Septimo modo de juego!🐼", null, null, "bold", 2);
-                    room.sendAnnouncement("¡PELOTA PESADA!", null, 0x09c49f, "bold", 2);
-
-                    room.setDiscProperties(0, {
-                        invMass: 0.5
-                    });
                 }
 
                 chaosModeTimer = setTimeout(() => {
@@ -603,10 +596,6 @@ HaxballJS().then((HBInit) => {
             } else if (mode === 4) {
                 room.setDiscProperties(0, {
                     bCoeff: 0.4
-                });
-            } else if (mode === 5) {
-                room.setDiscProperties(0, {
-                    invMass: 1.5
                 });
             }
             remainingTime = 30000;
