@@ -125,7 +125,7 @@ HaxballJS().then((HBInit) => {
                 "lon": -60.6559,
                 "code": "MO"
             },
-            token: "thr1.AAAAAGffa9rYgeJ_W7NPog.RtuSegGnb4s"
+            token: "thr1.AAAAAGffowuFGIVRwN4y6w.vNklHFuJeQ8"
         });
         // | 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
         // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
@@ -1224,8 +1224,8 @@ HaxballJS().then((HBInit) => {
                 let forceFieldX = playerPos.x;
                 let forceFieldY = playerPos.y;
 
-                const segmentX = x5Active ? 890 : x7Active ? 1105 : 0;
-                const forceX = x5Active ? 760 : x7Active ? 1015 : 0;
+                const segmentX = x5Active ? 741 : x7Active ? 985 : 0;
+                const forceX = x5Active ? 615 : x7Active ? 900 : 0;
 
                 if (offsideTeam === 1 && playerPos.x >= segmentX) {
                     forceFieldX = forceX;
@@ -1596,7 +1596,7 @@ HaxballJS().then((HBInit) => {
                     const playerName = player.name;
                     const xPlayer = playerProperties.x * scale + canvas.width / 2;
                     const yPlayer = playerProperties.y * scale + canvas.height / 2;
-                    ctx.fillText(playerName, xPlayer, yPlayer + playerProperties.radius + 10);
+                    ctx.fillText(playerName, xPlayer, yPlayer + playerProperties.radius + 20);
                 }
             });
         }
@@ -2286,7 +2286,7 @@ HaxballJS().then((HBInit) => {
             gravityEnabled = false;
             betCooldownActive = false;
             chaosModeActive = true;
-            offsideActive = false;
+            resetOffsideVariables();
             bolapor = null;
             powerEnabled = false;
             gkred = [], gkblue = [];
