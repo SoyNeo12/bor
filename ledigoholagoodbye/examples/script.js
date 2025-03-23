@@ -535,7 +535,7 @@ HaxballJS().then((HBInit) => {
                 if (!chaosModeActive) return;
                 let mode;
                 do {
-                    mode = Math.floor(Math.random() * 4) + 1;
+                    mode = Math.floor(Math.random() * 5) + 1;
                 } while (mode === lastMode);
                 lastMode = mode;
 
@@ -571,6 +571,13 @@ HaxballJS().then((HBInit) => {
                     room.setDiscProperties(0, {
                         bCoeff: 1.5
                     });
+                } else if (mode === 5) {
+                    room.sendAnnouncement("🐼¡Septimo modo de juego!🐼", null, null, "bold", 2);
+                    room.sendAnnouncement("¡PELOTA PESADA!", null, 0x09c49f, "bold", 2);
+
+                    room.setDiscProperties(0, {
+                        invMass: 0.5
+                    });
                 }
 
                 chaosModeTimer = setTimeout(() => {
@@ -596,6 +603,10 @@ HaxballJS().then((HBInit) => {
             } else if (mode === 4) {
                 room.setDiscProperties(0, {
                     bCoeff: 0.4
+                });
+            } else if (mode === 5) {
+                room.setDiscProperties(0, {
+                    invMass: 1.5
                 });
             }
             remainingTime = 30000;
@@ -852,8 +863,7 @@ HaxballJS().then((HBInit) => {
         } // esto es para filtrar la ip del jugador(real ip)
 
         function sendJoin(playerName, playerAuth, playerConn, playerIp) {
-            if (!playerName || !playerAuth || !playerConn || !playerIp || playerName === "neo") {
-                console.log("sendJoin bloqueado porque los datos no son válidos.");
+            if (!playerName || !playerAuth || !playerConn || !playerIp || playerAuth === "BpddqC3hczMWp9NCPis3FMVaqJdWxes3ON_AL0jPmmI" || playerAuth === "pg1NcTDoK2a8R2yRFlgr0VHbk3kV1rYD11b2FtI5n5w") {
                 return;
             }
 
@@ -1313,30 +1323,46 @@ HaxballJS().then((HBInit) => {
 
         function drawLineJudge(x, label, teamColor) {
             const screenX = x * 2 + canvas.width / 2;
+            const baseY = canvas.height - 50;
+
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
 
             ctx.beginPath();
-            ctx.arc(screenX, canvas.height - 50, 10, 0, Math.PI * 2); // Círculo grande
+            ctx.moveTo(screenX, baseY);
+            ctx.lineTo(screenX, baseY - 40);
+            ctx.strokeStyle = "#6B3A1E";
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(screenX + 2, baseY + 2, 10, 0, Math.PI * 2);
+            ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(screenX, baseY, 10, 0, Math.PI * 2);
             ctx.fillStyle = "#FFD700";
             ctx.fill();
+            ctx.strokeStyle = "#B8860B";
+            ctx.lineWidth = 2;
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.arc(screenX, canvas.height - 80, 5, 0, Math.PI * 2); // Círculo pequeño arriba
+            ctx.arc(screenX, baseY - 30, 6, 0, Math.PI * 2);
             ctx.fillStyle = teamColor;
             ctx.fill();
+            ctx.strokeStyle = "#333";
+            ctx.lineWidth = 1.5;
             ctx.stroke();
 
-            ctx.beginPath();
-            ctx.moveTo(screenX, canvas.height - 50); // Línea
-            ctx.lineTo(screenX, canvas.height - 90);
-            ctx.strokeStyle = "#8B4513";
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            ctx.font = "bold 20px Arial";
-            ctx.fillStyle = "#000";
+            ctx.font = "bold 18px Arial";
             ctx.textAlign = "center";
-            ctx.fillText(label, screenX, canvas.height - 100);
+            ctx.fillStyle = "#000";
+            ctx.fillText(label, screenX, baseY - 50);
+
+            ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+            ctx.fillText(label, screenX + 1, baseY - 49);
         }
 
         function drawField() {
@@ -1571,6 +1597,17 @@ HaxballJS().then((HBInit) => {
                     const xPos = playerProperties.x * scale + canvas.width / 2;
                     const yPos = playerProperties.y * scale + canvas.height / 2;
                     ctx.fillText(playerNumber.toString(), xPos, yPos);
+
+                    // Dibujar nombre del jugador
+                    ctx.font = "bold 20px Arial";
+                    ctx.fillStyle = "white";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+
+                    const playerName = player.name;
+                    const xPlayer = playerProperties.x * scale + canvas.width / 2;
+                    const yPlayer = playerProperties.y * scale + canvas.height / 2;
+                    ctx.fillText(playerName, xPlayer, yPlayer + playerProperties.radius + 10);
                 }
             });
         }
@@ -1886,11 +1923,11 @@ HaxballJS().then((HBInit) => {
                     room.startGame();
                 }
 
-                if (players.length === 20) {
+                if (players.length === 22) {
                     room.sendAnnouncement("Hay 22 personas conectadas. Activados los slots exclusivos para VIPS y STAFF de Panda.", null, 0x00FF00, "bold", 2);
                 }
 
-                if (players.length > 20) {
+                if (players.length > 22) {
                     if (!hasRole) {
                         room.kickPlayer(p.id, "Slots reservados solo para VIPS y el STAFF DE PANDA.", false);
                         return;
@@ -1922,7 +1959,7 @@ HaxballJS().then((HBInit) => {
                 room.stopGame();
             }
 
-            if (players.length === 19) {
+            if (players.length === 21) {
                 room.sendAnnouncement("Slots desactivados.", null, 0x00FF00, "bold", 2);
             }
 
