@@ -125,7 +125,7 @@ HaxballJS().then((HBInit) => {
                 "lon": -60.6559,
                 "code": "MO"
             },
-            token: "thr1.AAAAAGffowuFGIVRwN4y6w.vNklHFuJeQ8"
+            token: "thr1.AAAAAGffa9rYgeJ_W7NPog.RtuSegGnb4s"
         });
         // | 𝘓𝘌𝘎𝘐𝘖𝘕 𝘗𝘈𝘕𝘋𝘈 - 🐼🎋
         // 𝐉𝐔𝐄𝐆𝐀𝐍 𝐓𝐎𝐃𝐎𝐒 | 𝐏𝐀𝐍𝐃𝐀🐼🎋
@@ -1587,16 +1587,17 @@ HaxballJS().then((HBInit) => {
                     const yPos = playerProperties.y * scale + canvas.height / 2;
                     ctx.fillText(playerNumber.toString(), xPos, yPos);
 
-                    // Dibujar nombre del jugador
+
+                    // Dibujar el nombre del jugador
                     ctx.font = "bold 20px Arial";
                     ctx.fillStyle = "white";
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
 
-                    const playerName = player.name;
+                    const normalizedName = player.name?.normalize("NFD")?.replace(/[\u0300-\u036f]/g, "");
                     const xPlayer = playerProperties.x * scale + canvas.width / 2;
                     const yPlayer = playerProperties.y * scale + canvas.height / 2;
-                    ctx.fillText(playerName, xPlayer, yPlayer + playerProperties.radius + 20);
+                    ctx.fillText(normalizedName, xPlayer, yPlayer + playerProperties.radius + 20);
                 }
             });
         }
