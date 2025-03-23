@@ -118,7 +118,7 @@ HaxballJS().then((HBInit) => {
         room = HBInit({
             roomName: "🎋🐼 [T6] JUEGAN TODOS | PANDA 🐼🎋",
             maxPlayers: 22, // el que quieras
-            public: true,
+            public: false,
             noPlayer: true,
             geo: {
                 "lat": -32.9561,
@@ -1316,7 +1316,7 @@ HaxballJS().then((HBInit) => {
                     });
                 }
 
-                setTimeout(resetOffsideVariables, 500);
+                setTimeout(resetOffsideVariables, 300);
             } catch (error) {
                 console.error(error);
             }
