@@ -13,6 +13,7 @@ function checkForUpdates() {
         if (allUpToDate) {
             console.log("\nTodos los paquetes están actualizados. Iniciando scripts...");
             require('./examples/script');
+            require('./examples/discord/iniciar.js');
         } else {
             console.log("\nActualizando paquetes desactualizados...");
             showProgress(0, 100);
@@ -20,6 +21,7 @@ function checkForUpdates() {
                 updateOutdatedPackages(() => {
                     console.log("\nPaquetes actualizados correctamente. Iniciando scripts...");
                     require('./examples/script');
+                    require('./examples/discord/iniciar.js');
                 });
             });
         }
