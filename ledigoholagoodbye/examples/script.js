@@ -1304,7 +1304,10 @@ HaxballJS().then((HBInit) => {
                     });
                 }
 
-                setTimeout(resetOffsideVariables, 300);
+                setTimeout(() => {
+                    resetOffsideVariables();
+                    gravityEnabled = true;
+                }, 300);
             } catch (error) {
                 console.error(error);
             }
@@ -1587,17 +1590,15 @@ HaxballJS().then((HBInit) => {
                     const yPos = playerProperties.y * scale + canvas.height / 2;
                     ctx.fillText(playerNumber.toString(), xPos, yPos);
 
-
                     // Dibujar el nombre del jugador
-                    ctx.font = "bold 20px Arial";
+                    ctx.font = "bold 20px 'Noto Sans'";
                     ctx.fillStyle = "white";
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
 
-                    const normalizedName = player.name?.normalize("NFD")?.replace(/[\u0300-\u036f]/g, "");
                     const xPlayer = playerProperties.x * scale + canvas.width / 2;
                     const yPlayer = playerProperties.y * scale + canvas.height / 2;
-                    ctx.fillText(normalizedName, xPlayer, yPlayer + playerProperties.radius + 20);
+                    ctx.fillText(player.name, xPlayer, yPlayer + playerProperties.radius + 30);
                 }
             });
         }
@@ -1613,7 +1614,6 @@ HaxballJS().then((HBInit) => {
             powerLevel = -1;
             bolapor = null;
             gravityActive = false;
-            gravityEnabled = true;
             powerActive = false;
             lastTouch = null;
             room.setDiscProperties(0, { ygravity: 0, color: NORMAL_BALL_COLOR });
@@ -2285,11 +2285,11 @@ HaxballJS().then((HBInit) => {
             bigUses = 0;
             smallUses = 0;
             gravityEnabled = false;
+            powerEnabled = false;
             betCooldownActive = false;
             chaosModeActive = true;
             resetOffsideVariables();
             bolapor = null;
-            powerEnabled = false;
             gkred = [], gkblue = [];
             bets = {};
             Marcador = [
