@@ -1605,7 +1605,9 @@ HaxballJS().then((HBInit) => {
 
         function resetOffsideVariables() {
             offsidePosition = null;
-            isInProccesOffside = false;
+            setTimeout(() => {
+                isInProccesOffside = false;
+            }, 1000);
             ballWasKicked = false;
             offsideTeam = null;
             defenseTeam = null;
@@ -1616,7 +1618,7 @@ HaxballJS().then((HBInit) => {
             gravityActive = false;
             powerActive = false;
             lastTouch = null;
-            room.setDiscProperties(0, { ygravity: 0, color: NORMAL_BALL_COLOR });
+            room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
 
             if (gravityTimer) {
                 clearInterval(gravityTimer);
@@ -2070,13 +2072,7 @@ HaxballJS().then((HBInit) => {
                         room.setDiscProperties(0, { ygravity: 0 });
                     }, 2000);
 
-                    gravityActive = false;
-                    bolapor = null;
-                    powerLevel = -1;
-                    if (gravityTimer) {
-                        clearInterval(gravityTimer);
-                        gravityTimer = null;
-                    }
+                    disableForceField();
                 }
             }
 
@@ -2553,11 +2549,6 @@ HaxballJS().then((HBInit) => {
                         ballWasKicked = false;
                         clearInterval(gravityTimer);
                         gravityTimer = null;
-                    }
-
-                    // Si la pelota sale del radio del forceField y FUE pateada, terminar el offside
-                    else if (distance > forceField.radius && ballWasKicked && forceField.radius >= 150) {
-                        disableForceField();
                     }
                 }
                 checkOffSide();
