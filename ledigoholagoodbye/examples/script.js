@@ -1579,26 +1579,26 @@ HaxballJS().then((HBInit) => {
                     ctx.fill();
                     ctx.closePath();
 
-                    // Dibujar número del jugador
+                    // Dibujar número del jugador o emoji si es arquero
                     ctx.font = "bold 18px Arial";
                     ctx.fillStyle = "white";
                     ctx.textAlign = "center";
                     ctx.textBaseline = "middle";
 
-                    const playerNumber = Math.floor(Math.random() * 99) + 1;
                     const xPos = playerProperties.x * scale + canvas.width / 2;
                     const yPos = playerProperties.y * scale + canvas.height / 2;
-                    ctx.fillText(playerNumber.toString(), xPos, yPos);
+
+                    if (gkred.includes(player.id) || gkblue.includes(player.id)) {
+                        ctx.font = "bold 22px Arial";
+                        ctx.fillText("🧤", xPos, yPos);
+                    } else {
+                        const playerNumber = Math.floor(Math.random() * 99) + 1;
+                        ctx.fillText(playerNumber.toString(), xPos, yPos);
+                    }
 
                     // Dibujar el nombre del jugador
-                    ctx.font = "bold 20px 'Noto Sans'";
-                    ctx.fillStyle = "white";
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "middle";
-
-                    const xPlayer = playerProperties.x * scale + canvas.width / 2;
-                    const yPlayer = playerProperties.y * scale + canvas.height / 2;
-                    ctx.fillText(player.name, xPlayer, yPlayer + playerProperties.radius + 30);
+                    ctx.font = "bold 16px 'Noto Sans'";
+                    ctx.fillText(player.name, xPos, yPos + playerProperties.radius + 15);
                 }
             });
         }
