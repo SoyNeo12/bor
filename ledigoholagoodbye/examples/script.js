@@ -1120,20 +1120,30 @@ HaxballJS().then((HBInit) => {
         function getLastTouch() {
             const players = room.getPlayerList().filter(player => player.team === 1 || player.team === 2);
             let closestPlayer = null;
-
+            
+            const BLUE_LIMIT_X = x5Active ? 950 : x7Active ? 1200 : Infinity;  
+            const RED_LIMIT_X = x5Active ? -950 : x7Active ? -1200 : -Infinity;  
+            
             players.forEach(player => {
                 const playerProperties = room.getPlayerDiscProperties(player.id);
                 const ballProperties = room.getDiscProperties(0);
-
                 const distance = pointDistance(playerProperties.x, playerProperties.y, ballProperties.x, ballProperties.y);
-                if (distance < 30) {  // Si el jugador tocó el balón
+
+                const triggerDistance = playerProperties.radius + ballProperties.radius;
+                
+                if (
+                    distance < triggerDistance &&
+                    playerProperties.x > 0 && playerProperties.x < BLUE_LIMIT_X &&
+                    playerProperties.x < 0 && playerProperties.x > RED_LIMIT_X &&
+                ) {  
+                    minDistance = distance;
                     closestPlayer = player;
-                    if (closestPlayer !== lastTouch) {
-                        lastTouch = closestPlayer;
-                    }
                 }
             });
-
+            
+            if (closestPlayer && closestPlayer !== lastTouch) {
+                lastTouch = closestPlayer;
+            }
             return lastTouch;
         }
 
@@ -1146,6 +1156,7 @@ HaxballJS().then((HBInit) => {
                 const defenders = getLastDefenders();
                 const currentTouch = getLastTouch();
 
+                
                 if (currentTouch && currentTouch !== lastBallTouch) {
                     // Verificación de pase intencional
                     if (lastBallTouch && currentTouch.id !== lastBallTouch.id) {
@@ -1505,27 +1516,26 @@ HaxballJS().then((HBInit) => {
                 });
 
                 if (response.status === 200) {
-                    console.log("✅ Imagen y embed enviados a Discord con éxito");
+                    console.log("Imagen y embed enviados a Discord con éxito");
                 } else {
-                    console.error("❌ Error al enviar imagen:", response.statusText);
+                    console.error("Error al enviar imagen:", response.statusText);
                 }
             } catch (error) {
-                console.error("❌ Error al enviar imagen:", error.message);
+                console.error("Error al enviar imagen:", error.message);
             }
         }
 
         function drawGameObjects() {
             drawField();
-
+            
             let JMAP = x5Active ? JSON.parse(mapaX5) : x7Active ? JSON.parse(mapaX7) : null;
-            const scale = 2; // Ajustar la escala
-
-            // Dibujar los discos del mapa
+            const scale = 2;
+            
             if (JMAP?.discs) {
                 JMAP.discs.forEach(disc => {
                     if (!disc.color || disc.color === "transparent") return;
                     if (disc.radius === 10 || disc.radius === 6.25 || disc.bCoef === 0) return;
-
+                    
                     ctx.beginPath();
                     ctx.arc(
                         disc.pos[0] * scale + canvas.width / 2,
@@ -1541,10 +1551,9 @@ HaxballJS().then((HBInit) => {
                     ctx.closePath();
                 });
             }
-
-            // Dibujar la pelota
+            
             const ball = room.getDiscProperties(0);
-            if (ball && ball.x !== undefined && ball.y !== undefined) {
+            if (ball?.x !== undefined && ball?.y !== undefined && ball?.radius !== undefined) {
                 ctx.beginPath();
                 ctx.arc(
                     ball.x * scale + canvas.width / 2,
@@ -1553,52 +1562,44 @@ HaxballJS().then((HBInit) => {
                     0,
                     Math.PI * 2
                 );
-                ctx.fillStyle = "#FFCC00"; // Color de la pelota
+                ctx.fillStyle = "#FFCC00";
                 ctx.fill();
                 ctx.closePath();
             }
-
-            // Dibujar jugadores
+            
             const players = room.getPlayerList();
             players.forEach(player => {
                 const playerProperties = room.getPlayerDiscProperties(player.id);
+                if (!playerProperties) return;
 
-                if (playerProperties !== null) {
-                    ctx.beginPath();
-                    ctx.arc(
-                        playerProperties.x * scale + canvas.width / 2,
-                        playerProperties.y * scale + canvas.height / 2,
-                        playerProperties.radius * scale,
-                        0,
-                        Math.PI * 2
-                    );
+                const xPos = playerProperties.x * scale + canvas.width / 2;   
+                const yPos = playerProperties.y * scale + canvas.height / 2;
 
-                    const playerColor = player.team === 1 ? "#FF0000" : "#0000FF";
+                ctx.beginPath();  
+				ctx.arc(xPos, yPos, playerProperties.radius * scale, 0, Math.PI * 2);
+                ctx.fillStyle = player.team === 1 ? "#FF0000" : "#0000FF";
+                ctx.fill();
+                ctx.closePath();
 
-                    ctx.fillStyle = playerColor;
-                    ctx.fill();
-                    ctx.closePath();
-
-                    // Dibujar número del jugador o emoji si es arquero
-                    ctx.font = "bold 18px Arial";
-                    ctx.fillStyle = "white";
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "middle";
-
-                    const xPos = playerProperties.x * scale + canvas.width / 2;
-                    const yPos = playerProperties.y * scale + canvas.height / 2;
-
-                    if (gkred.includes(player.id) || gkblue.includes(player.id)) {
-                        ctx.font = "bold 22px Arial";
-                        ctx.fillText("🧤", xPos, yPos);
-                    } else {
-                        const playerNumber = Math.floor(Math.random() * 99) + 1;
-                        ctx.fillText(playerNumber.toString(), xPos, yPos);
-                    }
-
-                    // Dibujar el nombre del jugador
+                ctx.font = "bold 18px Arial";
+                ctx.fillStyle = "white";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(Math.floor(Math.random() * 99) + 1, xPos, yPos);
+                
+                if (player.name) {
                     ctx.font = "bold 16px 'Noto Sans'";
                     ctx.fillText(player.name, xPos, yPos + playerProperties.radius + 15);
+                }
+                
+                if (gkred.some(gk => gk.auth === playerId[player.id])) {
+                    ctx.font = "bold 16px Arial";
+                    ctx.fillText("GKRED", xPos, yPos + playerProperties.radius + 30);
+                }
+                
+                if (gkblue.some(gk => gk.auth === playerId[player.id])) {
+                    ctx.font = "bold 16px Arial";
+                    ctx.fillText("GKBLUE", xPos, yPos + playerProperties.radius + 30);
                 }
             });
         }
@@ -2045,7 +2046,7 @@ HaxballJS().then((HBInit) => {
                     const ballProperties = room.getDiscProperties(0);
                     const playerPosition = player.position;
 
-                    const kickPower = 2.5;
+                    const kickPower = 2;
 
                     let xspeed = ballProperties.xspeed * kickPower;
                     let yspeed = ballProperties.yspeed * kickPower;
@@ -3017,7 +3018,7 @@ HaxballJS().then((HBInit) => {
                                     if (index !== -1) {
                                         gkred.splice(index, 1);
                                         room.sendAnnouncement(`${player.name} ya NO es el GK del RED.🧤❌`, null, 0xffabbc, "bold", 1);
-                                        room.setPlayerAvatar(player.id, "🧤");
+                                        room.setPlayerAvatar(player.id, null);
                                     } else {
                                         if (gkred.length > 0) {
                                             room.sendAnnouncement(`🧤🥅 Ya hay un GK en el equipo rojo: ${gkred[0].name}`, player.id, 0xffabbc);
