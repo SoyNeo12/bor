@@ -209,7 +209,7 @@ HaxballJS().then((HBInit) => {
 
         const palabrasCensuradas = ['puto', 'horrendos', 'cojido', 'cogido', 'violin', 'payaso', 'puta', 'sida', 'cancer', 'cancerigeno', 'son un asco', 'son muy malos', 'mono', 'negro de mierda', 'argensimios', 'trolo', 'sidoso', 'sidosos', 'retrasado mental', 'putas', 'putos', 'coger', 'garchar', 'sexo', 'down', 'autismo', 'd0wn', 'travesti', 'mueranse', 'chupame la pija', 'la concha de tu madre', 'suicidate', 'matate', 'pegate un tiro', 'son una mierda', 'gay', 'traba', 'violar', 'pija', 'pelotudo', 'chupar', 'chupala', 'chupa', 'verga', 'autista', 'mongolico', 'mogolico', 'pene', 'hijo de puta', 'pelmazo', 'mamerto', 'aweonao', 'hijodeputa', 'horrendos', 'chupas', 'nazi', 'nasi']; const POWER_HOLD_TIME = 1800;
         const MODES = ['power', 'comba'];
-        const BOOST_SPEEDS = [1.2, 1.5, 1.7, 2];
+	const BOOST_SPEEDS = [1.4, 1.6, 1.8, 2]; // const BOOST_SPEEDS = [1.2, 1.5, 1.7, 2];
         const COLORS = [0xff0000, 0xa40000, 0x6a0a0a, 0xff6400];
         const COMBA_COLORS = [0xbd00ff, 0x8500b4, 0x57136f, 0xff00ff];
         const operators = ['+', '-', '*', '/', 'sqrt', '^', 'ln'];
