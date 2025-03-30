@@ -1121,8 +1121,8 @@ HaxballJS().then((HBInit) => {
             const players = room.getPlayerList().filter(player => player.team === 1 || player.team === 2);
             let closestPlayer = null;
             
-            const BLUE_LIMIT_X = x5Active ? 950 : x7Active ? 1200 : Infinity;  
-            const RED_LIMIT_X = x5Active ? -950 : x7Active ? -1200 : -Infinity;  
+            const BLUE_LIMIT_X = x5Active ? 950 : x7Active ? 1200 : 0;  
+            const RED_LIMIT_X = x5Active ? -950 : x7Active ? -1200 : 0;  
             
             players.forEach(player => {
                 const playerProperties = room.getPlayerDiscProperties(player.id);
@@ -1134,9 +1134,8 @@ HaxballJS().then((HBInit) => {
                 if (
                     distance < triggerDistance &&
                     playerProperties.x > 0 && playerProperties.x < BLUE_LIMIT_X &&
-                    playerProperties.x < 0 && playerProperties.x > RED_LIMIT_X &&
-                ) {  
-                    minDistance = distance;
+                    playerProperties.x < 0 && playerProperties.x > RED_LIMIT_X
+                ) {
                     closestPlayer = player;
                 }
             });
