@@ -70,7 +70,7 @@ module.exports = {
 
             const forecastDate = new Date(dailyData.Date).toLocaleDateString('es-ES', { weekday: 'long', day: '2-digit', month: 'long' });
 
-            const alertsUrl = `http://dataservice.accuweather.com/alerts/v1/${location}`;
+            const alertsUrl = `http://dataservice.accuweather.com/alerts/v1/${encodeURIComponent(location)}`;
             const alertsResponse = await axios.get(alertsUrl);
             const alerts = alertsResponse.data;
 
