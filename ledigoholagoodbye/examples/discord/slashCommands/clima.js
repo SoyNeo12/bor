@@ -18,9 +18,9 @@ module.exports = {
         const location = interaction.options.getString('ubicacion');
 
         try {
-            const locationUrl = `http://dataservice.accuweather.com/locations/v1/cities/search?apikey=${WEATHER_API_KEY}&q=${encodeURIComponent(location)}`;
+            const locationUrl = `http://dataservice.accuweather.com/locations/v1/cities/search?apikey=${WEATHER_API_KEY}&q=${encodeURIComponent(location)}&language=es`;
             const locationResponse = await axios.get(locationUrl);
-            
+
             if (!locationResponse.data.length) {
                 return interaction.editReply({ content: '❌ Ubicación no encontrada.', ephemeral: true });
             }
@@ -30,7 +30,7 @@ module.exports = {
             const city = locationData.LocalizedName;
             const country = locationData.Country.ID;
 
-            const weatherUrl = `http://dataservice.accuweather.com/currentconditions/v1/${locationKey}?apikey=${WEATHER_API_KEY}&details=true`;
+            const weatherUrl = `http://dataservice.accuweather.com/currentconditions/v1/${locationKey}?apikey=${WEATHER_API_KEY}&details=true&language=es`;
             const weatherResponse = await axios.get(weatherUrl);
             const weatherData = weatherResponse.data[0];
 
@@ -40,24 +40,25 @@ module.exports = {
             const humidity = weatherData.RelativeHumidity;
             const windSpeed = weatherData.Wind.Speed.Metric.Value;
             const visibility = weatherData.Visibility.Metric.Value;
+            const pressure = weatherData.Pressure.Metric.Value;
             const localTime = new Date(weatherData.LocalObservationDateTime).toLocaleString('es-ES', { timeZone: 'UTC', hour12: false });
 
             const weatherIcon = `https://developer.accuweather.com/sites/default/files/${String(weatherData.WeatherIcon).padStart(2, '0')}-s.png`;
 
-            const hourlyForecastUrl = `http://dataservice.accuweather.com/forecasts/v1/hourly/12hour/${locationKey}?apikey=${WEATHER_API_KEY}&metric=true`;
+            const hourlyForecastUrl = `http://dataservice.accuweather.com/forecasts/v1/hourly/12hour/${locationKey}?apikey=${WEATHER_API_KEY}&metric=true&language=es`;
             const hourlyResponse = await axios.get(hourlyForecastUrl);
             const hourlyData = hourlyResponse.data;
 
             let rainStart = "No se esperan lluvias en las próximas 12 horas.";
             for (const hour of hourlyData) {
-                if (hour.PrecipitationProbability > 50) {
+                if (hour.PrecipitationProbability && hour.PrecipitationProbability > 50) {
                     const rainTime = new Date(hour.DateTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
                     rainStart = `🌧️ Lluvia esperada a las ${rainTime} con ${hour.PrecipitationProbability}% de probabilidad.`;
                     break;
                 }
             }
 
-            const dailyForecastUrl = `http://dataservice.accuweather.com/forecasts/v1/daily/1day/${locationKey}?apikey=${WEATHER_API_KEY}&metric=true`;
+            const dailyForecastUrl = `http://dataservice.accuweather.com/forecasts/v1/daily/1day/${locationKey}?apikey=${WEATHER_API_KEY}&metric=true&language=es`;
             const dailyResponse = await axios.get(dailyForecastUrl);
             const dailyData = dailyResponse.data.DailyForecasts[0];
 
@@ -68,6 +69,15 @@ module.exports = {
             const rainChance = dailyData.Day.PrecipitationProbability;
 
             const forecastDate = new Date(dailyData.Date).toLocaleDateString('es-ES', { weekday: 'long', day: '2-digit', month: 'long' });
+
+            const alertsUrl = `http://dataservice.accuweather.com/alerts/v1/${locationKey}?apikey=${WEATHER_API_KEY}&language=es`;
+            const alertsResponse = await axios.get(alertsUrl);
+            const alerts = alertsResponse.data;
+
+            let alertMessage = "No hay alertas meteorológicas.";
+            if (alerts && alerts.length > 0) {
+                alertMessage = alerts.map(alert => `${alert.AlertType}: ${alert.Headline}`).join("\n");
+            }
 
             const weatherEmbed = new EmbedBuilder()
                 .setColor('#1E90FF')
@@ -80,11 +90,13 @@ module.exports = {
                     { name: '💧 Humedad', value: `${humidity}%`, inline: true },
                     { name: '🌬️ Viento', value: `${windSpeed} km/h`, inline: true },
                     { name: '👀 Visibilidad', value: `${visibility} km`, inline: true },
+                    { name: '🌪️ Presión atmosférica', value: `${pressure} mb`, inline: true },
                     { name: '🕒 Última actualización', value: localTime, inline: false },
                     { name: '☀️ Clima diurno', value: dayCondition, inline: true },
                     { name: '🌙 Clima nocturno', value: nightCondition, inline: true },
                     { name: '🌧️ Probabilidad de lluvia', value: `${rainChance}%`, inline: true },
-                    { name: '⏳ Cuándo empieza a llover', value: rainStart, inline: false }
+                    { name: '⏳ Cuándo empieza a llover', value: rainStart, inline: false },
+                    { name: '⚠️ Alertas meteorológicas', value: alertMessage, inline: false }
                 )
                 .setFooter({ text: 'Datos proporcionados por AccuWeather' })
                 .setTimestamp();
