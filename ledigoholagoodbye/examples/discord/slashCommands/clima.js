@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js'); 
 const axios = require('axios');
 
-const WEATHER_API_KEY = "YPUqlXVf6eteJSHpawN6AhvOvqAZsMog";
+const WEATHER_API_KEY = "lRfA0MAVLrS789berKFmpQqJbuI00cjQ";
 
 module.exports = {
     data: new SlashCommandBuilder()
