@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js'); 
 const axios = require('axios');
 
 const WEATHER_API_KEY = "YPUqlXVf6eteJSHpawN6AhvOvqAZsMog";
@@ -6,12 +6,13 @@ const WEATHER_API_KEY = "YPUqlXVf6eteJSHpawN6AhvOvqAZsMog";
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('clima')
-        .setDescription('🌧️☀️ Muestra el clima actual de una ciudad. 🌧️☀️')
+        .setDescription('🌧️☀️ Muestra el clima actual de una ciudad.')
         .addStringOption(option =>
             option.setName('ubicacion')
                 .setDescription('Nombre de la ciudad.')
                 .setRequired(true)
         ),
+
     execute: async (interaction) => {
         await interaction.deferReply();
         const location = interaction.options.getString('ubicacion');
@@ -19,7 +20,7 @@ module.exports = {
         try {
             const locationUrl = `http://dataservice.accuweather.com/locations/v1/cities/search?apikey=${WEATHER_API_KEY}&q=${encodeURIComponent(location)}`;
             const locationResponse = await axios.get(locationUrl);
-
+            
             if (!locationResponse.data.length) {
                 return interaction.editReply({ content: '❌ Ubicación no encontrada.', ephemeral: true });
             }
@@ -39,29 +40,57 @@ module.exports = {
             const humidity = weatherData.RelativeHumidity;
             const windSpeed = weatherData.Wind.Speed.Metric.Value;
             const visibility = weatherData.Visibility.Metric.Value;
-            const localTime = weatherData.LocalObservationDateTime;
+            const localTime = new Date(weatherData.LocalObservationDateTime).toLocaleString('es-ES', { timeZone: 'UTC', hour12: false });
+
             const weatherIcon = `https://developer.accuweather.com/sites/default/files/${String(weatherData.WeatherIcon).padStart(2, '0')}-s.png`;
 
-            const radarUrl = `https://www.accuweather.com/en/${country}/weather-radar`;
+            const hourlyForecastUrl = `http://dataservice.accuweather.com/forecasts/v1/hourly/12hour/${locationKey}?apikey=${WEATHER_API_KEY}&metric=true`;
+            const hourlyResponse = await axios.get(hourlyForecastUrl);
+            const hourlyData = hourlyResponse.data;
+
+            let rainStart = "No se esperan lluvias en las próximas 12 horas.";
+            for (const hour of hourlyData) {
+                if (hour.PrecipitationProbability > 50) {
+                    const rainTime = new Date(hour.DateTime).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+                    rainStart = `🌧️ Lluvia esperada a las ${rainTime} con ${hour.PrecipitationProbability}% de probabilidad.`;
+                    break;
+                }
+            }
+
+            const dailyForecastUrl = `http://dataservice.accuweather.com/forecasts/v1/daily/1day/${locationKey}?apikey=${WEATHER_API_KEY}&metric=true`;
+            const dailyResponse = await axios.get(dailyForecastUrl);
+            const dailyData = dailyResponse.data.DailyForecasts[0];
+
+            const minTemp = dailyData.Temperature.Minimum.Value;
+            const maxTemp = dailyData.Temperature.Maximum.Value;
+            const dayCondition = dailyData.Day.IconPhrase;
+            const nightCondition = dailyData.Night.IconPhrase;
+            const rainChance = dailyData.Day.PrecipitationProbability;
+
+            const forecastDate = new Date(dailyData.Date).toLocaleDateString('es-ES', { weekday: 'long', day: '2-digit', month: 'long' });
 
             const weatherEmbed = new EmbedBuilder()
                 .setColor('#1E90FF')
-                .setTitle(`Clima en ${city}`)
+                .setTitle(`Clima en ${city} - ${forecastDate}`)
                 .setDescription(weatherDescription)
                 .setThumbnail(weatherIcon)
                 .addFields(
-                    { name: '🌡️ Temperatura', value: `${temperature}°C`, inline: true },
+                    { name: '🌡️ Temperatura actual', value: `${temperature}°C`, inline: true },
                     { name: '🌡️ Sensación térmica', value: `${feelsLike}°C`, inline: true },
                     { name: '💧 Humedad', value: `${humidity}%`, inline: true },
                     { name: '🌬️ Viento', value: `${windSpeed} km/h`, inline: true },
                     { name: '👀 Visibilidad', value: `${visibility} km`, inline: true },
-                    { name: '🕒 Última actualización', value: localTime, inline: false }
+                    { name: '🕒 Última actualización', value: localTime, inline: false },
+                    { name: '☀️ Clima diurno', value: dayCondition, inline: true },
+                    { name: '🌙 Clima nocturno', value: nightCondition, inline: true },
+                    { name: '🌧️ Probabilidad de lluvia', value: `${rainChance}%`, inline: true },
+                    { name: '⏳ Cuándo empieza a llover', value: rainStart, inline: false }
                 )
-                .setImage(radarUrl)
                 .setFooter({ text: 'Datos proporcionados por AccuWeather' })
                 .setTimestamp();
 
             await interaction.editReply({ embeds: [weatherEmbed] });
+
         } catch (error) {
             console.error("Error obteniendo datos:", error);
             await interaction.editReply({ content: '❌ Error al obtener el clima.', ephemeral: true });
