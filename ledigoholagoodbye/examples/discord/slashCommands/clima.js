@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js'); 
 const axios = require('axios');
 
-const WEATHER_API_KEY = "lRfA0MAVLrS789berKFmpQqJbuI00cjQ";
+const WEATHER_API_KEY = "YPUqlXVf6eteJSHpawN6AhvOvqAZsMog";
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,7 +18,7 @@ module.exports = {
         const location = interaction.options.getString('ubicacion');
 
         try {
-            const locationUrl = `http://dataservice.accuweather.com/locations/v1/cities/search?apikey=${WEATHER_API_KEY}&q=${encodeURIComponent(location)}&language=es`;
+            const locationUrl = `http://dataservice.accuweather.com/locations/v1/cities/search?apikey=${WEATHER_API_KEY}&q=${encodeURIComponent(location)}`;
             const locationResponse = await axios.get(locationUrl);
 
             if (!locationResponse.data.length) {
@@ -30,7 +30,7 @@ module.exports = {
             const city = locationData.LocalizedName;
             const country = locationData.Country.ID;
 
-            const weatherUrl = `http://dataservice.accuweather.com/currentconditions/v1/${locationKey}?apikey=${WEATHER_API_KEY}&details=true&language=es`;
+            const weatherUrl = `http://dataservice.accuweather.com/currentconditions/v1/${locationKey}?apikey=${WEATHER_API_KEY}&details=true`;
             const weatherResponse = await axios.get(weatherUrl);
             const weatherData = weatherResponse.data[0];
 
@@ -45,7 +45,7 @@ module.exports = {
 
             const weatherIcon = `https://developer.accuweather.com/sites/default/files/${String(weatherData.WeatherIcon).padStart(2, '0')}-s.png`;
 
-            const hourlyForecastUrl = `http://dataservice.accuweather.com/forecasts/v1/hourly/12hour/${locationKey}?apikey=${WEATHER_API_KEY}&metric=true&language=es`;
+            const hourlyForecastUrl = `http://dataservice.accuweather.com/forecasts/v1/hourly/12hour/${locationKey}?apikey=${WEATHER_API_KEY}&metric=true`;
             const hourlyResponse = await axios.get(hourlyForecastUrl);
             const hourlyData = hourlyResponse.data;
 
@@ -58,7 +58,7 @@ module.exports = {
                 }
             }
 
-            const dailyForecastUrl = `http://dataservice.accuweather.com/forecasts/v1/daily/1day/${locationKey}?apikey=${WEATHER_API_KEY}&metric=true&language=es`;
+            const dailyForecastUrl = `http://dataservice.accuweather.com/forecasts/v1/daily/1day/${locationKey}?apikey=${WEATHER_API_KEY}&metric=true`;
             const dailyResponse = await axios.get(dailyForecastUrl);
             const dailyData = dailyResponse.data.DailyForecasts[0];
 
@@ -70,7 +70,7 @@ module.exports = {
 
             const forecastDate = new Date(dailyData.Date).toLocaleDateString('es-ES', { weekday: 'long', day: '2-digit', month: 'long' });
 
-            const alertsUrl = `http://dataservice.accuweather.com/alerts/v1/${locationKey}?apikey=${WEATHER_API_KEY}&language=es`;
+            const alertsUrl = `http://dataservice.accuweather.com/alerts/v1/${locationKey}?apikey=${WEATHER_API_KEY}`;
             const alertsResponse = await axios.get(alertsUrl);
             const alerts = alertsResponse.data;
 
