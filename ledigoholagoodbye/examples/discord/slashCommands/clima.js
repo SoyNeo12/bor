@@ -1,59 +1,70 @@
-const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
+
+const WEATHER_API_KEY = "YPUqlXVf6eteJSHpawN6AhvOvqAZsMog";
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('clima')
-        .setDescription('🌧️☀️Para enterarte del clima en una ciudad🌧️☀️.')
+        .setDescription('🌧️☀️ Muestra el clima actual de una ciudad. 🌧️☀️')
         .addStringOption(option =>
             option.setName('ubicacion')
-                .setDescription('Nombre de la ciudad a la que deseas ver el clima')
+                .setDescription('Nombre de la ciudad.')
                 .setRequired(true)
         ),
     execute: async (interaction) => {
+        await interaction.deferReply();
         const location = interaction.options.getString('ubicacion');
-        const url = `https://api.weatherapi.com/v1/current.json?key=e81b3cb466de47bcbfa235851240411&q=${encodeURIComponent(location)}&aqi=no`;
 
         try {
-            const response = await axios.get(url);
-            const weatherData = response.data;
+            const locationUrl = `http://dataservice.accuweather.com/locations/v1/cities/search?apikey=${WEATHER_API_KEY}&q=${encodeURIComponent(location)}`;
+            const locationResponse = await axios.get(locationUrl);
 
-            const city = weatherData.location.name;
-            const region = weatherData.location.region;
-            const country = weatherData.location.country;
-            const localTime = weatherData.location.localtime;
-            const temperature = weatherData.current.temp_c;
-            const feelsLike = weatherData.current.feelslike_c;
-            const weatherDescription = weatherData.current.condition.text;
-            const humidity = weatherData.current.humidity;
-            const windSpeed = weatherData.current.wind_kph;
-            const visibility = weatherData.current.vis_km;
-            const iconUrl = `https:${weatherData.current.condition.icon}`;
+            if (!locationResponse.data.length) {
+                return interaction.editReply({ content: '❌ Ubicación no encontrada.', ephemeral: true });
+            }
+
+            const locationData = locationResponse.data[0];
+            const locationKey = locationData.Key;
+            const city = locationData.LocalizedName;
+            const country = locationData.Country.ID;
+
+            const weatherUrl = `http://dataservice.accuweather.com/currentconditions/v1/${locationKey}?apikey=${WEATHER_API_KEY}&details=true`;
+            const weatherResponse = await axios.get(weatherUrl);
+            const weatherData = weatherResponse.data[0];
+
+            const temperature = weatherData.Temperature.Metric.Value;
+            const feelsLike = weatherData.RealFeelTemperature.Metric.Value;
+            const weatherDescription = weatherData.WeatherText;
+            const humidity = weatherData.RelativeHumidity;
+            const windSpeed = weatherData.Wind.Speed.Metric.Value;
+            const visibility = weatherData.Visibility.Metric.Value;
+            const localTime = weatherData.LocalObservationDateTime;
+            const weatherIcon = `https://developer.accuweather.com/sites/default/files/${String(weatherData.WeatherIcon).padStart(2, '0')}-s.png`;
+
+            const radarUrl = `https://www.accuweather.com/en/${country}/weather-radar`;
 
             const weatherEmbed = new EmbedBuilder()
                 .setColor('#1E90FF')
-                .setTitle(`Clima actual en (${region}, ${country})`)
-                .setDescription(`Información del clima para **${city}**`)
-                .setThumbnail(iconUrl)
+                .setTitle(`Clima en ${city}`)
+                .setDescription(weatherDescription)
+                .setThumbnail(weatherIcon)
                 .addFields(
                     { name: '🌡️ Temperatura', value: `${temperature}°C`, inline: true },
-                    { name: '🌡️🤔 Sensación térmica', value: `${feelsLike}°C`, inline: true },
-                    { name: '🌧️ Estado del tiempo', value: weatherDescription, inline: true },
+                    { name: '🌡️ Sensación térmica', value: `${feelsLike}°C`, inline: true },
                     { name: '💧 Humedad', value: `${humidity}%`, inline: true },
                     { name: '🌬️ Viento', value: `${windSpeed} km/h`, inline: true },
                     { name: '👀 Visibilidad', value: `${visibility} km`, inline: true },
-                    { name: '🕒 Hora Local', value: localTime, inline: true },
+                    { name: '🕒 Última actualización', value: localTime, inline: false }
                 )
-                .setFooter({ text: 'Clima obtenido de WeatherAPI.com' })
+                .setImage(radarUrl)
+                .setFooter({ text: 'Datos proporcionados por AccuWeather' })
                 .setTimestamp();
 
-            await interaction.reply({ embeds: [weatherEmbed] });
+            await interaction.editReply({ embeds: [weatherEmbed] });
         } catch (error) {
-            console.error(error);
-            await interaction.reply({
-                content: '❌No se encontró esa ubicacion, verificá el nombre❌.',
-                flags: MessageFlags.Ephemeral
-            });
+            console.error("Error obteniendo datos:", error);
+            await interaction.editReply({ content: '❌ Error al obtener el clima.', ephemeral: true });
         }
     },
 };
