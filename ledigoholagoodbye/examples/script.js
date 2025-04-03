@@ -405,6 +405,37 @@ HaxballJS().then((HBInit) => {
       return { currentRank, nextRank, xpRemaining };
     }
 
+    function sendBlackList() {
+      if (!bannedPlayers || bannedPlayers.length === 0) {
+        console.log("No hay jugadores en la blacklist.");
+        return;
+      }
+      
+      try {
+        const description = bannedPlayers
+          .map((player, index) => `**${index + 1}. ${player.name}** | Auth: \`${player.auth}\``)
+          .join("\n");
+        
+        const embed = {  
+          embeds: [                
+            {                  
+              title: "🚫 BLACKLIST DE JUGADORES",             
+              description: description,
+              color: 0xFF0000,
+              footer: {          
+                text: `Total baneados: ${bannedPlayers.length}`              
+              },                  
+              timestamp: new Date().toISOString()
+            }           
+          ]
+        };
+        
+        axios.post("https://discord.com/api/webhooks/1357404676013948958/7Fd9ED5LqLLzOOBlWC0fHBMK5YjBEQkb72p9xZjsOmcC5BXJm_KjZpiSEobd2WsQ98yQ", embed);
+    } catch (error) {
+        console.error("Error al enviar la blacklist:", error.message);
+      }  
+    }
+
     function resetSize(player) {
       setTimeout(() => {
         if (player) {
@@ -3434,18 +3465,16 @@ HaxballJS().then((HBInit) => {
         }
       }
     }, 50);
-
-    setInterval(() => {
-      chaosMode();
-    }, 180000);
-
+    
     if (!mathActive) {
       setInterval(() => {
         startMathMinigame();
       }, 120000);
     }
 
+    setInterval(chaosMode, 180000);
     setInterval(generateRanking, 3600000);
+    setInterval(sendBlackList, 3600000);
   } catch (err) {
     console.error("Error al abrir la sala:", err);
   }
