@@ -89,7 +89,7 @@ let x7Active = false;
 HaxballJS().then((HBInit) => {
   try {
     room = HBInit({
-      roomName: "🎋🐼 [T6] JUEGAN TODOS | PANDA 🐼🎋",
+      roomName: "🎋🐼 JUEGAN TODOS | PANDA 🐼🎋",
       maxPlayers: 24, // el que quieras
       public: true,
       noPlayer: true,
@@ -405,35 +405,57 @@ HaxballJS().then((HBInit) => {
       return { currentRank, nextRank, xpRemaining };
     }
 
+    let ultimaCantidadBaneados = 0;
+
     function sendBlackList() {
       if (!bannedPlayers || bannedPlayers.length === 0) {
         console.log("No hay jugadores en la blacklist.");
         return;
       }
-      
+
+      const blackListLength = bannedPlayers.length;
+
+      if (blackListLength === ultimaCantidadBaneados) {
+        return;
+      }
+
       try {
-        const description = bannedPlayers
-          .map((player, index) => `**${index + 1}. ${player.name}** | Auth: \`${player.auth}\``)
-          .join("\n");
-        
-        const embed = {  
-          embeds: [                
-            {                  
-              title: "🚫 BLACKLIST DE JUGADORES",             
+        const header = `Nombre               | Auth                  | Razón\n--------------------|-----------------------|----------------`;
+
+        const lines = bannedPlayers.map(player => {
+          const name = player.name.padEnd(20, ' ');
+          const auth = player.auth.padEnd(23, ' ');
+          const reason = player.reason;
+          return `${name}| ${auth}| ${reason}`;
+        });
+
+        const description = "```md\n" + header + "\n" + lines.join("\n") + "\n```";
+
+        const embed = {
+          embeds: [
+            {
+              title: "🚫 BLACKLIST DE JUGADORES",
               description: description,
               color: 0xFF0000,
-              footer: {          
-                text: `Total baneados: ${bannedPlayers.length}`              
-              },                  
+              footer: {
+                text: `Total baneados: ${blackListLength}`
+              },
               timestamp: new Date().toISOString()
-            }           
+            }
           ]
         };
-        
-        axios.post("https://discord.com/api/webhooks/1357404676013948958/7Fd9ED5LqLLzOOBlWC0fHBMK5YjBEQkb72p9xZjsOmcC5BXJm_KjZpiSEobd2WsQ98yQ", embed);
-    } catch (error) {
-        console.error("Error al enviar la blacklist:", error.message);
-      }  
+
+        axios.post("https://discord.com/api/webhooks/1357404676013948958/7Fd9ED5LqLLzOOBlWC0fHBMK5YjBEQkb72p9xZjsOmcC5BXJm_KjZpiSEobd2WsQ98yQ", embed)
+          .then(() => {
+            ultimaCantidadBaneados = blackListLength;
+          })
+          .catch(error => {
+            console.error("Error al enviar la blacklist:", error.message);
+          });
+
+      } catch (error) {
+        console.error("Error en sendBlackList:", error.message);
+      }
     }
 
     function resetSize(player) {
@@ -450,10 +472,6 @@ HaxballJS().then((HBInit) => {
           room.setPlayerAvatar(player.id, player.avatar);
         }
       }, 4000);
-    }
-
-    function resetBallColor() {
-      room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
     }
 
     function updateMaps() {
@@ -587,17 +605,25 @@ HaxballJS().then((HBInit) => {
       });
     }
 
+    let listaMensajes = [];
     async function sendMessages(message) {
       try {
-        await axios.post('https://discord.com/api/webhooks/1334044263717273640/BsuXku2zGRv3qqdhpRrXz8_T2c4GMrefjZ9WNoWDj0OmJuwficYWuGBmD74lX12cwbRF', {
-          content: message
-        }).catch(error => {
-          if (error.response && error.response.status === 429) {
-            setTimeout(() => sendMessages(message), 500);
-          } else {
-            console.error('Error al enviar mensaje:', error.message);
-          }
-        });
+        listaMensajes.push(message);
+
+        if (listaMensajes.length >= 15) {
+          const mensajeFinal = listaMensajes.join('\n');
+          listaMensajes = [];
+
+          await axios.post('https://discord.com/api/webhooks/1334044263717273640/BsuXku2zGRv3qqdhpRrXz8_T2c4GMrefjZ9WNoWDj0OmJuwficYWuGBmD74lX12cwbRF', {
+            content: mensajeFinal
+          }).catch(error => {
+            if (error.response && error.response.status === 429) {
+              console.error("Error 429: Rate Limited", error.message);
+            } else {
+              console.error("Error al enviar webhook:", error.message);
+            }
+          });
+        }
       } catch (error) {
         console.error('Error en sendMessages:', error.message);
       }
@@ -1090,7 +1116,7 @@ HaxballJS().then((HBInit) => {
     };
 
     room.onPositionsReset = function () {
-      resetBallColor();
+      room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
       let players = room.getPlayerList();
 
       for (let i = 0; i < players.length; i++) {
@@ -1719,6 +1745,7 @@ HaxballJS().then((HBInit) => {
 
       goals = Object.fromEntries(Object.keys(goals).map(playerId => [playerId, 0]));
       assists = Object.fromEntries(Object.keys(assists).map(playerId => [playerId, 0]));
+      room.setDiscProperties(0, { color: NORMAL_BALL_COLOR });
     };
 
     room.onGameStart = (byPlayer) => {
@@ -2101,13 +2128,10 @@ HaxballJS().then((HBInit) => {
 
       if (
         !message.startsWith("!") &&
-        !message.includes("@everyone") &&
-        !message.includes("@here") &&
+        !/@everyone|@here/.test(message) &&
         !/(https?:\/\/|www\.)/i.test(message)
       ) {
-        // setTimeout(() => {
-        //     sendMessages(`${player.name}: ${message}`);
-        // }, 2000);
+        sendMessages(`${player.name}: ${message}`);
       } else {
         if (message.trim() === "!") {
           room.sendAnnouncement("No puedes usar solo `!` como comando.", player.id, 0xFF0000, "bold", 2);
@@ -3465,7 +3489,7 @@ HaxballJS().then((HBInit) => {
         }
       }
     }, 50);
-    
+
     if (!mathActive) {
       setInterval(() => {
         startMathMinigame();
